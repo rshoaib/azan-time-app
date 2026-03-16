@@ -1,18 +1,20 @@
-import React, { useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  StatusBar,
-  Vibration,
-} from 'react-native';
+import { Theme } from '@/constants/theme';
+import { DAILY_DUAS, DuaItem, EVENING_ADHKAR, MORNING_ADHKAR, TASBIH_TYPES } from '@/data/duas';
+import { isDuaPlaying, playDuaAudio, stopDuaAudio } from '@/services/duaAudioService';
+import { getTasbihCount, setTasbihCount } from '@/services/storageService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { Theme } from '@/constants/theme';
-import { MORNING_ADHKAR, EVENING_ADHKAR, DAILY_DUAS, TASBIH_TYPES, DuaItem } from '@/data/duas';
-import { getTasbihCount, setTasbihCount } from '@/services/storageService';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    Animated,
+    Pressable,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    Vibration,
+    View,
+} from 'react-native';
 
 type DuaTab = 'morning' | 'evening' | 'daily' | 'tasbih';
 
@@ -145,6 +147,42 @@ export default function DuaScreen() {
 
 function DuaCard({ dua }: { dua: DuaItem }) {
   const [expanded, setExpanded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isPlaying) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 0.4, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isPlaying]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isDuaPlaying(dua.id)) {
+        stopDuaAudio();
+      }
+    };
+  }, []);
+
+  const toggleAudio = async () => {
+    if (isPlaying) {
+      await stopDuaAudio();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      await playDuaAudio(dua.id, dua.arabic, () => setIsPlaying(false));
+    }
+  };
 
   return (
     <Pressable
@@ -165,11 +203,25 @@ function DuaCard({ dua }: { dua: DuaItem }) {
         </>
       )}
       <View style={styles.duaFooter}>
-        {dua.repeat > 1 && (
-          <View style={styles.repeatBadge}>
-            <Text style={styles.repeatText}>×{dua.repeat}</Text>
-          </View>
-        )}
+        <View style={styles.footerLeft}>
+          <Pressable
+            onPress={(e) => { e.stopPropagation(); toggleAudio(); }}
+            style={[styles.audioButton, isPlaying && styles.audioButtonActive]}
+            hitSlop={8}
+          >
+            <Animated.Text style={[styles.audioIcon, { opacity: isPlaying ? pulseAnim : 1 }]}>
+              {isPlaying ? '⏹️' : '🔊'}
+            </Animated.Text>
+            <Text style={[styles.audioLabel, isPlaying && styles.audioLabelActive]}>
+              {isPlaying ? 'Stop' : 'Listen'}
+            </Text>
+          </Pressable>
+          {dua.repeat > 1 && (
+            <View style={styles.repeatBadge}>
+              <Text style={styles.repeatText}>×{dua.repeat}</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.tapToExpand}>{expanded ? '▲ Less' : '▼ Tap for translation'}</Text>
       </View>
     </Pressable>
@@ -235,6 +287,20 @@ const styles = StyleSheet.create({
   repeatText: { fontSize: 11, color: Theme.colors.isha, fontWeight: Theme.fontWeight.bold },
   tapToExpand: { fontSize: 11, color: Theme.colors.textMuted },
 
+  // Audio button
+  footerLeft: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
+  audioButton: {
+    flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: Theme.borderRadius.full,
+    backgroundColor: Theme.colors.teal + '12', borderWidth: 1, borderColor: Theme.colors.teal + '25',
+  },
+  audioButtonActive: {
+    backgroundColor: Theme.colors.danger + '12', borderColor: Theme.colors.danger + '25',
+  },
+  audioIcon: { fontSize: 14 },
+  audioLabel: { fontSize: 11, color: Theme.colors.teal, fontWeight: Theme.fontWeight.semibold },
+  audioLabelActive: { color: Theme.colors.danger },
+
   // Tasbih
   tasbihContainer: { alignItems: 'center', paddingHorizontal: 20 },
   tasbihTypeScroll: { marginBottom: 24 },
@@ -260,7 +326,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Theme.colors.cardBorder,
   },
   tasbihArabic: { fontSize: 22, color: Theme.colors.gold, marginBottom: 8 },
-  tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: Theme.colors.textPrimary },
+  tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
   tasbihTarget: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: 4 },
   progressBarBg: {
     width: '80%', height: 6, borderRadius: 3,

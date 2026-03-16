@@ -1,0 +1,35 @@
+﻿node : node:child_process:965
+At line:1 char:1
++ node -e "const cp = require('child_process'); const r = cp.execSync(' ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (node:child_process:965:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    throw err;
+    ^
+
+Error: Command failed: npx tsc --noEmit --pretty false
+    at checkExecSyncError (node:child_process:890:11)
+    at Object.execSync (node:child_process:962:15)
+    at [eval]:1:51
+    at runScriptInThisContext (node:internal/vm:144:10)
+    at node:internal/process/execution:109:14
+    at [eval]-wrapper:6:24
+    at runScript (node:internal/process/execution:92:62)
+    at evalScript (node:internal/process/execution:123:10)
+    at node:internal/main/eval_string:51:3 {
+  status: 2,
+  signal: null,
+  output: [
+    null,
+    "services/prayerService.ts(82,13): error TS2353: Object literal may only specify known properties, and '[Prayer.Fajr]' does not exist in type 'Record<number, PrayerName>'.\r\n" +
+      "services/prayerService.ts(89,32): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.\r\n",
+    ''
+  ],
+  pid: 21784,
+  stdout: "services/prayerService.ts(82,13): error TS2353: Object literal may only specify known properties, and '[Prayer.Fajr]' does not exist in type 'Record<number, PrayerName>'.\r\n" +
+    "services/prayerService.ts(89,32): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.\r\n",
+  stderr: ''
+}
+
+Node.js v20.11.1

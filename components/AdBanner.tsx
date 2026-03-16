@@ -1,35 +1,43 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Theme } from '@/constants/theme';
+import Constants from 'expo-constants';
+import React from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 
 interface AdBannerProps {
   style?: object;
 }
 
+// Detect Expo Go — native ad modules are NOT supported in Expo Go
+const isExpoGo = Constants.appOwnership === 'expo';
+
 let BannerAdComponent: React.ComponentType<any> | null = null;
 let BannerAdSize: any = null;
 let TestIds: any = null;
 
-// Try to load native ads module — silently fail in Expo Go
-try {
-  const adsModule = require('react-native-google-mobile-ads');
-  BannerAdComponent = adsModule.BannerAd;
-  BannerAdSize = adsModule.BannerAdSize;
-  TestIds = adsModule.TestIds;
-} catch {
-  // react-native-google-mobile-ads is not available in Expo Go
+// Only load ads in dev builds (not Expo Go)
+if (!isExpoGo) {
+  try {
+    const adsModule = require('react-native-google-mobile-ads');
+    BannerAdComponent = adsModule.BannerAd;
+    BannerAdSize = adsModule.BannerAdSize;
+    TestIds = adsModule.TestIds;
+  } catch {
+    // Module not available
+  }
 }
 
 export default function AdBanner({ style }: AdBannerProps) {
-  // If the native ad module isn't available, show nothing
   if (!BannerAdComponent || !BannerAdSize || !TestIds) {
     return null;
   }
 
+  // TODO: Replace with real AdMob unit IDs before production release
   const adUnitId = __DEV__
     ? TestIds.ADAPTIVE_BANNER
     : Platform.select({
+        // TODO: Insert your real Android ad unit ID below
         android: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+        // TODO: Insert your real iOS ad unit ID below
         ios: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
         default: TestIds.ADAPTIVE_BANNER,
       }) || TestIds.ADAPTIVE_BANNER;

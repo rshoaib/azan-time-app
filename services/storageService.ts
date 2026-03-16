@@ -122,32 +122,55 @@ export async function setPrayerStatus(date: Date, prayer: keyof DayLog, status: 
 }
 
 export async function getWeekLog(): Promise<{ date: Date; log: DayLog }[]> {
-    const result: { date: Date; log: DayLog }[] = [];
+    const dates: Date[] = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        result.push({ date: d, log: await getDayLog(d) });
+        dates.push(d);
     }
-    return result;
+    const keys = dates.map(dateKey);
+    const pairs = await AsyncStorage.multiGet(keys);
+    return dates.map((date, i) => ({
+        date,
+        log: pairs[i][1] ? JSON.parse(pairs[i][1]!) : { ...EMPTY_DAY },
+    }));
 }
 
 export async function getStreak(): Promise<number> {
     let streak = 0;
     const today = new Date();
-    for (let i = 0; i < 365; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        const log = await getDayLog(d);
-        const prayers: (keyof DayLog)[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-        const allPrayed = prayers.every((p) => log[p] === 'prayed');
-        if (allPrayed) {
-            streak++;
-        } else if (i === 0) {
-            // Today might not be complete yet, skip it
-            continue;
-        } else {
-            break;
+    const prayers: (keyof DayLog)[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+    // Batch-read in chunks of 30 days at a time for efficiency
+    const CHUNK_SIZE = 30;
+    let offset = 0;
+    let done = false;
+
+    while (!done && offset < 365) {
+        const dates: Date[] = [];
+        for (let i = offset; i < Math.min(offset + CHUNK_SIZE, 365); i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            dates.push(d);
         }
+        const keys = dates.map(dateKey);
+        const pairs = await AsyncStorage.multiGet(keys);
+
+        for (let j = 0; j < pairs.length; j++) {
+            const i = offset + j;
+            const log: DayLog = pairs[j][1] ? JSON.parse(pairs[j][1]!) : { ...EMPTY_DAY };
+            const allPrayed = prayers.every((p) => log[p] === 'prayed');
+            if (allPrayed) {
+                streak++;
+            } else if (i === 0) {
+                // Today might not be complete yet, skip it
+                continue;
+            } else {
+                done = true;
+                break;
+            }
+        }
+        offset += CHUNK_SIZE;
     }
     return streak;
 }

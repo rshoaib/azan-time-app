@@ -1,34 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  ActivityIndicator,
-  StatusBar,
-  Dimensions,
-} from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Theme, PRAYER_CONFIG } from '@/constants/theme';
-import {
-  getPrayerTimes,
-  formatTime,
-  getTimeRemaining,
-  PrayerTimesResult,
-  PrayerName,
-  PrayerTimeEntry,
-} from '@/services/prayerService';
+import AdBanner from '@/components/AdBanner';
+import { PRAYER_CONFIG, Theme } from '@/constants/theme';
+import { getDailyAyah } from '@/data/dailyAyah';
 import { getCurrentLocation, LocationResult } from '@/services/locationService';
 import {
-  getCalculationMethod,
-  getEnabledPrayers,
-  getAdvanceMinutes,
-  getSavedLocation,
-  setSavedLocation,
+    formatTime,
+    getPrayerTimes,
+    getTimeRemaining,
+    PrayerTimeEntry,
+    PrayerTimesResult
+} from '@/services/prayerService';
+import { getHijriDate, getRamadanInfo } from '@/services/ramadanService';
+import {
+    getAdvanceMinutes,
+    getCalculationMethod,
+    getEnabledPrayers,
+    getSavedLocation,
+    setSavedLocation,
 } from '@/services/storageService';
-import AdBanner from '@/components/AdBanner';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    Dimensions,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    Share,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -39,8 +43,14 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState('');
+  const [calcMethod, setCalcMethod] = useState('MuslimWorldLeague');
+  const isLoadingRef = useRef(false);
 
   const loadPrayerTimes = useCallback(async () => {
+    // Prevent concurrent calls (race between focus + countdown)
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+
     try {
       setError(null);
 
@@ -53,6 +63,7 @@ export default function HomeScreen() {
       setLocation(loc as LocationResult);
 
       const method = await getCalculationMethod();
+      setCalcMethod(method);
       const times = getPrayerTimes(loc.latitude, loc.longitude, new Date(), method);
       setPrayerTimes(times);
 
@@ -73,22 +84,33 @@ export default function HomeScreen() {
       setError(e.message || 'Failed to load prayer times');
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }, []);
 
-  useEffect(() => {
-    loadPrayerTimes();
-  }, [loadPrayerTimes]);
+  // Load prayer times on mount AND whenever the tab comes into focus
+  // (useFocusEffect fires on mount too, so no separate useEffect needed)
+  useFocusEffect(
+    useCallback(() => {
+      loadPrayerTimes();
+    }, [loadPrayerTimes])
+  );
 
-  // Countdown timer
+  // Countdown timer — auto-advances to next prayer when current one passes
   useEffect(() => {
     const timer = setInterval(() => {
       if (prayerTimes?.nextPrayerTime) {
-        setCountdown(getTimeRemaining(prayerTimes.nextPrayerTime));
+        const remaining = getTimeRemaining(prayerTimes.nextPrayerTime);
+        setCountdown(remaining);
+
+        // When current next-prayer has passed, recalculate
+        if (remaining === '—') {
+          loadPrayerTimes();
+        }
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [prayerTimes]);
+  }, [prayerTimes, loadPrayerTimes]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -128,9 +150,36 @@ export default function HomeScreen() {
     day: 'numeric',
   });
 
+  const hijri = getHijriDate();
+  const ramadan = getRamadanInfo(prayerTimes);
+  const ayah = getDailyAyah();
+
   const nextPrayerConfig = prayerTimes?.nextPrayer
     ? PRAYER_CONFIG[prayerTimes.nextPrayer]
     : null;
+
+  // Prayer comparison data (Fajr & Maghrib for 7 days)
+  const weekComparison = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const label = i === 0 ? 'Today' : dayNames[d.getDay()];
+    if (!location) return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 };
+    try {
+      const times = getPrayerTimes(location.latitude, location.longitude, d, calcMethod);
+      const fajr = times.prayers.find(p => p.name === 'fajr');
+      const maghrib = times.prayers.find(p => p.name === 'maghrib');
+      const fajrMin = fajr ? fajr.time.getHours() * 60 + fajr.time.getMinutes() : 0;
+      const maghribMin = maghrib ? maghrib.time.getHours() * 60 + maghrib.time.getMinutes() : 0;
+      return {
+        label,
+        fajrStr: fajr ? formatTime(fajr.time).replace(' ', '') : '--',
+        maghribStr: maghrib ? formatTime(maghrib.time).replace(' ', '') : '--',
+        fajrHeight: Math.max(15, (fajrMin / 360) * 50),
+        maghribHeight: Math.max(15, ((maghribMin - 720) / 360) * 50),
+      };
+    } catch { return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 }; }
+  });
 
   return (
     <View style={styles.container}>
@@ -164,7 +213,40 @@ export default function HomeScreen() {
             </View>
           )}
           <Text style={styles.dateText}>{dateStr}</Text>
+          <Text style={styles.hijriText}>{hijri.day} {hijri.monthName} {hijri.year} AH</Text>
         </LinearGradient>
+
+        {/* Ramadan Banner */}
+        {ramadan.isRamadan && (
+          <View style={styles.ramadanWrapper}>
+            <LinearGradient
+              colors={['#1A472A', '#0D2818']}
+              style={styles.ramadanCard}
+            >
+              <View style={styles.ramadanHeader}>
+                <Text style={{ fontSize: 24 }}>🌙</Text>
+                <View>
+                  <Text style={styles.ramadanTitle}>Ramadan Mubarak</Text>
+                  <Text style={styles.ramadanDay}>Day {ramadan.dayOfRamadan} of 30 · {ramadan.daysRemaining} days left</Text>
+                </View>
+              </View>
+              <View style={styles.ramadanTimes}>
+                {ramadan.suhoorTime && (
+                  <View style={styles.ramadanTimeBox}>
+                    <Text style={styles.ramadanTimeLabel}>🍽️ Suhoor ends</Text>
+                    <Text style={styles.ramadanTimeValue}>{formatTime(ramadan.suhoorTime)}</Text>
+                  </View>
+                )}
+                {ramadan.iftarTime && (
+                  <View style={styles.ramadanTimeBox}>
+                    <Text style={styles.ramadanTimeLabel}>🌅 Iftar at</Text>
+                    <Text style={styles.ramadanTimeValue}>{formatTime(ramadan.iftarTime)}</Text>
+                  </View>
+                )}
+              </View>
+            </LinearGradient>
+          </View>
+        )}
 
         {/* Next Prayer Hero Card */}
         {prayerTimes?.nextPrayer && prayerTimes.nextPrayerTime && nextPrayerConfig && (
@@ -211,6 +293,60 @@ export default function HomeScreen() {
 
         {/* Ad Banner */}
         <AdBanner style={{ marginTop: 16, marginHorizontal: 24 }} />
+
+        {/* Daily Ayah Card */}
+        <View style={styles.ayahWrapper}>
+          <LinearGradient
+            colors={['#F0EDE6', '#E8E4DB']}
+            style={styles.ayahCard}
+          >
+            <Text style={styles.ayahSectionLabel}>📖 VERSE OF THE DAY</Text>
+            <Text style={styles.ayahArabic}>{ayah.arabic}</Text>
+            <Text style={styles.ayahTranslation}>"{ayah.translation}"</Text>
+            <View style={styles.ayahFooter}>
+              <Text style={styles.ayahReference}>{ayah.reference}</Text>
+              <Pressable
+                style={styles.shareButton}
+                onPress={() => Share.share({
+                  message: `${ayah.arabic}\n\n"${ayah.translation}"\n\n— ${ayah.reference}\n\nShared via Azan Time 🕌`,
+                })}
+              >
+                <FontAwesome name="share-alt" size={14} color={Theme.colors.teal} />
+                <Text style={styles.shareText}>Share</Text>
+              </Pressable>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Prayer Time Comparison */}
+        <View style={styles.comparisonWrapper}>
+          <Text style={styles.comparisonTitle}>📊 Fajr & Maghrib This Week</Text>
+          <View style={styles.comparisonChart}>
+            {weekComparison.map((day, i) => (
+              <View key={i} style={styles.comparisonDay}>
+                <Text style={styles.comparisonLabel}>{day.label}</Text>
+                <View style={styles.comparisonBars}>
+                  <View style={[styles.comparisonBar, styles.comparisonBarFajr, { height: day.fajrHeight }]} />
+                  <View style={[styles.comparisonBar, styles.comparisonBarMaghrib, { height: day.maghribHeight }]} />
+                </View>
+                <Text style={styles.comparisonTime}>{day.fajrStr}</Text>
+                <Text style={[styles.comparisonTime, { color: Theme.colors.maghrib }]}>{day.maghribStr}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.comparisonLegend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: Theme.colors.fajr }]} />
+              <Text style={styles.legendText}>Fajr</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: Theme.colors.maghrib }]} />
+              <Text style={styles.legendText}>Maghrib</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -535,4 +671,50 @@ const styles = StyleSheet.create({
   prayerTimePast: {
     color: Theme.colors.textMuted,
   },
+
+  // Hijri date
+  hijriText: {
+    fontSize: Theme.fontSize.xs,
+    color: Theme.colors.goldDark,
+    marginTop: 2,
+    fontWeight: Theme.fontWeight.medium,
+  },
+
+  // Ramadan banner
+  ramadanWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: 8, marginBottom: 16 },
+  ramadanCard: { borderRadius: Theme.borderRadius.xl, padding: 20, borderWidth: 1, borderColor: '#2E7D32' + '40' },
+  ramadanHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  ramadanTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: '#A5D6A7' },
+  ramadanDay: { fontSize: Theme.fontSize.sm, color: '#81C784', marginTop: 2 },
+  ramadanTimes: { flexDirection: 'row', gap: 12 },
+  ramadanTimeBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: Theme.borderRadius.lg, padding: 12, alignItems: 'center' },
+  ramadanTimeLabel: { fontSize: Theme.fontSize.xs, color: '#A5D6A7', marginBottom: 4 },
+  ramadanTimeValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+
+  // Daily Ayah
+  ayahWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: 20 },
+  ayahCard: { borderRadius: Theme.borderRadius.xl, padding: 24, borderWidth: 1, borderColor: '#D5CFC4' },
+  ayahSectionLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.goldDark, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 16 },
+  ayahArabic: { fontSize: 22, color: '#2C2C2C', textAlign: 'right', lineHeight: 44, fontWeight: '600', marginBottom: 12 },
+  ayahTranslation: { fontSize: Theme.fontSize.md, color: '#5C5C5C', lineHeight: 24, fontStyle: 'italic', marginBottom: 12 },
+  ayahFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  ayahReference: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldDark, fontWeight: Theme.fontWeight.semibold },
+  shareButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Theme.colors.teal + '15', paddingHorizontal: 14, paddingVertical: 7, borderRadius: Theme.borderRadius.full },
+  shareText: { fontSize: Theme.fontSize.sm, color: Theme.colors.teal, fontWeight: Theme.fontWeight.semibold },
+
+  // Prayer comparison chart
+  comparisonWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: 24 },
+  comparisonTitle: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 12 },
+  comparisonChart: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg, padding: 16, borderWidth: 1, borderColor: Theme.colors.cardBorder },
+  comparisonDay: { alignItems: 'center', flex: 1 },
+  comparisonLabel: { fontSize: 10, color: Theme.colors.textMuted, marginBottom: 6, fontWeight: Theme.fontWeight.semibold },
+  comparisonBars: { flexDirection: 'row', gap: 3, alignItems: 'flex-end', marginBottom: 6 },
+  comparisonBar: { width: 8, borderRadius: 4 },
+  comparisonBarFajr: { backgroundColor: Theme.colors.fajr },
+  comparisonBarMaghrib: { backgroundColor: Theme.colors.maghrib },
+  comparisonTime: { fontSize: 8, color: Theme.colors.fajr, fontWeight: Theme.fontWeight.medium },
+  comparisonLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 10 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted },
 });

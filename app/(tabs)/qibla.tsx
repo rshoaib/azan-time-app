@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  StatusBar,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
-import { Magnetometer, type MagnetometerMeasurement } from 'expo-sensors';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Theme } from '@/constants/theme';
-import { getQiblaDirection } from '@/services/prayerService';
 import { getCurrentLocation } from '@/services/locationService';
+import { findNearbyMosques, formatDistance, Mosque, navigateToMosque } from '@/services/mosqueService';
+import { getQiblaDirection } from '@/services/prayerService';
 import { getSavedLocation } from '@/services/storageService';
-import { findNearbyMosques, formatDistance, navigateToMosque, Mosque } from '@/services/mosqueService';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Magnetometer, type MagnetometerMeasurement } from 'expo-sensors';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    Dimensions,
+    Pressable,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
 const COMPASS_SIZE = Math.min(width * 0.65, 280);
@@ -29,6 +30,7 @@ export default function QiblaScreen() {
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loadingMosques, setLoadingMosques] = useState(false);
   const [showMosques, setShowMosques] = useState(false);
+  const wasAlignedRef = useRef(false);
 
   useEffect(() => {
     loadQibla();
@@ -63,15 +65,27 @@ export default function QiblaScreen() {
     Magnetometer.setUpdateInterval(100);
     Magnetometer.addListener((data: MagnetometerMeasurement) => {
       const { x, y } = data;
-      let angle = Math.atan2(y, x) * (180 / Math.PI);
-      angle = angle >= 0 ? angle : angle + 360;
+      // atan2(x, y) gives the angle of the magnetic field from the device's
+      // forward (y) axis. Negate it to get the device's compass heading
+      // (where the device points, measured clockwise from magnetic north).
+      const angle = Math.atan2(x, y) * (180 / Math.PI);
       const compassHeading = (360 - angle) % 360;
       setHeading(compassHeading);
     });
   };
 
   const qiblaRotation = qiblaAngle !== null ? qiblaAngle - heading : 0;
-  const isAligned = qiblaAngle !== null && Math.abs(qiblaRotation % 360) < 10;
+  // Properly handle wrap-around near 0°/360° for alignment detection
+  const normalizedRotation = ((qiblaRotation % 360) + 360) % 360;
+  const isAligned = qiblaAngle !== null && (normalizedRotation < 10 || normalizedRotation > 350);
+
+  // Haptic feedback when aligning with Qibla
+  useEffect(() => {
+    if (isAligned && !wasAlignedRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    }
+    wasAlignedRef.current = isAligned;
+  }, [isAligned]);
 
   return (
     <View style={styles.container}>
@@ -306,10 +320,10 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: Theme.colors.cardBorder, minWidth: 90,
   },
   infoLabel: {
-    fontSize: 10, color: Theme.colors.textMuted, textTransform: 'uppercase',
+    fontSize: 10, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase',
     letterSpacing: 1.5, fontWeight: Theme.fontWeight.semibold, marginBottom: 2,
   },
-  infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: Theme.colors.textPrimary },
+  infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
 
   // Mosques Section
   mosquesSection: {

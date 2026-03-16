@@ -212,7 +212,7 @@ export default function SettingsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.settingLabel}>Azan Time</Text>
-                <Text style={styles.settingValue}>Version 1.0.0</Text>
+                <Text style={styles.settingValue}>Version 1.1.0</Text>
               </View>
             </View>
           </View>

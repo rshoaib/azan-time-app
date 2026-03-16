@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { PRAYER_CONFIG, Theme } from '@/constants/theme';
+import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
 import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  StatusBar,
-} from 'react-native';
+    DayLog,
+    getDayLog,
+    getStreak,
+    getWeekLog,
+    PrayerStatus,
+    setPrayerStatus,
+} from '@/services/storageService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { Theme, PRAYER_CONFIG } from '@/constants/theme';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  getDayLog,
-  setPrayerStatus,
-  getWeekLog,
-  getStreak,
-  DayLog,
-  PrayerStatus,
-} from '@/services/storageService';
+    Pressable,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 type TrackerPrayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 const TRACKER_PRAYERS: TrackerPrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -35,13 +36,15 @@ const statusLabel: Record<string, string> = {
 };
 
 export default function TrackerScreen() {
-  const [today] = useState(new Date());
+  const [today, setToday] = useState(new Date());
   const [dayLog, setDayLog] = useState<DayLog>({ fajr: null, dhuhr: null, asr: null, maghrib: null, isha: null });
   const [weekLog, setWeekLog] = useState<{ date: Date; log: DayLog }[]>([]);
   const [streak, setStreak] = useState(0);
 
   const loadData = async () => {
-    const [log, week, s] = await Promise.all([getDayLog(today), getWeekLog(), getStreak()]);
+    const now = new Date();
+    setToday(now);
+    const [log, week, s] = await Promise.all([getDayLog(now), getWeekLog(), getStreak()]);
     setDayLog(log);
     setWeekLog(week);
     setStreak(s);
@@ -189,6 +192,44 @@ export default function TrackerScreen() {
             </Text>
           </View>
         )}
+
+        {/* Achievements */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🏆 ACHIEVEMENTS</Text>
+          <View style={styles.achievementsGrid}>
+            {getUnlockedAchievements(streak).map((a) => {
+              const colors = TIER_COLORS[a.tier];
+              return (
+                <View key={a.id} style={[styles.achievementBadge, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+                  <Text style={styles.achievementEmoji}>{a.emoji}</Text>
+                  <Text style={[styles.achievementTitle, { color: colors.text }]}>{a.title}</Text>
+                  <Text style={styles.achievementDesc}>{a.description}</Text>
+                </View>
+              );
+            })}
+            {getUnlockedAchievements(streak).length === 0 && (
+              <View style={styles.noAchievements}>
+                <Text style={{ fontSize: 32 }}>🔒</Text>
+                <Text style={styles.noAchievementsText}>Pray consistently to unlock badges!</Text>
+              </View>
+            )}
+          </View>
+          {(() => {
+            const next = getNextAchievement(streak);
+            if (!next) return null;
+            const progress = Math.min(streak / next.requirement, 1);
+            return (
+              <View style={styles.nextAchievement}>
+                <Text style={styles.nextAchievementLabel}>Next: {next.emoji} {next.title} ({streak}/{next.requirement} days)</Text>
+                <View style={styles.progressBarBg}>
+                  <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+                </View>
+              </View>
+            );
+          })()}
+        </View>
+
+        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -209,8 +250,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Theme.colors.cardBorder,
   },
   statEmoji: { fontSize: 22, marginBottom: 4 },
-  statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: Theme.colors.textPrimary },
-  statLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 2 },
+  statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+  statLabel: { fontSize: Theme.fontSize.xs, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
 
   // Sections
   section: { paddingHorizontal: 20, marginBottom: 24 },
@@ -267,5 +308,18 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.gold + '10', borderRadius: Theme.borderRadius.lg,
     padding: 16, borderWidth: 1, borderColor: Theme.colors.gold + '20',
   },
-  motivationText: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldLight, flex: 1, fontWeight: Theme.fontWeight.medium },
+  motivationText: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldDark, flex: 1, fontWeight: Theme.fontWeight.medium },
+
+  // Achievements
+  achievementsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  achievementBadge: { width: '47%', borderRadius: Theme.borderRadius.lg, padding: 14, borderWidth: 1.5, alignItems: 'center' },
+  achievementEmoji: { fontSize: 28, marginBottom: 6 },
+  achievementTitle: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, textAlign: 'center' },
+  achievementDesc: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, textAlign: 'center', marginTop: 2 },
+  noAchievements: { width: '100%', alignItems: 'center', padding: 24, backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: Theme.colors.cardBorder },
+  noAchievementsText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: 8 },
+  nextAchievement: { marginTop: 14 },
+  nextAchievementLabel: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginBottom: 8, fontWeight: Theme.fontWeight.medium },
+  progressBarBg: { height: 8, backgroundColor: Theme.colors.surfaceDark, borderRadius: 4, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: Theme.colors.gold, borderRadius: 4 },
 });
