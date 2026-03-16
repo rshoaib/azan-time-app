@@ -35,8 +35,7 @@ export default function AdBanner({ style }: AdBannerProps) {
   const adUnitId = __DEV__
     ? TestIds.ADAPTIVE_BANNER
     : Platform.select({
-        // TODO: Insert your real Android ad unit ID below
-        android: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+        android: 'ca-app-pub-3166995085202346/9036572986',
         // TODO: Insert your real iOS ad unit ID below
         ios: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
         default: TestIds.ADAPTIVE_BANNER,
