@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hijri Date Converter — Gregorian to Islamic Date | Azan Time</title>
+<meta name="description" content="Free Hijri date converter. Convert Gregorian to Islamic Hijri date and back instantly. Today's date in the Islamic calendar, Ramadan, Hajj and Eid dates.">
+<meta name="keywords" content="hijri converter, gregorian to hijri, hijri to gregorian, islamic calendar, today hijri date, ramadan date converter, hijri date today, islamic date converter">
+
+<meta property="og:title" content="Hijri Date Converter — Gregorian ↔ Islamic Date">
+<meta property="og:description" content="Convert any Gregorian date to Hijri (Islamic) and back, instantly. Free, no signup.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://azantime.app/hijri-converter/">
+<meta property="og:image" content="https://azantime.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://azantime.app/og-image.png">
+
+<link rel="canonical" href="https://azantime.app/hijri-converter/">
+<link rel="stylesheet" href="../style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Hijri Date Converter",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "description": "Convert Gregorian dates to Hijri (Islamic) calendar dates and vice versa.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is today's Hijri date?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Today's Hijri date is shown above and updated automatically based on your device's date. The Islamic Hijri calendar is a lunar calendar with 12 months totaling about 354 days, so it shifts roughly 11 days earlier each Gregorian year."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate is this Hijri date converter?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The converter uses the Umm al-Qura calendar — the official Saudi Arabian astronomical calendar. Note that the actual start of a new Islamic month often depends on local moon-sighting (rouyat-e-hilal), so the exact day for Ramadan, Eid or Hajj may differ by ±1 day in your country."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the 12 Hijri months?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The 12 months are: Muharram, Safar, Rabi al-Awwal, Rabi al-Thani, Jumada al-Awwal, Jumada al-Thani, Rajab, Sha'ban, Ramadan, Shawwal, Dhu al-Qi'dah, and Dhu al-Hijjah."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When is Ramadan this year?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ramadan is the 9th month of the Hijri calendar. Use the converter above to find the Gregorian date corresponding to 1 Ramadan in any Hijri year. Exact start dates depend on local moon sighting."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+.converter-card {
+    max-width: 720px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(15, 24, 64, 0.08);
+    border: 1px solid var(--border);
+}
+.today-display {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #F0EDE6 0%, #E8DCAA 100%);
+    border-radius: 12px;
+    margin-bottom: 32px;
+}
+.today-display .label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; }
+.today-display .hijri  { font-size: 32px; font-weight: 800; color: var(--navy); margin: 8px 0; }
+.today-display .greg   { font-size: 16px; color: var(--text-muted); }
+.tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
+.tab-btn {
+    flex: 1; padding: 14px; background: none; border: none;
+    font-size: 15px; font-weight: 700; color: var(--text-muted);
+    cursor: pointer; border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); }
+.input-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.input-row label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+.input-row input, .input-row select {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 16px; background: #fff;
+}
+.convert-btn {
+    width: 100%; padding: 16px; background: var(--navy); color: #fff;
+    border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: background 0.2s;
+}
+.convert-btn:hover { background: #0F1840; }
+.result-box {
+    margin-top: 24px; padding: 24px; background: #F5F6FA;
+    border-radius: 10px; text-align: center; min-height: 80px;
+    display: flex; align-items: center; justify-content: center;
+}
+.result-box .out {
+    font-size: 24px; font-weight: 800; color: var(--navy);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.key-dates { margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border); }
+.key-dates h3 { font-size: 18px; margin-bottom: 16px; color: var(--navy); }
+.key-dates ul { list-style: none; padding: 0; }
+.key-dates li {
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; font-size: 15px;
+}
+.key-dates li:last-child { border-bottom: none; }
+.key-dates .name { font-weight: 600; color: var(--text); }
+.key-dates .date { color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+    <nav>
+        <div class="logo">🕌 <a href="/" style="color:#fff;">Azan Time</a></div>
+        <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/prayer-times/">Prayer Times</a></li>
+            <li><a href="/#download" class="cta">Download</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero-content">
+        <h1>Hijri Date Converter</h1>
+        <p class="sub">
+            Convert any Gregorian date to Hijri (Islamic) and back, instantly.<br>
+            Free, no signup, works offline once loaded.
+        </p>
+    </div>
+</header>
+
+<section>
+    <div class="converter-card">
+        <div class="today-display">
+            <div class="label">Today's Date</div>
+            <div class="hijri" id="today-hijri">Loading…</div>
+            <div class="greg" id="today-greg"></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="g2h">Gregorian → Hijri</button>
+            <button class="tab-btn" data-tab="h2g">Hijri → Gregorian</button>
+        </div>
+
+        <div class="tab-panel active" id="panel-g2h">
+            <div class="input-row">
+                <div>
+                    <label for="g-day">Day</label>
+                    <input type="number" id="g-day" min="1" max="31" value="1">
+                </div>
+                <div>
+                    <label for="g-month">Month</label>
+                    <select id="g-month">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="g-year">Year</label>
+                    <input type="number" id="g-year" min="1900" max="2200" value="2026">
+                </div>
+            </div>
+            <button class="convert-btn" onclick="convertG2H()">Convert to Hijri</button>
+            <div class="result-box"><span class="out" id="g2h-result">—</span></div>
+        </div>
+
+        <div class="tab-panel" id="panel-h2g">
+            <div class="input-row">
+                <div>
+                    <label for="h-day">Day</label>
+                    <input type="number" id="h-day" min="1" max="30" value="1">
+                </div>
+                <div>
+                    <label for="h-month">Month</label>
+                    <select id="h-month">
+                        <option value="1">Muharram</option>
+                        <option value="2">Safar</option>
+                        <option value="3">Rabi al-Awwal</option>
+                        <option value="4">Rabi al-Thani</option>
+                        <option value="5">Jumada al-Awwal</option>
+                        <option value="6">Jumada al-Thani</option>
+                        <option value="7">Rajab</option>
+                        <option value="8">Sha'ban</option>
+                        <option value="9" selected>Ramadan</option>
+                        <option value="10">Shawwal</option>
+                        <option value="11">Dhu al-Qi'dah</option>
+                        <option value="12">Dhu al-Hijjah</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="h-year">Year (AH)</label>
+                    <input type="number" id="h-year" min="1300" max="1600" value="1448">
+                </div>
+            </div>
+            <button class="convert-btn" onclick="convertH2G()">Convert to Gregorian</button>
+            <div class="result-box"><span class="out" id="h2g-result">—</span></div>
+        </div>
+
+        <div class="key-dates">
+            <h3>Key Islamic dates this year (approximate)</h3>
+            <ul id="key-dates"></ul>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 12px;">
+                Based on the Umm al-Qura calendar. Actual dates depend on local moon sighting and may vary by ±1 day.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section style="background: var(--cream); margin: 0; max-width: none;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 24px;">
+        <h2 style="text-align: left; margin-bottom: 24px;">About the Hijri Calendar</h2>
+        <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+            The Hijri (Islamic) calendar is a lunar calendar with 12 months totaling 354 or 355 days — about 11 days
+            shorter than the Gregorian year. That's why Ramadan, Hajj, Eid al-Fitr and Eid al-Adha shift earlier each
+            Gregorian year, cycling through all four seasons over roughly 33 years.
+        </p>
+        <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+            The calendar's epoch — 1 Muharram, year 1 AH — corresponds to 16 July 622 CE, the Hijra (migration) of the
+            Prophet Muhammad ﷺ from Makkah to Madinah. "AH" stands for Anno Hegirae, "in the year of the Hijra".
+        </p>
+        <p style="font-size: 16px; color: var(--text-muted);">
+            Most converters (this one included) use the Umm al-Qura tabular calendar — Saudi Arabia's official
+            astronomical reckoning. In practice, the start of each Hijri month is confirmed by local moon-sighting
+            committees, so calculated dates may differ from observed dates by ±1 day depending on your country.
+        </p>
+    </div>
+</section>
+
+<section style="background: var(--bg); margin: 0; max-width: none;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 24px;">
+        <h2 style="text-align: left; margin-bottom: 24px;">Frequently Asked Questions</h2>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">What is today's Hijri date?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Today's Hijri date is shown at the top of the page and updates automatically based on your device's
+                date. The Islamic calendar shifts roughly 11 days earlier each Gregorian year because it's lunar.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">How accurate is this converter?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                It uses the Umm al-Qura tabular calendar — Saudi Arabia's official astronomical reckoning. Actual
+                month starts in your country may differ by ±1 day depending on local moon sighting (rouyat-e-hilal).
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">What are the 12 Hijri months?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Muharram, Safar, Rabi al-Awwal, Rabi al-Thani, Jumada al-Awwal, Jumada al-Thani, Rajab, Sha'ban,
+                Ramadan, Shawwal, Dhu al-Qi'dah, and Dhu al-Hijjah.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">When is Ramadan this year?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Use the converter above to find the Gregorian date corresponding to 1 Ramadan in any Hijri year, or
+                check the key dates list. Exact start depends on moon sighting in your region.
+            </p>
+        </details>
+    </div>
+</section>
+
+<section id="download" class="download">
+    <h2>Get prayer times that match.</h2>
+    <p>Azan Time shows the live Hijri date alongside every prayer, with Ramadan countdowns built in. Free forever.</p>
+    <div class="badges">
+        <a href="https://play.google.com/store/apps/details?id=com.azantime.app" class="badge badge-android">Get for Android</a>
+        <span class="badge badge-soon" aria-disabled="true" title="Coming to iOS soon">iOS — Coming soon</span>
+    </div>
+</section>
+
+<footer>
+    <p><strong>Azan Time</strong> · Free Islamic tools · May Allah accept.</p>
+    <p>
+        <a href="/">Home</a> ·
+        <a href="/prayer-times/">Prayer Times</a> ·
+        <a href="/privacy/">Privacy</a>
+    </p>
+</footer>
+
+<script>
+/*
+ * Hijri ↔ Gregorian conversion using a well-known Julian Day Number algorithm
+ * (Kuwaiti / tabular variant, very close to Umm al-Qura for modern dates).
+ * No external dependency — works offline once loaded.
+ */
+function gregorianToJD(y, m, d) {
+    if (m <= 2) { y -= 1; m += 12; }
+    const A = Math.floor(y / 100);
+    const B = 2 - A + Math.floor(A / 4);
+    return Math.floor(365.25 * (y + 4716)) +
+           Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
+}
+
+function jdToGregorian(jd) {
+    jd = jd + 0.5;
+    const Z = Math.floor(jd);
+    let A;
+    if (Z < 2299161) {
+        A = Z;
+    } else {
+        const alpha = Math.floor((Z - 1867216.25) / 36524.25);
+        A = Z + 1 + alpha - Math.floor(alpha / 4);
+    }
+    const B = A + 1524;
+    const C = Math.floor((B - 122.1) / 365.25);
+    const D = Math.floor(365.25 * C);
+    const E = Math.floor((B - D) / 30.6001);
+    const day   = B - D - Math.floor(30.6001 * E);
+    const month = E < 14 ? E - 1 : E - 13;
+    const year  = month > 2 ? C - 4716 : C - 4715;
+    return { year, month, day };
+}
+
+function gregorianToHijri(gy, gm, gd) {
+    const jd = gregorianToJD(gy, gm, gd);
+    const l  = jd - 1948440 + 10632;
+    const n  = Math.floor((l - 1) / 10631);
+    const l2 = l - 10631 * n + 354;
+    const j  = (Math.floor((10985 - l2) / 5316)) * (Math.floor((50 * l2) / 17719))
+             + (Math.floor(l2 / 5670)) * (Math.floor((43 * l2) / 15238));
+    const l3 = l2 - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50))
+             - (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
+    const month = Math.floor((24 * l3) / 709);
+    const day   = l3 - Math.floor((709 * month) / 24);
+    const year  = 30 * n + j - 30;
+    return { year, month, day };
+}
+
+function hijriToGregorian(hy, hm, hd) {
+    const jd = Math.floor((11 * hy + 3) / 30) + 354 * hy + 30 * hm
+             - Math.floor((hm - 1) / 2) + hd + 1948440 - 385;
+    return jdToGregorian(jd);
+}
+
+const HIJRI_MONTHS = [
+    "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
+    "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+    "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"
+];
+const GREG_MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
+
+// Today display
+function showToday() {
+    const now = new Date();
+    const h = gregorianToHijri(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    document.getElementById('today-hijri').textContent =
+        `${h.day} ${HIJRI_MONTHS[h.month - 1]} ${h.year} AH`;
+    document.getElementById('today-greg').textContent =
+        now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Pre-fill year inputs
+    document.getElementById('g-year').value = now.getFullYear();
+    document.getElementById('h-year').value = h.year;
+}
+
+function convertG2H() {
+    const d = parseInt(document.getElementById('g-day').value, 10);
+    const m = parseInt(document.getElementById('g-month').value, 10);
+    const y = parseInt(document.getElementById('g-year').value, 10);
+    if (!d || !m || !y) {
+        document.getElementById('g2h-result').textContent = 'Please enter a valid date.';
+        return;
+    }
+    const h = gregorianToHijri(y, m, d);
+    document.getElementById('g2h-result').textContent =
+        `${h.day} ${HIJRI_MONTHS[h.month - 1]} ${h.year} AH`;
+}
+
+function convertH2G() {
+    const d = parseInt(document.getElementById('h-day').value, 10);
+    const m = parseInt(document.getElementById('h-month').value, 10);
+    const y = parseInt(document.getElementById('h-year').value, 10);
+    if (!d || !m || !y) {
+        document.getElementById('h2g-result').textContent = 'Please enter a valid date.';
+        return;
+    }
+    const g = hijriToGregorian(y, m, d);
+    const date = new Date(g.year, g.month - 1, g.day);
+    document.getElementById('h2g-result').textContent =
+        `${g.day} ${GREG_MONTHS[g.month - 1]} ${g.year} (${date.toLocaleDateString(undefined, { weekday: 'long' })})`;
+}
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + tab).classList.add('active');
+    });
+});
+
+// Key Islamic dates for the current Hijri year
+function showKeyDates() {
+    const now = new Date();
+    const h = gregorianToHijri(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    const hy = h.year;
+
+    const events = [
+        { name: "1 Muharram (Islamic New Year)",  m: 1,  d: 1  },
+        { name: "10 Muharram (Day of Ashura)",    m: 1,  d: 10 },
+        { name: "12 Rabi al-Awwal (Mawlid)",      m: 3,  d: 12 },
+        { name: "27 Rajab (Isra and Mi'raj)",     m: 7,  d: 27 },
+        { name: "1 Ramadan (start of fasting)",   m: 9,  d: 1  },
+        { name: "27 Ramadan (Laylat al-Qadr*)",   m: 9,  d: 27 },
+        { name: "1 Shawwal (Eid al-Fitr)",        m: 10, d: 1  },
+        { name: "9 Dhu al-Hijjah (Day of Arafah)",m: 12, d: 9  },
+        { name: "10 Dhu al-Hijjah (Eid al-Adha)", m: 12, d: 10 }
+    ];
+
+    const ul = document.getElementById('key-dates');
+    ul.innerHTML = events.map(e => {
+        const g = hijriToGregorian(hy, e.m, e.d);
+        const date = new Date(g.year, g.month - 1, g.day);
+        const greg = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        return `<li><span class="name">${e.name}</span><span class="date">${greg}</span></li>`;
+    }).join('');
+}
+
+showToday();
+showKeyDates();
+</script>
+
+</body>
+</html>
