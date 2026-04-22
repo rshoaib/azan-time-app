@@ -143,6 +143,21 @@ nav a.cta {
     color: #0F1840;
 }
 
+/* "Coming soon" — visually disabled, not clickable. Used for iOS until launch. */
+.badge-soon {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.55);
+    border: 1px dashed rgba(255,255,255,0.25);
+    cursor: not-allowed;
+}
+.badge-soon:hover { transform: none; }
+/* When the soon-badge appears on the cream-coloured download band, flip the colours so it's still legible */
+.download .badge-soon {
+    background: rgba(15,24,64,0.05);
+    color: rgba(15,24,64,0.45);
+    border: 1px dashed rgba(15,24,64,0.2);
+}
+
 /* Sections */
 section {
     max-width: 1100px;
@@ -248,28 +263,4 @@ section h2 {
 .download h2 { margin-bottom: 10px; }
 .download p {
     color: var(--text-muted);
-    font-size: 18px;
-    margin-bottom: 32px;
-}
-
-/* Footer */
-footer {
-    background: #0F1840;
-    color: rgba(255,255,255,0.7);
-    padding: 40px 24px;
-    text-align: center;
-    font-size: 14px;
-}
-
-footer p { margin-bottom: 8px; }
-footer a { color: var(--gold); margin: 0 4px; }
-
-/* Responsive */
-@media (max-width: 700px) {
-    .hero h1 { font-size: 40px; }
-    .hero .sub { font-size: 16px; }
-    nav ul { gap: 16px; }
-    nav ul li:not(:last-child) { display: none; }
-    section h2 { font-size: 28px; }
-    section { padding: 60px 20px; }
-}
+    font-size
