@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    TEMPLATE: Prayer times city page.
+    Replace Manchester, United Kingdom, 53.4808, -2.2426, manchester for each city.
+    Goal: rank for "prayer times Manchester", "azan time Manchester", "salah times Manchester".
+    Publish 1–2 per week. Aim for 50+ cities in 6 months.
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prayer Times in Manchester — Today's Azan, Fajr, Iftar | Azan Time</title>
+<meta name="description" content="Accurate prayer times for Manchester, United Kingdom. Today's Fajr, Dhuhr, Asr, Maghrib and Isha times — plus Suhoor and Iftar during Ramadan. Updated every 24 hours.">
+<meta name="keywords" content="prayer times Manchester, azan time Manchester, salah times Manchester, namaz time Manchester, fajr time Manchester, iftar time Manchester, suhoor time Manchester, ramadan Manchester">
+
+<meta property="og:title" content="Prayer Times in Manchester — Today's Azan Times">
+<meta property="og:description" content="Accurate daily prayer times for Manchester, United Kingdom.">
+<meta property="og:type" content="website">
+
+<link rel="canonical" href="https://azantime.app/prayer-times/manchester/">
+<link rel="stylesheet" href="../style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Prayer Times in Manchester",
+  "description": "Accurate daily prayer times for Manchester, United Kingdom.",
+  "about": {
+    "@type": "Place",
+    "name": "Manchester",
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "53.4808",
+      "longitude": "-2.2426"
+    }
+  }
+}
+</script>
+</head>
+<body>
+
+<header class="hero">
+    <nav>
+        <div class="logo">🕌 <a href="/" style="color:#fff;">Azan Time</a></div>
+        <ul>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/prayer-times/">Cities</a></li>
+            <li><a href="/#download" class="cta">Download</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero-content">
+        <h1>Prayer Times in Manchester</h1>
+        <p class="sub">
+            Accurate salah times for Manchester, United Kingdom. Calculated with the Muslim World League method.
+            <br>Updated daily. Download Azan Time for live azan alerts, Qibla compass and more.
+        </p>
+    </div>
+</header>
+
+<section>
+    <h2>Today's Prayer Times — Manchester</h2>
+
+    <div class="grid" style="max-width: 700px; margin: 0 auto;">
+        <article>
+            <span class="icon">🌅</span>
+            <h3>Fajr</h3>
+            <p><strong id="fajr-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+        </article>
+        <article>
+            <span class="icon">☀️</span>
+            <h3>Dhuhr</h3>
+            <p><strong id="dhuhr-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+        </article>
+        <article>
+            <span class="icon">🌤️</span>
+            <h3>Asr</h3>
+            <p><strong id="asr-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+        </article>
+        <article>
+            <span class="icon">🌆</span>
+            <h3>Maghrib</h3>
+            <p><strong id="maghrib-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+        </article>
+        <article>
+            <span class="icon">🌙</span>
+            <h3>Isha</h3>
+            <p><strong id="isha-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+        </article>
+    </div>
+
+    <p style="text-align:center; color: var(--text-muted); margin-top: 40px;">
+        Times shown in local Manchester time. Calculation method: Muslim World League.<br>
+        <em>For minute-by-minute accuracy across calculation methods, use the Azan Time app.</em>
+    </p>
+</section>
+
+<section style="background: var(--cream); margin: 0; max-width: none;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 24px;">
+        <h2 style="text-align: left; margin-bottom: 24px;">About Prayer Times in Manchester</h2>
+        <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+            Muslims in Manchester observe five daily prayers: Fajr before sunrise, Dhuhr after midday, Asr in the afternoon,
+            Maghrib at sunset, and Isha at night. The exact times vary slightly throughout the year based on the sun's
+            position and the calculation method used by your local masjid.
+        </p>
+        <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+            Azan Time supports 8 calculation methods commonly used across the Muslim world, including the Muslim World
+            League standard (default in United Kingdom and most global locations), ISNA (common in North America),
+            Umm al-Qura (Saudi Arabia), and Karachi (common in South Asia).
+        </p>
+        <p style="font-size: 16px; color: var(--text-muted);">
+            During Ramadan, the app also shows precise Suhoor and Iftar times for Manchester, with live countdowns so you
+            never miss sahur or rush for iftar.
+        </p>
+    </div>
+</section>
+
+<section id="download" class="download">
+    <h2>Get Live Azan Alerts for Manchester</h2>
+    <p>Download Azan Time — free forever. Adhan notifications, offline Qibla, duas and a streak tracker.</p>
+    <div class="badges">
+        <a href="https://play.google.com/store/apps/details?id=com.azantime.app" class="badge badge-android">Get for Android</a>
+        <span class="badge badge-soon" aria-disabled="true" title="Coming to iOS soon">iOS — Coming soon</span>
+    </div>
+</section>
+
+<footer>
+    <p><strong>Azan Time</strong> · Free prayer times for every city · May Allah accept.</p>
+    <p>
+        <a href="/">Home</a> ·
+        <a href="/prayer-times/">All cities</a> ·
+        <a href="/privacy/">Privacy</a>
+    </p>
+</footer>
+
+<!--
+    Client-side prayer time calculation.
+    Uses the `adhan` library (same one your app uses) via unpkg.
+    This is the entire SEO trick: Google indexes the city page, the
+    date is calculated on-the-fly, and the content is always fresh.
+-->
+<script src="https://unpkg.com/adhan@4.4.3/Adhan.js"></script>
+<script>
+    const LAT = 53.4808;
+    const LNG = -2.2426;
+
+    const coordinates = new adhan.Coordinates(LAT, LNG);
+    const params = adhan.CalculationMethod.MuslimWorldLeague();
+    const date = new Date();
+    const times = new adhan.PrayerTimes(coordinates, date, params);
+
+    function fmt(d) {
+        return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    document.getElementById('fajr-time').textContent = fmt(times.fajr);
+    document.getElementById('dhuhr-time').textContent = fmt(times.dhuhr);
+    document.getElementById('asr-time').textContent = fmt(times.asr);
+    document.getElementById('maghrib-time').textContent = fmt(times.maghrib);
+    document.getElementById('isha-time').textContent = fmt(times.isha);
+</script>
+
+</body>
+</html>
