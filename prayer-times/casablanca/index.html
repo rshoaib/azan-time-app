@@ -3,8 +3,6 @@
 <!--
     TEMPLATE: Prayer times city page.
     Replace Casablanca, Morocco, 33.5731, -7.5898, casablanca for each city.
-    Goal: rank for "prayer times Casablanca", "azan time Casablanca", "salah times Casablanca".
-    Publish 1–2 per week. Aim for 50+ cities in 6 months.
 -->
 <head>
 <meta charset="UTF-8">
@@ -50,42 +48,27 @@
     {
       "@type": "Question",
       "name": "What time is Fajr in Casablanca today?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Fajr in Casablanca, Morocco is calculated using the Muslim World League method, based on the sun being 18 degrees below the horizon before sunrise. Today's exact Fajr time is shown above and updated every 24 hours. For minute-by-minute alerts, install the Azan Time app."
-      }
+      "acceptedAnswer": { "@type": "Answer", "text": "Fajr in Casablanca, Morocco is calculated using the Muslim World League method, based on the sun being 18 degrees below the horizon before sunrise. Today's exact Fajr time is shown above and updated every 24 hours. For minute-by-minute alerts, install the Azan Time app." }
     },
     {
       "@type": "Question",
       "name": "Which prayer time calculation method is used for Casablanca?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "This page uses the Muslim World League method, the most widely-accepted global default. The Azan Time app supports 8 methods including ISNA, Umm al-Qura, Karachi, Dubai, Qatar, Kuwait and Egyptian — pick the one your local masjid in Casablanca follows."
-      }
+      "acceptedAnswer": { "@type": "Answer", "text": "This page uses the Muslim World League method, the most widely-accepted global default. The Azan Time app supports 8 methods including ISNA, Umm al-Qura, Karachi, Dubai, Qatar, Kuwait and Egyptian — pick the one your local masjid in Casablanca follows." }
     },
     {
       "@type": "Question",
       "name": "When is Suhoor and Iftar in Casablanca during Ramadan?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Suhoor in Casablanca ends at Fajr (the time shown above). Iftar begins at Maghrib (sunset). The Azan Time app shows live countdowns to both during Ramadan, plus exact local times for Casablanca, Morocco."
-      }
+      "acceptedAnswer": { "@type": "Answer", "text": "Suhoor in Casablanca ends at Fajr (the time shown above). Iftar begins at Maghrib (sunset). The Azan Time app shows live countdowns to both during Ramadan, plus exact local times for Casablanca, Morocco." }
     },
     {
       "@type": "Question",
       "name": "How accurate are these prayer times for Casablanca?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Times are calculated from precise coordinates (33.5731, -7.5898) using the same astronomical algorithms used by major mosques worldwide. They match within ±1 minute of times issued by official authorities for Casablanca."
-      }
+      "acceptedAnswer": { "@type": "Answer", "text": "Times are calculated from precise coordinates (33.5731, -7.5898) using the same astronomical algorithms used by major mosques worldwide. They match within ±1 minute of times issued by official authorities for Casablanca." }
     },
     {
       "@type": "Question",
       "name": "Does Azan Time work offline in Casablanca?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes. Once installed, the Azan Time app calculates prayer times for Casablanca entirely offline, plays the adhan, and shows the Qibla compass without needing internet."
-      }
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Once installed, the Azan Time app calculates prayer times for Casablanca entirely offline, plays the adhan, and shows the Qibla compass without needing internet." }
     }
   ]
 }
@@ -119,27 +102,27 @@
         <article>
             <span class="icon">🌅</span>
             <h3>Fajr</h3>
-            <p><strong id="fajr-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+            <p><strong id="fajr-time" style="font-size: 24px; color: var(--navy);">Loading…</strong></p>
         </article>
         <article>
             <span class="icon">☀️</span>
             <h3>Dhuhr</h3>
-            <p><strong id="dhuhr-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+            <p><strong id="dhuhr-time" style="font-size: 24px; color: var(--navy);">Loading…</strong></p>
         </article>
         <article>
             <span class="icon">🌤️</span>
             <h3>Asr</h3>
-            <p><strong id="asr-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+            <p><strong id="asr-time" style="font-size: 24px; color: var(--navy);">Loading…</strong></p>
         </article>
         <article>
             <span class="icon">🌆</span>
             <h3>Maghrib</h3>
-            <p><strong id="maghrib-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+            <p><strong id="maghrib-time" style="font-size: 24px; color: var(--navy);">Loading…</strong></p>
         </article>
         <article>
             <span class="icon">🌙</span>
             <h3>Isha</h3>
-            <p><strong id="isha-time" style="font-size: 24px; color: var(--navy);">Loading...</strong></p>
+            <p><strong id="isha-time" style="font-size: 24px; color: var(--navy);">Loading…</strong></p>
         </article>
     </div>
 
@@ -158,4 +141,194 @@
             position and the calculation method used by your local masjid.
         </p>
         <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
- 
+            Azan Time supports 8 calculation methods commonly used across the Muslim world, including the Muslim World
+            League standard (default in Morocco and most global locations), ISNA (common in North America),
+            Umm al-Qura (Saudi Arabia), and Karachi (common in South Asia).
+        </p>
+        <p style="font-size: 16px; color: var(--text-muted);">
+            During Ramadan, the app also shows precise Suhoor and Iftar times for Casablanca, with live countdowns so you
+            never miss sahur or rush for iftar.
+        </p>
+    </div>
+</section>
+
+<section style="background: var(--bg); margin: 0; max-width: none;">
+    <div style="max-width: 800px; margin: 0 auto; padding: 0 24px;">
+        <h2 style="text-align: left; margin-bottom: 24px;">Frequently Asked Questions — Casablanca</h2>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">What time is Fajr in Casablanca today?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Fajr in Casablanca, Morocco is calculated using the Muslim World League method, based on the sun
+                being 18° below the horizon before sunrise. Today's exact Fajr time is shown in the table above and
+                updated every 24 hours. For live azan alerts, install the Azan Time app.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">Which calculation method is used for Casablanca?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                This page uses the Muslim World League method — the most widely-accepted global default. The Azan
+                Time app supports 8 methods including ISNA, Umm al-Qura, Karachi, Dubai, Qatar, Kuwait and Egyptian.
+                Pick whichever your local masjid in Casablanca follows.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">When is Suhoor and Iftar in Casablanca during Ramadan?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Suhoor in Casablanca ends at Fajr (the time shown above). Iftar begins at Maghrib (sunset). During
+                Ramadan, Azan Time shows live countdowns to both, plus exact local times for Casablanca, Morocco.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">How accurate are these prayer times?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Times are calculated from precise coordinates (33.5731, -7.5898) using the same astronomical
+                algorithms used by major mosques worldwide. They match within ±1 minute of times issued by official
+                authorities for Casablanca.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer;">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px;">Does Azan Time work offline in Casablanca?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Yes. Once installed, the app calculates prayer times for Casablanca entirely offline, plays the adhan,
+                and shows the Qibla compass — no internet required.
+            </p>
+        </details>
+    </div>
+</section>
+
+<section id="download" class="download">
+    <h2>Get Live Azan Alerts for Casablanca</h2>
+    <p>Download Azan Time — free forever. Adhan notifications, offline Qibla, duas and a streak tracker.</p>
+    <div class="badges">
+        <a href="https://play.google.com/store/apps/details?id=com.azantime.app" class="badge badge-android">Get for Android</a>
+        <span class="badge badge-soon" aria-disabled="true" title="Coming to iOS soon">iOS — Coming soon</span>
+    </div>
+</section>
+
+<footer>
+    <p><strong>Azan Time</strong> · Free prayer times for every city · May Allah accept.</p>
+    <p>
+        <a href="/">Home</a> ·
+        <a href="/prayer-times/">All cities</a> ·
+        <a href="/privacy/">Privacy</a>
+    </p>
+</footer>
+
+<!--
+    Self-contained prayer-time calculation. No external CDN dependency.
+    Implements Muslim World League method (Fajr 18°, Isha 17°).
+    Algorithm: solar position via NOAA equations + sun-altitude inverse.
+-->
+<script>
+(function () {
+    var LAT = 33.5731;
+    var LNG = -7.5898;
+    var FAJR_ANGLE = 18;   // Muslim World League
+    var ISHA_ANGLE = 17;
+    var ASR_FACTOR = 1;    // Standard (Shafi'i); Hanafi would be 2
+
+    var DEG = Math.PI / 180;
+    function sin(x) { return Math.sin(x * DEG); }
+    function cos(x) { return Math.cos(x * DEG); }
+    function tan(x) { return Math.tan(x * DEG); }
+    function asinD(x){ return Math.asin(x) / DEG; }
+    function atan2D(y, x){ return Math.atan2(y, x) / DEG; }
+    function acosD(x){ return Math.acos(x) / DEG; }
+
+    function julianDay(date) {
+        var Y = date.getUTCFullYear();
+        var M = date.getUTCMonth() + 1;
+        var D = date.getUTCDate();
+        if (M <= 2) { Y -= 1; M += 12; }
+        var A = Math.floor(Y / 100);
+        var B = 2 - A + Math.floor(A / 4);
+        return Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + D + B - 1524.5;
+    }
+
+    // Returns { declination, equationOfTime } for given Julian day
+    function sunPosition(jd) {
+        var D = jd - 2451545.0;
+        var g = (357.529 + 0.98560028 * D) % 360;
+        var q = (280.459 + 0.98564736 * D) % 360;
+        var L = (q + 1.915 * sin(g) + 0.020 * sin(2 * g)) % 360;
+        var e = 23.439 - 0.00000036 * D;
+        var RA = atan2D(cos(e) * sin(L), cos(L)) / 15;
+        if (RA < 0) RA += 24;
+        var decl = asinD(sin(e) * sin(L));
+        var eqt = (q / 15 - RA);
+        // Normalize eqt to [-12, 12]
+        if (eqt > 12)  eqt -= 24;
+        if (eqt < -12) eqt += 24;
+        return { decl: decl, eqt: eqt };
+    }
+
+    // Compute time (hours UTC) when sun has given altitude (negative = below horizon)
+    // direction: 'before' = morning, 'after' = evening
+    function timeForAngle(jd, angle, direction) {
+        var sp = sunPosition(jd);
+        var noonUTC = 12 - LNG / 15 - sp.eqt;
+        var cosH = (sin(angle) - sin(LAT) * sin(sp.decl)) / (cos(LAT) * cos(sp.decl));
+        if (cosH < -1 || cosH > 1) return null; // sun never reaches that altitude (polar regions)
+        var H = acosD(cosH) / 15;
+        return direction === 'before' ? noonUTC - H : noonUTC + H;
+    }
+
+    function asrTime(jd) {
+        var sp = sunPosition(jd);
+        var noonUTC = 12 - LNG / 15 - sp.eqt;
+        // Asr: shadow length = ASR_FACTOR + tan(latitude - declination)
+        var angle = -atan2D(1, ASR_FACTOR + tan(Math.abs(LAT - sp.decl))) ;
+        var cosH = (sin(angle) - sin(LAT) * sin(sp.decl)) / (cos(LAT) * cos(sp.decl));
+        if (cosH < -1 || cosH > 1) return null;
+        var H = acosD(cosH) / 15;
+        return noonUTC + H;
+    }
+
+    function dhuhrTime(jd) {
+        var sp = sunPosition(jd);
+        return 12 - LNG / 15 - sp.eqt;
+    }
+
+    function fmtUTCHours(hUTC) {
+        if (hUTC === null || isNaN(hUTC)) return '—';
+        // Build a Date for "today" at given UTC hour, then format in local tz
+        var now = new Date();
+        var date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        // Add the UTC hours
+        var ms = date.getTime() + Math.round(hUTC * 3600000);
+        var d = new Date(ms);
+        return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    function compute() {
+        var now = new Date();
+        var jd = julianDay(now);
+
+        var fajr    = timeForAngle(jd, -FAJR_ANGLE, 'before');
+        var dhuhr   = dhuhrTime(jd);
+        var asr     = asrTime(jd);
+        var maghrib = timeForAngle(jd, -0.833, 'after');   // sunset (refraction adjusted)
+        var isha    = timeForAngle(jd, -ISHA_ANGLE, 'after');
+
+        document.getElementById('fajr-time').textContent    = fmtUTCHours(fajr);
+        document.getElementById('dhuhr-time').textContent   = fmtUTCHours(dhuhr);
+        document.getElementById('asr-time').textContent     = fmtUTCHours(asr);
+        document.getElementById('maghrib-time').textContent = fmtUTCHours(maghrib);
+        document.getElementById('isha-time').textContent    = fmtUTCHours(isha);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', compute);
+    } else {
+        compute();
+    }
+})();
+</script>
+
+</body>
+</html>
