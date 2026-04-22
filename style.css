@@ -1,0 +1,275 @@
+/* Azan Time — marketing site stylesheet
+ * Single file, no preprocessor, no build step.
+ * Drop onto GitHub Pages or any static host. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --gold: #D4AF37;
+    --gold-dark: #B8932D;
+    --navy: #1A2C6B;
+    --emerald: #0D9488;
+    --cream: #F0EDE6;
+    --bg: #F5F6FA;
+    --text: #1A1A1A;
+    --text-muted: #5C5C5C;
+    --border: #E5E7EB;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-weight: 800; letter-spacing: -0.01em; }
+
+a { color: var(--gold-dark); text-decoration: none; }
+a:hover { color: var(--gold); }
+
+/* Hero */
+.hero {
+    background: linear-gradient(160deg, #0F1840 0%, #1A2C6B 100%);
+    color: #FFFFFF;
+    padding: 0 0 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '﷽';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 600px;
+    color: rgba(212, 175, 55, 0.03);
+    pointer-events: none;
+}
+
+nav {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: #FFFFFF;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 28px;
+    align-items: center;
+}
+
+nav a {
+    color: rgba(255,255,255,0.85);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+nav a:hover { color: var(--gold); }
+
+nav a.cta {
+    background: var(--gold);
+    color: #0F1840;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.hero-content {
+    max-width: 700px;
+    margin: 80px auto 0;
+    text-align: center;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero h1 {
+    font-size: 64px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+}
+
+.hero .sub {
+    font-size: 20px;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 40px;
+}
+
+.badges {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: var(--gold);
+    color: #0F1840;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.15s ease;
+}
+
+.badge:hover {
+    transform: translateY(-1px);
+    color: #0F1840;
+}
+
+.badge-android {
+    background: #FFFFFF;
+    color: #0F1840;
+}
+
+/* Sections */
+section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 24px;
+}
+
+section h2 {
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--navy);
+}
+
+/* Feature grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.grid article {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.grid article:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.grid .icon {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.grid h3 {
+    font-size: 18px;
+    color: var(--navy);
+    margin-bottom: 8px;
+}
+
+.grid p {
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+/* Cities */
+.cities { background: var(--cream); margin: 0; max-width: none; }
+.cities h2 { max-width: 1100px; margin: 0 auto 10px; }
+.cities-sub {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 16px;
+    margin-bottom: 40px;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px;
+}
+
+.city-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.city-grid li a {
+    display: block;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: var(--navy);
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.15s;
+}
+
+.city-grid li a:hover {
+    background: var(--gold);
+    color: #0F1840;
+    border-color: var(--gold);
+}
+
+/* Download CTA */
+.download {
+    text-align: center;
+    background: linear-gradient(160deg, #F0EDE6 0%, #E8E4DB 100%);
+    margin: 0;
+    max-width: none;
+    padding: 100px 24px;
+}
+
+.download h2 { margin-bottom: 10px; }
+.download p {
+    color: var(--text-muted);
+    font-size: 18px;
+    margin-bottom: 32px;
+}
+
+/* Footer */
+footer {
+    background: #0F1840;
+    color: rgba(255,255,255,0.7);
+    padding: 40px 24px;
+    text-align: center;
+    font-size: 14px;
+}
+
+footer p { margin-bottom: 8px; }
+footer a { color: var(--gold); margin: 0 4px; }
+
+/* Responsive */
+@media (max-width: 700px) {
+    .hero h1 { font-size: 40px; }
+    .hero .sub { font-size: 16px; }
+    nav ul { gap: 16px; }
+    nav ul li:not(:last-child) { display: none; }
+    section h2 { font-size: 28px; }
+    section { padding: 60px 20px; }
+}
