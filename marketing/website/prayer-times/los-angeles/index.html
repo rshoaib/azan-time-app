@@ -282,7 +282,8 @@
         var sp = sunPosition(jd);
         var noonUTC = 12 - LNG / 15 - sp.eqt;
         // Asr: shadow length = ASR_FACTOR + tan(latitude - declination)
-        var angle = -atan2D(1, ASR_FACTOR + tan(Math.abs(LAT - sp.decl))) ;
+        // Sun is ABOVE horizon at Asr — altitude angle is positive
+        var angle = atan2D(1, ASR_FACTOR + tan(Math.abs(LAT - sp.decl))) ;
         var cosH = (sin(angle) - sin(LAT) * sin(sp.decl)) / (cos(LAT) * cos(sp.decl));
         if (cosH < -1 || cosH > 1) return null;
         var H = acosD(cosH) / 15;
@@ -330,5 +331,25 @@
 })();
 </script>
 
+<section id="download" class="download">
+    <h2>Take prayer times with you.</h2>
+    <p>Live azan notifications, offline Qibla, duas and a streak tracker. Free forever.</p>
+    <div class="badges">
+        <a href="https://play.google.com/store/apps/details?id=com.azantime.app" class="badge badge-android">Get for Android</a>
+        <span class="badge badge-soon" aria-disabled="true" title="Coming to iOS soon">iOS — Coming soon</span>
+    </div>
+</section>
+
+<footer>
+    <p><strong>Azan Time</strong> &middot; Free prayer times for Los Angeles &middot; May Allah accept.</p>
+    <p>
+        <a href="/">Home</a> &middot;
+        <a href="/prayer-times/">All Cities</a> &middot;
+        <a href="/blog/">Blog</a> &middot;
+        <a href="/privacy/">Privacy</a>
+    </p>
+</footer>
+
 </body>
 </html>
+                                                                
