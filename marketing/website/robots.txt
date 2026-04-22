@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://azantime.app/sitemap.xml

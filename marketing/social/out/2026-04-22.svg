@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#0F1840"/>
+            <stop offset="1" stop-color="#1A2C6B"/>
+        </linearGradient>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="12" result="blur"/>
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Background -->
+    <rect width="1080" height="1080" fill="url(#bg)"/>
+
+    <!-- Faint calligraphy watermark ﷽ -->
+    <text x="540" y="720" text-anchor="middle"
+          font-family="Amiri, Arial, serif" font-size="520"
+          fill="#D4AF37" opacity="0.05">﷽</text>
+
+    <!-- Decorative border -->
+    <rect x="40" y="40" width="1000" height="1000" fill="none"
+          stroke="#D4AF37" stroke-width="2" rx="24"/>
+    <rect x="56" y="56" width="968" height="968" fill="none"
+          stroke="#D4AF37" stroke-width="0.5" rx="20"/>
+
+    <!-- Header: Bismillah -->
+    <text x="540" y="200" text-anchor="middle"
+          font-family="Amiri, Arial, serif" font-size="60"
+          fill="#D4AF37">﷽</text>
+
+    <!-- Arabic text -->
+    <text x="540" y="340" text-anchor="middle"
+          font-family="Amiri, 'Traditional Arabic', Arial, serif"
+          font-size="52" fill="#FFFFFF" direction="rtl">فَفِرُّوا إِلَى اللَّهِ</text>
+
+    <!-- Translation -->
+    <text x="540" y="420" text-anchor="middle"
+          font-family="Georgia, 'Times New Roman', serif"
+          font-size="30" fill="rgba(255,255,255,0.92)"
+          font-style="italic"><tspan x="540" dy="0">So flee to Allah.</tspan></text>
+
+    <!-- Reference -->
+    <text x="540" y="532" text-anchor="middle"
+          font-family="Georgia, serif" font-size="24"
+          fill="#D4AF37" font-weight="700">— Surah Adh-Dhariyat 51:50</text>
+
+    <!-- Bottom: logo and handle -->
+    <text x="540" y="980" text-anchor="middle"
+          font-family="-apple-system, Arial, sans-serif"
+          font-size="22" fill="rgba(255,255,255,0.6)">
+        🕌 Azan Time  ·  azantime.app
+    </text>
+</svg>

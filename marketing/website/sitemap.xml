@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Sitemap for azantime.app
+    Regenerate city URLs when cities.json changes — or write a tiny Node script to do it.
+    Submit this to Google Search Console after the first deploy.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://azantime.app/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>https://azantime.app/prayer-times/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://azantime.app/blog/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://azantime.app/privacy/</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.3</priority>
+    </url>
+
+    <!-- City pages — regenerate this block from cities.json when adding cities -->
+    <url><loc>https://azantime.app/prayer-times/mecca/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/medina/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/jakarta/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/istanbul/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/cairo/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/karachi/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/dhaka/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/dubai/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/kuala-lumpur/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/london/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/new-york/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/toronto/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/riyadh/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/lahore/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/doha/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/kuwait-city/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/amman/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/casablanca/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/lagos/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/paris/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/berlin/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>https://azantime.app/prayer-times/sydney/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+</urlset>

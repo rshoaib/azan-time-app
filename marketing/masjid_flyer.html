@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Azan Time — Masjid Flyer</title>
+<!--
+    Masjid flyer (A4 portrait, print-ready).
+    How to use:
+      1. Open this file in Chrome / Safari / Edge
+      2. File → Print → Save as PDF (A4, portrait, no margins)
+      3. Send the PDF to masjid admins
+      4. Can also be printed and pinned on noticeboards
+    The QR codes are generated client-side via qrcode.js (pulled from a CDN)
+    so there's nothing to compile.
+-->
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+
+    html, body {
+        font-family: 'Georgia', 'Amiri', serif;
+        background: #F5F6FA;
+        color: #1A1A1A;
+    }
+
+    .flyer {
+        width: 210mm;
+        height: 297mm;
+        margin: 0 auto;
+        background: linear-gradient(160deg, #FFFFFF 0%, #F5F6FA 100%);
+        padding: 20mm 18mm;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Decorative border */
+    .flyer::before {
+        content: '';
+        position: absolute;
+        top: 10mm; left: 10mm; right: 10mm; bottom: 10mm;
+        border: 1.5px solid #D4AF37;
+        border-radius: 4mm;
+        pointer-events: none;
+    }
+    .flyer::after {
+        content: '';
+        position: absolute;
+        top: 12mm; left: 12mm; right: 12mm; bottom: 12mm;
+        border: 0.5px solid #D4AF37;
+        border-radius: 3mm;
+        pointer-events: none;
+    }
+
+    /* Bismillah */
+    .bismillah {
+        text-align: center;
+        font-size: 44pt;
+        color: #D4AF37;
+        margin-bottom: 4mm;
+        line-height: 1;
+    }
+
+    /* App name */
+    h1 {
+        text-align: center;
+        font-size: 38pt;
+        font-weight: 900;
+        color: #1A2C6B;
+        letter-spacing: 1px;
+        margin-bottom: 2mm;
+    }
+
+    .tagline {
+        text-align: center;
+        font-size: 14pt;
+        color: #5C5C5C;
+        font-style: italic;
+        margin-bottom: 10mm;
+    }
+
+    /* Feature grid */
+    .features {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6mm;
+        margin-bottom: 10mm;
+    }
+
+    .feature {
+        display: flex;
+        gap: 4mm;
+        align-items: flex-start;
+    }
+
+    .feature-icon {
+        font-size: 20pt;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    .feature-content h3 {
+        font-size: 12pt;
+        font-weight: 700;
+        color: #1A2C6B;
+        margin-bottom: 1mm;
+    }
+
+    .feature-content p {
+        font-size: 10pt;
+        color: #4A4A4A;
+        line-height: 1.4;
+    }
+
+    /* QR section */
+    .qr-section {
+        border-top: 1px dashed #D4AF37;
+        padding-top: 8mm;
+        margin-top: 6mm;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10mm;
+    }
+
+    .qr-block {
+        text-align: center;
+    }
+
+    .qr-block canvas,
+    .qr-block img {
+        margin: 0 auto 3mm;
+        display: block;
+        border: 4px solid #FFFFFF;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .qr-store-name {
+        font-size: 11pt;
+        font-weight: 700;
+        color: #1A2C6B;
+        margin-bottom: 1mm;
+    }
+
+    .qr-caption {
+        font-size: 9pt;
+        color: #6A6A6A;
+    }
+
+    /* Footer */
+    .footer {
+        position: absolute;
+        bottom: 14mm;
+        left: 18mm;
+        right: 18mm;
+        text-align: center;
+        font-size: 9pt;
+        color: #7A7A7A;
+        line-height: 1.5;
+    }
+
+    .footer strong {
+        color: #D4AF37;
+        font-size: 10pt;
+    }
+
+    /* Arabic calligraphy watermark */
+    .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 240pt;
+        color: rgba(212, 175, 55, 0.04);
+        pointer-events: none;
+        line-height: 1;
+        z-index: 0;
+    }
+
+    .flyer > * {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+</head>
+<body>
+
+<div class="flyer">
+
+    <!-- Faint Arabic calligraphy watermark -->
+    <div class="watermark">﷽</div>
+
+    <div class="bismillah">﷽</div>
+
+    <h1>AZAN TIME</h1>
+    <p class="tagline">A prayer companion built for the ummah.</p>
+
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">🕌</div>
+            <div class="feature-content">
+                <h3>Accurate Prayer Times</h3>
+                <p>For every city on Earth. 8 calculation methods including Muslim World League, ISNA, Umm al-Qura.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🧭</div>
+            <div class="feature-content">
+                <h3>Qibla Compass</h3>
+                <p>Find the direction to Makkah from anywhere. Works completely offline.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🔔</div>
+            <div class="feature-content">
+                <h3>Authentic Adhan</h3>
+                <p>Real adhan audio for every prayer. Customizable notifications that never miss a salah.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">📖</div>
+            <div class="feature-content">
+                <h3>Duas &amp; Adhkar</h3>
+                <p>Morning and evening adhkar, daily duas, digital tasbih counter — all in one place.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🌙</div>
+            <div class="feature-content">
+                <h3>Ramadan Ready</h3>
+                <p>Live Suhoor &amp; Iftar countdowns. Automatic detection of Ramadan via Hijri calendar.</p>
+            </div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🏆</div>
+            <div class="feature-content">
+                <h3>Prayer Tracker</h3>
+                <p>Build consistency. Track your streak, unlock milestones, build the habit of salah.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="qr-section">
+        <div class="qr-block">
+            <div id="qr-ios"></div>
+            <div class="qr-store-name">📱 iOS — App Store</div>
+            <div class="qr-caption">Scan with iPhone camera</div>
+        </div>
+        <div class="qr-block">
+            <div id="qr-android"></div>
+            <div class="qr-store-name">🤖 Android — Play Store</div>
+            <div class="qr-caption">Scan with Android camera</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Free forever.</strong> No subscription. No tracking. No ads between prayers.<br>
+        Built with love for the ummah. May Allah accept.<br>
+        <span style="opacity: 0.6;">azantime.app · support@azantime.app</span>
+    </div>
+
+</div>
+
+<!-- qrcode.js from CDN — generates QR codes client-side. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // Update these URLs with your real store links before printing.
+    const IOS_URL = 'https://apps.apple.com/app/azan-time/id0000000000';
+    const ANDROID_URL = 'https://play.google.com/store/apps/details?id=com.azantime.app';
+
+    new QRCode(document.getElementById('qr-ios'), {
+        text: IOS_URL,
+        width: 140,
+        height: 140,
+        colorDark: '#1A2C6B',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M,
+    });
+
+    new QRCode(document.getElementById('qr-android'), {
+        text: ANDROID_URL,
+        width: 140,
+        height: 140,
+        colorDark: '#1A472A',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M,
+    });
+</script>
+
+</body>
+</html>
