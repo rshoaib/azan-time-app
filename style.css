@@ -263,4 +263,28 @@ section h2 {
 .download h2 { margin-bottom: 10px; }
 .download p {
     color: var(--text-muted);
-    font-size
+    font-size: 18px;
+    margin-bottom: 32px;
+}
+
+/* Footer */
+footer {
+    background: #0F1840;
+    color: rgba(255,255,255,0.7);
+    padding: 40px 24px;
+    text-align: center;
+    font-size: 14px;
+}
+
+footer p { margin-bottom: 8px; }
+footer a { color: var(--gold); margin: 0 4px; }
+
+/* Responsive */
+@media (max-width: 700px) {
+    .hero h1 { font-size: 40px; }
+    .hero .sub { font-size: 16px; }
+    nav ul { gap: 16px; }
+    nav ul li:not(:last-child) { display: none; }
+    section h2 { font-size: 28px; }
+    section { padding: 60px 20px; }
+}

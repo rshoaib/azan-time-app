@@ -9,7 +9,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prayer Times in {{CITY}} — Today's Azan, Fajr, Iftar | Azan Time</title>
 <meta name="description" content="Accurate prayer times for {{CITY}}, {{COUNTRY}}. Today's Fajr, Dhuhr, Asr, Maghrib and Isha times — plus Suhoor and Iftar during Ramadan. Updated every 24 hours.">
-<meta name="keywords" content="prayer times {{CITY}}, azan time {{CITY}}, salah times {{CITY}}, namaz time {{CITY}}, fajr time {{CITY}}, iftar time {{CITY}}, suhoor time {{CITY}}, ramadan {{CITY}}">
+
+<!-- Performance: preconnect to Google Play -->
+<link rel="preconnect" href="https://play.google.com">
+<link rel="dns-prefetch" href="https://play.google.com">
 
 <meta property="og:title" content="Prayer Times in {{CITY}} — Today's Azan Times">
 <meta property="og:description" content="Accurate daily prayer times for {{CITY}}, {{COUNTRY}}.">
@@ -69,6 +72,35 @@
       "@type": "Question",
       "name": "Does Azan Time work offline in {{CITY}}?",
       "acceptedAnswer": { "@type": "Answer", "text": "Yes. Once installed, the Azan Time app calculates prayer times for {{CITY}} entirely offline, plays the adhan, and shows the Qibla compass without needing internet." }
+    }
+  ]
+}
+</script>
+
+<!-- BreadcrumbList — gives Google a nav trail like Home > Prayer Times > {{CITY}}
+     which renders as breadcrumb pills in search results (better CTR). -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://azantime.app/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Prayer Times",
+      "item": "https://azantime.app/prayer-times/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{CITY}}",
+      "item": "https://azantime.app/prayer-times/{{SLUG}}/"
     }
   ]
 }
@@ -211,10 +243,11 @@
 </section>
 
 <footer>
-    <p><strong>Azan Time</strong> · Free prayer times for every city · May Allah accept.</p>
+    <p><strong>Azan Time</strong> · Free prayer times for {{CITY}} · May Allah accept.</p>
     <p>
         <a href="/">Home</a> ·
-        <a href="/prayer-times/">All cities</a> ·
+        <a href="/prayer-times/">All Cities</a> ·
+        <a href="/blog/">Blog</a> ·
         <a href="/privacy/">Privacy</a>
     </p>
 </footer>
@@ -331,25 +364,5 @@
 })();
 </script>
 
-<section id="download" class="download">
-    <h2>Take prayer times with you.</h2>
-    <p>Live azan notifications, offline Qibla, duas and a streak tracker. Free forever.</p>
-    <div class="badges">
-        <a href="https://play.google.com/store/apps/details?id=com.azantime.app" class="badge badge-android">Get for Android</a>
-        <span class="badge badge-soon" aria-disabled="true" title="Coming to iOS soon">iOS — Coming soon</span>
-    </div>
-</section>
-
-<footer>
-    <p><strong>Azan Time</strong> &middot; Free prayer times for {{CITY}} &middot; May Allah accept.</p>
-    <p>
-        <a href="/">Home</a> &middot;
-        <a href="/prayer-times/">All Cities</a> &middot;
-        <a href="/blog/">Blog</a> &middot;
-        <a href="/privacy/">Privacy</a>
-    </p>
-</footer>
-
 </body>
 </html>
-                                                                
