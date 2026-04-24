@@ -58,4 +58,13 @@ That's the whole deploy. First index by Google: 48–72 hours.
 ## AdMob verification (post-deploy)
 
 1. In Google Play Console → Store listing → set **Website** = `https://azantime.app`. Save and publish the listing change.
-2. In AdMob → Apps → Azan Time → App settings → re-run app verification (it should now find the developer we
+2. In AdMob → Apps → Azan Time → App settings → re-run app verification (it should now find the developer website).
+3. In AdMob → Settings → app-ads.txt → click **Check status**. Once `https://azantime.app/app-ads.txt` is live and AdMob has crawled it (usually within 24h), the badge flips to **Authorized**.
+4. After both verifications pass, the "Limited ad serving" cap is fully lifted and programmatic exchanges that require app-ads.txt will start bidding.
+
+## SEO notes
+
+- Every per-city page has its own `<title>`, `<meta description>`, and schema.org `WebPage` entity with GeoCoordinates — this is what Google needs to rank local-intent queries.
+- Prayer times update client-side from the `adhan` library — the page content "refreshes daily" from Google's perspective because the visible text changes every day.
+- The sitemap uses `changefreq=daily` on city pages to nudge re-crawl frequency.
+- All internal linking uses trailing slashes (`/prayer-times/mecca/`) to avoid duplicate-content penalties.

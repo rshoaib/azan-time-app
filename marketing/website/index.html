@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Last updated: 2026-04-24 — SEO revamp: structured data, FAQPage, country hubs -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Azan Time — Free Prayer Times, Adhan & Qibla App</title>
 <meta name="description" content="Accurate prayer times for every city. Authentic azan notifications, offline Qibla compass, duas, tasbih and prayer tracker. Free for iOS &amp; Android.">
-<meta name="keywords" content="prayer times, azan, adhan, qibla, salah, namaz, muslim app, ramadan, suhoor, iftar, hijri calendar, tasbih, dua, islamic app">
+
+<!-- Performance: preconnect to Google Play so the download badge navigates faster -->
+<link rel="preconnect" href="https://play.google.com">
+<link rel="dns-prefetch" href="https://play.google.com">
 
 <!-- Open Graph -->
 <meta property="og:title" content="Azan Time — Free Prayer Times, Adhan & Qibla App">
@@ -13,27 +17,148 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://azantime.app">
 <meta property="og:image" content="https://azantime.app/og-image.png">
+<meta property="og:site_name" content="Azan Time">
+<meta property="og:locale" content="en_US">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Azan Time — Free Prayer Times &amp; Qibla App">
 <meta name="twitter:description" content="Accurate prayer times, authentic azan, offline Qibla. Free forever.">
+<meta name="twitter:image" content="https://azantime.app/og-image.png">
 
-<!-- Schema.org structured data — helps Google show rich results.
-     Note: aggregateRating intentionally omitted until we have real Play Store reviews to cite. -->
+<!-- Structured data — Organization + WebSite + MobileApplication in one @graph. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "MobileApplication",
-  "name": "Azan Time",
-  "operatingSystem": "Android",
-  "applicationCategory": "LifestyleApplication",
-  "downloadUrl": "https://play.google.com/store/apps/details?id=com.azantime.app",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://azantime.app/#organization",
+      "name": "Azan Time",
+      "url": "https://azantime.app/",
+      "logo": "https://azantime.app/og-image.png",
+      "sameAs": [
+        "https://play.google.com/store/apps/details?id=com.azantime.app"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://azantime.app/#website",
+      "url": "https://azantime.app/",
+      "name": "Azan Time",
+      "description": "Free prayer times, adhan and Qibla app for every city.",
+      "inLanguage": "en",
+      "publisher": { "@id": "https://azantime.app/#organization" }
+    },
+    {
+      "@type": "MobileApplication",
+      "@id": "https://azantime.app/#app",
+      "name": "Azan Time",
+      "operatingSystem": "Android",
+      "applicationCategory": "LifestyleApplication",
+      "description": "Accurate prayer times for every city. Authentic azan notifications, offline Qibla compass, duas, tasbih and prayer streak tracker. Free forever.",
+      "image": "https://azantime.app/og-image.png",
+      "author": { "@id": "https://azantime.app/#organization" },
+      "publisher": { "@id": "https://azantime.app/#organization" },
+      "downloadUrl": "https://play.google.com/store/apps/details?id=com.azantime.app",
+      "installUrl": "https://play.google.com/store/apps/details?id=com.azantime.app",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  ]
+}
+</script>
+
+<!-- FAQPage schema — eligible for rich result FAQ snippet in Google SERPs. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are the 5 daily prayer times in Islam?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The five daily prayers (salah) are Fajr before sunrise, Dhuhr after midday, Asr in the late afternoon, Maghrib at sunset, and Isha at night. Exact times are determined by the sun's position and vary daily based on your location."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Azan Time calculate accurate prayer times?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Azan Time uses precise astronomical algorithms based on your exact GPS coordinates, with 8 widely-accepted calculation methods including Muslim World League, ISNA, Umm al-Qura, Karachi, Dubai, Qatar, Kuwait and Egyptian. Times match official masjid times within plus or minus 1 minute."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Azan Time really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — completely free, forever. No subscription, no in-app purchases, no account required. A single small banner ad appears at the bottom of the screen; no ads interrupt the adhan or Qibla compass."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Qibla compass work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Once the app has your location, the Qibla compass works entirely offline using your phone's magnetometer. It points to the Kaaba in Makkah from anywhere in the world."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I choose a different azan reciter?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Azan Time includes authentic adhan audio from multiple well-known reciters. You can also set advance notifications up to 30 minutes before each prayer, plus a silent mode for Dhuhr at work."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which prayer time calculation method should I choose?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pick whichever your local masjid follows. Muslim World League is the common global default. In Saudi Arabia, Umm al-Qura is standard. In Pakistan, India, Bangladesh and Afghanistan, Karachi is common. In North America, ISNA is widely used. Azan Time defaults based on your country but you can override it any time."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Azan Time support Suhoor and Iftar countdowns during Ramadan?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. During Ramadan, the app automatically detects the Hijri date and shows live Suhoor (end at Fajr) and Iftar (at Maghrib) countdowns. You can also enable a pre-Iftar notification to start preparing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will Azan Time drain my phone battery?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Prayer times are calculated once per day then cached, so there is no constant GPS polling. Battery use is negligible — typically less than 1% per day even with all 5 azan notifications enabled."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Azan Time available on iOS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Azan Time is currently available on Android via Google Play. An iOS version is in development. You can follow progress on azantime.app or check back for a launch announcement."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate is the Hijri calendar in the app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Azan Time uses the Umm al-Qura Hijri calendar as a base, with optional moon-sighting adjustments for regions where the local authority follows physical sighting. Dates typically match official announcements on the same day."
+      }
+    }
+  ]
 }
 </script>
 
@@ -50,12 +175,13 @@
             <li><a href="/prayer-times/">Prayer Times</a></li>
             <li><a href="/hijri-converter/">Hijri Converter</a></li>
             <li><a href="/blog/">Blog</a></li>
+            <li><a href="#faq">FAQ</a></li>
             <li><a href="#download" class="cta">Download</a></li>
         </ul>
     </nav>
 
     <div class="hero-content">
-        <h1>Never miss a prayer.</h1>
+        <h1>Azan Time — Never miss a prayer.</h1>
         <p class="sub">
             Accurate prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker —
             in one clean app. Free forever, no subscription.
@@ -127,6 +253,92 @@
     <p style="text-align:center; margin-top: 24px;">
         <a href="/prayer-times/" style="font-weight: 600;">View all 42 cities →</a>
     </p>
+
+    <h3 style="text-align: center; margin-top: 40px; font-size: 18px; color: var(--text-muted);">Or browse by country</h3>
+    <ul class="city-grid" style="margin-top: 16px;">
+        <li><a href="/prayer-times/pakistan/">Pakistan</a></li>
+        <li><a href="/prayer-times/saudi-arabia/">Saudi Arabia</a></li>
+        <li><a href="/prayer-times/indonesia/">Indonesia</a></li>
+        <li><a href="/prayer-times/united-kingdom/">United Kingdom</a></li>
+        <li><a href="/prayer-times/united-states/">United States</a></li>
+        <li><a href="/prayer-times/morocco/">Morocco</a></li>
+    </ul>
+</section>
+
+<section id="faq" style="background: var(--bg); max-width: none; margin: 0;">
+    <div style="max-width: 820px; margin: 0 auto; padding: 0 24px;">
+        <h2 style="text-align: left; margin-bottom: 24px;">Frequently Asked Questions</h2>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">What are the 5 daily prayer times in Islam?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                The five daily prayers (salah) are <strong>Fajr</strong> before sunrise, <strong>Dhuhr</strong> after midday, <strong>Asr</strong> in the late afternoon, <strong>Maghrib</strong> at sunset, and <strong>Isha</strong> at night.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">How does Azan Time calculate accurate prayer times?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Azan Time uses precise astronomical algorithms based on your exact GPS coordinates, with 8 widely-accepted calculation methods. Times match official masjid times within about 1 minute.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Is Azan Time really free?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Yes — completely free, forever. No subscription, no in-app purchases, no account required. A single small banner ad appears at the bottom of the screen; no ads interrupt the adhan or Qibla compass.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Does the Qibla compass work offline?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Yes. Once the app has your location, the Qibla compass works entirely offline using your phone's magnetometer. It points to the Kaaba in Makkah from anywhere in the world.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Can I choose a different azan reciter?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Yes. Azan Time includes authentic adhan audio from multiple well-known reciters. You can also set advance notifications up to 30 minutes before each prayer, plus a silent mode for Dhuhr at work.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Which prayer time calculation method should I choose?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Pick whichever your local masjid follows. <strong>Muslim World League</strong> is the common global default. In Saudi Arabia, <strong>Umm al-Qura</strong> is standard. In Pakistan, India and Bangladesh, <strong>Karachi</strong> is common. In North America, <strong>ISNA</strong> is widely used.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Does Azan Time support Suhoor and Iftar countdowns during Ramadan?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Yes. During Ramadan, the app automatically detects the Hijri date and shows live Suhoor (end at Fajr) and Iftar (at Maghrib) countdowns.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Will Azan Time drain my phone battery?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                No. Prayer times are calculated once per day then cached. Battery use is negligible — typically less than 1% per day even with all 5 azan notifications enabled.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">Is Azan Time available on iOS?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Azan Time is currently available on Android via Google Play. An iOS version is in development.
+            </p>
+        </details>
+
+        <details style="background: #fff; padding: 18px 22px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border);">
+            <summary style="font-weight: 700; color: var(--navy); font-size: 17px; cursor: pointer;">How accurate is the Hijri calendar in the app?</summary>
+            <p style="margin-top: 12px; color: var(--text-muted); font-size: 15px;">
+                Azan Time uses the Umm al-Qura Hijri calendar as a base, with optional moon-sighting adjustments for regions where the local authority follows physical sighting.
+            </p>
+        </details>
+    </div>
 </section>
 
 <section id="download" class="download">
@@ -139,5 +351,16 @@
 </section>
 
 <footer>
+    <p><strong>Azan Time</strong> · Free prayer times, adhan and Qibla for every city · May Allah accept.</p>
     <p>
-        <stron
+        <a href="/">Home</a> ·
+        <a href="/prayer-times/">All Cities</a> ·
+        <a href="/hijri-converter/">Hijri Converter</a> ·
+        <a href="/blog/">Blog</a> ·
+        <a href="/privacy/">Privacy</a> ·
+        <a href="#faq">FAQ</a>
+    </p>
+</footer>
+
+</body>
+</html>
