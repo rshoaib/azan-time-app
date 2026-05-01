@@ -1,45 +1,31 @@
 import { Theme } from '@/constants/theme';
-import Constants from 'expo-constants';
+import {
+  AdUnitKey,
+  getAdsModule,
+  getRequestNonPersonalizedAdsOnly,
+  isAdsRuntimeAvailable,
+  resolveAdUnitId,
+} from '@/services/adsService';
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 interface AdBannerProps {
+  /** Which ad unit to render (must exist in AD_UNIT_IDS). Defaults to 'bannerHome'. */
+  unitKey?: AdUnitKey;
   style?: object;
 }
 
-// Detect Expo Go — native ad modules are NOT supported in Expo Go
-const isExpoGo = Constants.appOwnership === 'expo';
+const ads = getAdsModule();
+const BannerAdComponent: React.ComponentType<any> | null = ads?.BannerAd ?? null;
+const BannerAdSize: any = ads?.BannerAdSize ?? null;
+const TestIds: any = ads?.TestIds ?? null;
 
-let BannerAdComponent: React.ComponentType<any> | null = null;
-let BannerAdSize: any = null;
-let TestIds: any = null;
-
-// Only load ads in dev builds (not Expo Go)
-if (!isExpoGo) {
-  try {
-    const adsModule = require('react-native-google-mobile-ads');
-    BannerAdComponent = adsModule.BannerAd;
-    BannerAdSize = adsModule.BannerAdSize;
-    TestIds = adsModule.TestIds;
-  } catch {
-    // Module not available
-  }
-}
-
-export default function AdBanner({ style }: AdBannerProps) {
-  if (!BannerAdComponent || !BannerAdSize || !TestIds) {
+export default function AdBanner({ unitKey = 'bannerHome', style }: AdBannerProps) {
+  if (!isAdsRuntimeAvailable() || !BannerAdComponent || !BannerAdSize) {
     return null;
   }
 
-  // TODO: Replace with real AdMob unit IDs before production release
-  const adUnitId = __DEV__
-    ? TestIds.ADAPTIVE_BANNER
-    : Platform.select({
-        android: 'ca-app-pub-3166995085202346/9036572986',
-        // TODO: Insert your real iOS ad unit ID below
-        ios: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
-        default: TestIds.ADAPTIVE_BANNER,
-      }) || TestIds.ADAPTIVE_BANNER;
+  const adUnitId = resolveAdUnitId(unitKey, TestIds?.ADAPTIVE_BANNER);
 
   return (
     <View style={[styles.container, style]}>
@@ -47,7 +33,27 @@ export default function AdBanner({ style }: AdBannerProps) {
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{
-          requestNonPersonalizedAdsOnly: true,
+          // Driven by real UMP consent, not a hard-coded value. When the user
+          // has consented to personalized ads (or is outside GDPR scope) this
+          // is `false` and we get full eCPM.
+          requestNonPersonalizedAdsOnly: getRequestNonPersonalizedAdsOnly(),
+        }}
+        onAdLoaded={() => {
+          if (__DEV__) console.log(`[ads] banner loaded (${unitKey})`);
+        }}
+        onAdFailedToLoad={(error: any) => {
+          // Surface the failure code so we can spot fill problems by region.
+          console.warn(
+            `[ads] banner failed to load (${unitKey}):`,
+            error?.code ?? 'unknown',
+            error?.message ?? '',
+          );
+        }}
+        onAdOpened={() => {
+          if (__DEV__) console.log(`[ads] banner opened (${unitKey})`);
+        }}
+        onAdClosed={() => {
+          if (__DEV__) console.log(`[ads] banner closed (${unitKey})`);
         }}
       />
     </View>
