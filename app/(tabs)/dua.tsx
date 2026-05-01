@@ -25,6 +25,9 @@ export default function DuaScreen() {
 
   useFocusEffect(useCallback(() => {
     loadTasbih();
+    return () => {
+      stopDuaAudio();
+    };
   }, []));
 
   const loadTasbih = async () => {

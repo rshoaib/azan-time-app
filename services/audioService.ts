@@ -1,14 +1,18 @@
-import { Audio } from 'expo-av';
-import { getAzanSoundEnabled } from './storageService';
+import { getAzanReciter, getAzanSoundEnabled } from './storageService';
+import { getAudioModule } from './audioModuleLoader';
+import { getReciter } from '../constants/reciters';
 
-let currentSound: Audio.Sound | null = null;
+let currentSound: any = null;
 
 /**
  * Configure audio session for Azan playback.
  * Plays even in silent mode and mixes with other audio.
  */
 export async function configureAudio(): Promise<void> {
-    await Audio.setAudioModeAsync({
+    const AudioModule = await getAudioModule();
+    if (!AudioModule) return;
+
+    await AudioModule.setAudioModeAsync({
         allowsRecordingIOS: false,
         staysActiveInBackground: true,
         playsInSilentModeIOS: true,
@@ -31,17 +35,19 @@ export async function playAzan(): Promise<void> {
     try {
         await configureAudio();
 
-        // Load and play the bundled Azan audio
-        let audioSource;
-        try {
-            audioSource = require('../assets/audio/azan.mp3');
-        } catch {
-            console.warn('Azan audio file not found in assets/audio/azan.mp3');
+        const AudioModule = await getAudioModule();
+        if (!AudioModule) return;
+
+        // Load the user's selected reciter (falls back to default if missing)
+        const reciterId = await getAzanReciter();
+        const reciter = getReciter(reciterId);
+        if (!reciter?.audioSource) {
+            console.warn(`Reciter ${reciterId} has no audio source`);
             return;
         }
 
-        const { sound } = await Audio.Sound.createAsync(
-            audioSource,
+        const { sound } = await AudioModule.Sound.createAsync(
+            reciter.audioSource,
             {
                 shouldPlay: true,
                 volume: 1.0,
@@ -51,7 +57,7 @@ export async function playAzan(): Promise<void> {
         currentSound = sound;
 
         // Clean up when playback finishes
-        sound.setOnPlaybackStatusUpdate((status) => {
+        sound.setOnPlaybackStatusUpdate((status: any) => {
             if (status.isLoaded && status.didJustFinish) {
                 sound.unloadAsync();
                 currentSound = null;

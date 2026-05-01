@@ -8,6 +8,7 @@ const KEYS = {
     ADVANCE_MINUTES: 'advance_minutes',
     SAVED_LOCATION: 'saved_location',
     AZAN_SOUND_ENABLED: 'azan_sound_enabled',
+    AZAN_RECITER: 'azan_reciter',
 };
 
 export interface SavedLocation {
@@ -90,6 +91,16 @@ export async function getAzanSoundEnabled(): Promise<boolean> {
 
 export async function setAzanSoundEnabled(enabled: boolean): Promise<void> {
     await AsyncStorage.setItem(KEYS.AZAN_SOUND_ENABLED, enabled.toString());
+}
+
+// Azan reciter selection (personalization — strong retention lever)
+export async function getAzanReciter(): Promise<string> {
+    const value = await AsyncStorage.getItem(KEYS.AZAN_RECITER);
+    return value || 'default';
+}
+
+export async function setAzanReciter(reciterId: string): Promise<void> {
+    await AsyncStorage.setItem(KEYS.AZAN_RECITER, reciterId);
 }
 
 // ============ Prayer Tracker ============

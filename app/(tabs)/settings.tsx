@@ -12,7 +12,10 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
+import Constants from 'expo-constants';
 import { Theme, CALCULATION_METHODS, PRAYER_CONFIG } from '@/constants/theme';
+import { RECITERS } from '@/constants/reciters';
 import { PrayerName } from '@/services/prayerService';
 import {
   getCalculationMethod,
@@ -26,6 +29,8 @@ import {
   getSavedLocation,
   getAzanSoundEnabled,
   setAzanSoundEnabled,
+  getAzanReciter,
+  setAzanReciter,
 } from '@/services/storageService';
 import { stopAzan } from '@/services/audioService';
 
@@ -46,7 +51,9 @@ export default function SettingsScreen() {
   const [advance, setAdvance] = useState(0);
   const [showMethodModal, setShowMethodModal] = useState(false);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [showReciterModal, setShowReciterModal] = useState(false);
   const [azanSoundOn, setAzanSoundOn] = useState(true);
+  const [reciter, setReciter] = useState('default');
   const [locationInfo, setLocationInfo] = useState('');
 
   useEffect(() => { loadSettings(); }, []);
@@ -57,6 +64,7 @@ export default function SettingsScreen() {
     const e = await getEnabledPrayers(); setEnabledPrayersState(e);
     const a = await getAdvanceMinutes(); setAdvance(a);
     const azanOn = await getAzanSoundEnabled(); setAzanSoundOn(azanOn);
+    const r = await getAzanReciter(); setReciter(r);
     const loc = await getSavedLocation();
     if (loc) setLocationInfo(`${loc.city}, ${loc.country}`);
   };
@@ -78,9 +86,13 @@ export default function SettingsScreen() {
     setAzanSoundOn(value); await setAzanSoundEnabled(value);
     if (!value) await stopAzan();
   };
+  const handleReciterChange = async (id: string) => {
+    setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
+  };
 
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
   const currentAdvanceLabel = ADVANCE_OPTIONS.find((o) => o.value === advance)?.label || `${advance} min before`;
+  const currentReciterLabel = RECITERS.find((r) => r.id === reciter)?.name || 'Default';
 
   return (
     <View style={styles.container}>
@@ -185,6 +197,24 @@ export default function SettingsScreen() {
               thumbColor={azanSoundOn ? Theme.colors.gold : '#666'}
             />
           </View>
+
+          {azanSoundOn && RECITERS.length > 1 && (
+            <Pressable
+              style={({ pressed }) => [styles.settingCard, { marginTop: 8 }, pressed && styles.settingCardPressed]}
+              onPress={() => setShowReciterModal(true)}
+            >
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: Theme.colors.gold + '20' }]}>
+                  <Text style={{ fontSize: 16 }}>🕌</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.settingLabel}>Azan Reciter</Text>
+                  <Text style={styles.settingValue}>{currentReciterLabel}</Text>
+                </View>
+              </View>
+              <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+            </Pressable>
+          )}
         </View>
 
         {/* Location */}
@@ -212,7 +242,9 @@ export default function SettingsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.settingLabel}>Azan Time</Text>
-                <Text style={styles.settingValue}>Version 1.1.0</Text>
+                <Text style={styles.settingValue}>
+                  Version {Constants.expoConfig?.version ?? '1.0.0'}
+                </Text>
               </View>
             </View>
           </View>
@@ -226,6 +258,18 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </View>
+          <Pressable
+            style={({ pressed }) => [styles.settingCard, { marginTop: 8 }, pressed && styles.settingCardPressed]}
+            onPress={() => WebBrowser.openBrowserAsync('https://rshoaib.github.io/ovctech/azantime/privacy-policy.html')}
+          >
+            <View style={styles.settingLeft}>
+              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.teal + '20' }]}>
+                <Text style={{ fontSize: 16 }}>🔒</Text>
+              </View>
+              <Text style={styles.settingLabel}>Privacy Policy</Text>
+            </View>
+            <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -280,6 +324,40 @@ export default function SettingsScreen() {
                 {opt.value === advance && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
               </Pressable>
             ))}
+          </LinearGradient>
+        </View>
+      </Modal>
+
+      {/* Reciter Modal */}
+      <Modal visible={showReciterModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <LinearGradient colors={['#FFFFFF', '#F5F6FA']} style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Azan Reciter</Text>
+              <Pressable onPress={() => setShowReciterModal(false)} style={styles.modalClose}>
+                <FontAwesome name="times" size={20} color={Theme.colors.textSecondary} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={RECITERS}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[styles.modalItem, item.id === reciter && styles.modalItemActive]}
+                  onPress={() => handleReciterChange(item.id)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.modalItemText, item.id === reciter && styles.modalItemTextActive]}>
+                      {item.name}
+                    </Text>
+                    <Text style={{ fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 2 }}>
+                      {item.location}
+                    </Text>
+                  </View>
+                  {item.id === reciter && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
+                </Pressable>
+              )}
+            />
           </LinearGradient>
         </View>
       </Modal>
