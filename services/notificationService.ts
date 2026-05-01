@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
 import { getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
+import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm } from './analyticsService';
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -27,11 +28,25 @@ async function getNotifications() {
 
         // Also play Azan via expo-av when app is in foreground (richer audio)
         const { playAzan } = require('./audioService');
+        const { markPrayerNotificationFired } = require('./adsService');
+        const { maybeFireFirstAdhanHeard } = require('./analyticsService');
         Notifications!.addNotificationReceivedListener(async () => {
+            // Suppress App Open Ad briefly when a prayer notification fires —
+            // the user opens the app expecting the prayer moment, not an ad.
+            try { markPrayerNotificationFired(); } catch {}
+            // Fire the first-adhan-heard engagement conversion once per install.
+            try { maybeFireFirstAdhanHeard('foreground'); } catch {}
             const azanEnabled = await getAzanSoundEnabled();
             if (azanEnabled) {
                 playAzan();
             }
+        });
+
+        // Also mark suppression when user taps the notification to open the app.
+        Notifications!.addNotificationResponseReceivedListener(() => {
+            try { markPrayerNotificationFired(); } catch {}
+            // User tapping the adhan notification still counts as "heard".
+            try { maybeFireFirstAdhanHeard('notification_tap'); } catch {}
         });
     }
     return Notifications;
@@ -55,6 +70,9 @@ export async function requestNotificationPermission(): Promise<boolean> {
     if (finalStatus !== 'granted') {
         return false;
     }
+
+    // Day-1 retention funnel — step 3. Fires at most once per install.
+    try { await maybeFireNotificationGranted(); } catch {}
 
     // Android notification channels
     if (Platform.OS === 'android') {
@@ -119,6 +137,7 @@ export async function schedulePrayerNotifications(
         }
     }
 
+    let scheduled = 0;
     for (const prayer of allPrayers) {
         if (!enabledPrayers[prayer.name]) continue;
 
@@ -143,6 +162,14 @@ export async function schedulePrayerNotifications(
                 channelId: channelId,
             },
         });
+        scheduled++;
+    }
+
+    // Day-1 retention funnel — step 4. Fires at most once per install, the
+    // first time we successfully schedule at least one prayer alarm. This is
+    // the moment Azan Time's core promise lands.
+    if (scheduled > 0) {
+        try { await maybeFireFirstPrayerAlarm(scheduled); } catch {}
     }
 }
 
