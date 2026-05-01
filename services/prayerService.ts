@@ -78,7 +78,7 @@ export function getPrayerTimes(
     let nextPrayerTime: Date | null = null;
 
     if (nextAdhanPrayer !== Prayer.None) {
-        const prayerMap: Record<number, PrayerName> = {
+        const prayerMap: Record<string, PrayerName> = {
             [Prayer.Fajr]: 'fajr',
             [Prayer.Sunrise]: 'sunrise',
             [Prayer.Dhuhr]: 'dhuhr',
@@ -86,7 +86,7 @@ export function getPrayerTimes(
             [Prayer.Maghrib]: 'maghrib',
             [Prayer.Isha]: 'isha',
         };
-        nextPrayer = prayerMap[nextAdhanPrayer] || null;
+        nextPrayer = prayerMap[nextAdhanPrayer as string] || null;
         nextPrayerTime = prayerTimes.timeForPrayer(nextAdhanPrayer) || null;
     }
 
