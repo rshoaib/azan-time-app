@@ -43,6 +43,9 @@ tsc_*.txt
 # Secrets — service-account keys must never land in git history
 google-play-key.json
 
+# Claude Code workspace state (worktrees, settings, agent caches)
+.claude/
+
 # generated native folders
 /ios
 /android
