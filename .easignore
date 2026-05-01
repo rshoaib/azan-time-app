@@ -1,0 +1,83 @@
+# EAS upload exclude list. Mirrors .gitignore plus dev-only artifacts that
+# bloat the upload archive without contributing to the build.
+#
+# Note: EAS already excludes node_modules automatically, but listing it here
+# for clarity. When .easignore exists it takes precedence over .gitignore for
+# EAS uploads — this file must therefore be a superset of .gitignore for
+# anything we want kept out of the archive.
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Dependencies (EAS reinstalls these on the build server)
+# ──────────────────────────────────────────────────────────────────────────────
+node_modules/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Expo / Metro
+# ──────────────────────────────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Native build outputs (managed workflow — EAS regenerates these)
+# ──────────────────────────────────────────────────────────────────────────────
+/ios
+/android
+.kotlin/
+*.orig.*
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Local agent / IDE workspaces — biggest source of upload bloat (~137 MB)
+# ──────────────────────────────────────────────────────────────────────────────
+.claude/
+.vscode/
+.idea/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Documentation, tests, and dev-only assets that don't ship with the app
+# ──────────────────────────────────────────────────────────────────────────────
+docs/
+**/__tests__/
+**/__mocks__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+jest.config.*
+.jest/
+coverage/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Secrets and certs (never ship)
+# ──────────────────────────────────────────────────────────────────────────────
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+.env*.local
+google-play-key.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Logs, debug, OS noise
+# ──────────────────────────────────────────────────────────────────────────────
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+.DS_Store
+Thumbs.db
+
+# ──────────────────────────────────────────────────────────────────────────────
+# TypeScript build info (regenerated)
+# ──────────────────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Git
+# ──────────────────────────────────────────────────────────────────────────────
+.git/
+.gitignore

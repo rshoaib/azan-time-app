@@ -36,6 +36,13 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# typescript / tsc one-off output dumps (these are dev scratchpads; don't track)
+tsc_*.log
+tsc_*.txt
+
+# Secrets — service-account keys must never land in git history
+google-play-key.json
+
 # generated native folders
 /ios
 /android

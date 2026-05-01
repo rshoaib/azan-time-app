@@ -2,7 +2,9 @@
   "expo": {
     "name": "Azan Time",
     "slug": "azan-time",
-    "version": "1.1.0",
+    "version": "1.2.0",
+    "description": "Free prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker. No subscription, no ads between prayers.",
+    "primaryColor": "#D4AF37",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "azantime",
@@ -15,12 +17,16 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.azantime.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We need your location to calculate accurate prayer times for your area.",
+        "NSMotionUsageDescription": "We use motion sensors for the Qibla compass to point to Makkah.",
         "UIBackgroundModes": [
           "fetch",
           "remote-notification"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -35,7 +41,8 @@
         "VIBRATE",
         "RECEIVE_BOOT_COMPLETED"
       ],
-      "package": "com.azantime.app"
+      "package": "com.azantime.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -55,7 +62,9 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#D4AF37",
-          "sounds": ["./assets/audio/azan.mp3"]
+          "sounds": [
+            "./assets/audio/azan.mp3"
+          ]
         }
       ],
       [
@@ -68,9 +77,24 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-3166995085202346~7372137520",
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+          "iosAppId": "ca-app-pub-3166995085202346~9205339156"
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics",
+      "@react-native-firebase/perf",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      "expo-font",
+      "expo-sharing",
+      "expo-web-browser",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
