@@ -2,6 +2,7 @@ import { Theme } from '@/constants/theme';
 import { getCurrentLocation } from '@/services/locationService';
 import { findNearbyMosques, formatDistance, Mosque, navigateToMosque } from '@/services/mosqueService';
 import { getQiblaDirection } from '@/services/prayerService';
+import { recordQiblaUse } from '@/services/reviewPromptService';
 import { getSavedLocation } from '@/services/storageService';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as Haptics from 'expo-haptics';
@@ -35,6 +36,9 @@ export default function QiblaScreen() {
   useEffect(() => {
     loadQibla();
     startCompass();
+    // Track Qibla usage — after 3 successful uses the review service
+    // will prompt the native review dialog (once per 90 days max).
+    recordQiblaUse();
     return () => {
       Magnetometer.removeAllListeners();
     };

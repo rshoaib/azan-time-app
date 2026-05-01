@@ -1,4 +1,5 @@
 import AdBanner from '@/components/AdBanner';
+import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme } from '@/constants/theme';
 import { getDailyAyah } from '@/data/dailyAyah';
 import { getCurrentLocation, LocationResult } from '@/services/locationService';
@@ -10,6 +11,7 @@ import {
     PrayerTimesResult
 } from '@/services/prayerService';
 import { getHijriDate, getRamadanInfo } from '@/services/ramadanService';
+import { onRamadanMidpoint } from '@/services/reviewPromptService';
 import {
     getAdvanceMinutes,
     getCalculationMethod,
@@ -19,7 +21,7 @@ import {
 } from '@/services/storageService';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -37,6 +39,7 @@ import {
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
   const [location, setLocation] = useState<LocationResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,6 +121,17 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [loadPrayerTimes]);
 
+  // Review prompt — on day 15 of Ramadan (user is emotionally engaged).
+  // Service enforces its own frequency cap. Must live above any early returns
+  // so the hook order stays stable between render passes.
+  useEffect(() => {
+    if (!prayerTimes) return;
+    const r = getRamadanInfo(prayerTimes);
+    if (r.isRamadan && r.dayOfRamadan === 15) {
+      onRamadanMidpoint(r.dayOfRamadan);
+    }
+  }, [prayerTimes]);
+
   if (loading) {
     return (
       <LinearGradient colors={['#F5F6FA', '#FFFFFF']} style={styles.loadingContainer}>
@@ -137,7 +151,18 @@ export default function HomeScreen() {
         <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
         <FontAwesome name="exclamation-circle" size={48} color={Theme.colors.danger} />
         <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.errorHint}>Pull down to retry</Text>
+        <Pressable
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            isLoadingRef.current = false;
+            loadPrayerTimes();
+          }}
+        >
+          <FontAwesome name="refresh" size={16} color="#FFFFFF" />
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </Pressable>
       </LinearGradient>
     );
   }
@@ -202,6 +227,13 @@ export default function HomeScreen() {
           colors={['#F5F6FA', '#EEF0F6']}
           style={styles.header}
         >
+          <Pressable
+            style={styles.settingsButton}
+            onPress={() => router.push('/(tabs)/settings')}
+            hitSlop={10}
+          >
+            <FontAwesome name="cog" size={22} color={Theme.colors.textSecondary} />
+          </Pressable>
           <Text style={styles.bismillah}>﷽</Text>
           <Text style={styles.appTitle}>Azan Time</Text>
           {location && (
@@ -308,7 +340,9 @@ export default function HomeScreen() {
               <Pressable
                 style={styles.shareButton}
                 onPress={() => Share.share({
-                  message: `${ayah.arabic}\n\n"${ayah.translation}"\n\n— ${ayah.reference}\n\nShared via Azan Time 🕌`,
+                  // Share text includes store install links from constants/storeLinks —
+                  // every share is a free install surface.
+                  message: `${ayah.arabic}\n\n"${ayah.translation}"\n\n— ${ayah.reference}${SHARE_FOOTER}`,
                 })}
               >
                 <FontAwesome name="share-alt" size={14} color={Theme.colors.teal} />
@@ -441,10 +475,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
-  errorHint: {
-    color: Theme.colors.textMuted,
-    fontSize: Theme.fontSize.sm,
-    marginTop: 4,
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Theme.colors.teal,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: Theme.borderRadius.full,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: Theme.fontSize.md,
+    fontWeight: Theme.fontWeight.semibold,
   },
 
   // Header
@@ -452,6 +496,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 56,
     paddingBottom: 20,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 56,
+    right: 20,
+    zIndex: 10,
+    padding: 4,
   },
   bismillah: {
     fontSize: 36,

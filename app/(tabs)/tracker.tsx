@@ -1,5 +1,7 @@
+import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme } from '@/constants/theme';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
+import { onStreakMilestone } from '@/services/reviewPromptService';
 import {
     DayLog,
     getDayLog,
@@ -8,12 +10,14 @@ import {
     PrayerStatus,
     setPrayerStatus,
 } from '@/services/storageService';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Pressable,
     ScrollView,
+    Share,
     StatusBar,
     StyleSheet,
     Text,
@@ -47,6 +51,11 @@ export default function TrackerScreen() {
     const [log, week, s] = await Promise.all([getDayLog(now), getWeekLog(), getStreak()]);
     setDayLog(log);
     setWeekLog(week);
+    // Trigger a native review prompt on streak milestones (7/30/100 days).
+    // The service enforces its own frequency caps.
+    if (s > streak) {
+      onStreakMilestone(s);
+    }
     setStreak(s);
   };
 
@@ -62,6 +71,28 @@ export default function TrackerScreen() {
       null;
     await setPrayerStatus(today, prayer, nextStatus);
     await loadData();
+  };
+
+  /**
+   * Share a beautifully formatted streak card. Every share is a free install
+   * impression — the message includes both store links (via SHARE_FOOTER).
+   */
+  const shareStreak = async () => {
+    const title =
+      streak >= 100 ? '💎 100+ days of consistent salah! 💎' :
+      streak >= 30  ? '🌟 30+ day streak — alhamdulillah!' :
+      streak >= 7   ? '🔥 7-day prayer streak!' :
+      `Tracking my salah — day ${streak}`;
+
+    const body = streak > 0
+      ? `${title}\n\nI've prayed all 5 daily salah for ${streak} day${streak === 1 ? '' : 's'} in a row, using Azan Time.\n\nMay Allah accept. 🤲`
+      : `I'm tracking my daily salah with Azan Time. Join me in building the habit, insha'Allah. 🤲`;
+
+    try {
+      await Share.share({ message: body + SHARE_FOOTER });
+    } catch {
+      // user cancelled
+    }
   };
 
   const todayPrayed = TRACKER_PRAYERS.filter((p) => dayLog[p] === 'prayed').length;
@@ -181,14 +212,55 @@ export default function TrackerScreen() {
           </View>
         </View>
 
-        {/* Motivational */}
+        {/* Motivational + share */}
         {streak > 0 && (
           <View style={styles.motivationCard}>
-            <Text style={{ fontSize: 24 }}>🔥</Text>
+            <Text style={{ fontSize: 28 }}>
+              {streak >= 100 ? '💎' : streak >= 30 ? '🌟' : streak >= 7 ? '🔥' : '🤲'}
+            </Text>
             <Text style={styles.motivationText}>
-              {streak >= 7 ? "Amazing! Keep your streak going! 🌟" :
-               streak >= 3 ? "Great progress! Stay consistent! 💪" :
-               "You've started — keep it up! 🤲"}
+              {streak >= 100 ? "100+ days! May Allah bless your consistency 💎" :
+               streak >= 30  ? "30+ days — alhamdulillah! Keep going 🌟" :
+               streak >= 7   ? "7-day streak! Don't break the chain 🔥" :
+               streak >= 3   ? "Great progress! Stay consistent 💪" :
+                               "You've started — keep it up 🤲"}
+            </Text>
+            <Pressable style={styles.streakShareBtn} onPress={shareStreak} hitSlop={8}>
+              <FontAwesome name="share-alt" size={14} color={Theme.colors.goldDark} />
+            </Pressable>
+          </View>
+        )}
+
+        {/* Don't-break-the-chain — visualize the last 14 days */}
+        {streak >= 3 && (
+          <View style={styles.chainSection}>
+            <View style={styles.chainHeader}>
+              <Text style={styles.chainTitle}>🔥 Don't break the chain</Text>
+              <Pressable onPress={shareStreak} hitSlop={10} style={styles.chainShareLink}>
+                <FontAwesome name="share-alt" size={12} color={Theme.colors.teal} />
+                <Text style={styles.chainShareText}>Share streak</Text>
+              </Pressable>
+            </View>
+            <View style={styles.chainRow}>
+              {Array.from({ length: 14 }).map((_, i) => {
+                // Last 14 days, most recent rightmost
+                const dayOffset = 13 - i;
+                const isLit = dayOffset < streak;
+                return (
+                  <View
+                    key={i}
+                    style={[
+                      styles.chainLink,
+                      isLit && styles.chainLinkLit,
+                    ]}
+                  >
+                    <Text style={styles.chainLinkText}>{isLit ? '🔥' : '·'}</Text>
+                  </View>
+                );
+              })}
+            </View>
+            <Text style={styles.chainFooter}>
+              {streak >= 14 ? `${streak} days and counting` : `Day ${streak} of your streak`}
             </Text>
           </View>
         )}
@@ -309,6 +381,51 @@ const styles = StyleSheet.create({
     padding: 16, borderWidth: 1, borderColor: Theme.colors.gold + '20',
   },
   motivationText: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldDark, flex: 1, fontWeight: Theme.fontWeight.medium },
+  streakShareBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: Theme.colors.gold + '18',
+    justifyContent: 'center', alignItems: 'center',
+  },
+
+  // Don't-break-the-chain visualization
+  chainSection: {
+    marginHorizontal: 20, marginTop: 16, marginBottom: 8,
+    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg,
+    padding: 16, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+  },
+  chainHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 12,
+  },
+  chainTitle: {
+    fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold,
+    color: Theme.colors.textPrimary,
+  },
+  chainShareLink: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: Theme.colors.teal + '12',
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: Theme.borderRadius.full,
+  },
+  chainShareText: {
+    fontSize: Theme.fontSize.xs, color: Theme.colors.teal,
+    fontWeight: Theme.fontWeight.semibold,
+  },
+  chainRow: { flexDirection: 'row', gap: 4, justifyContent: 'space-between' },
+  chainLink: {
+    flex: 1, aspectRatio: 1, borderRadius: 6,
+    backgroundColor: Theme.colors.surfaceDark,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  chainLinkLit: {
+    backgroundColor: Theme.colors.gold + '25',
+    borderWidth: 1, borderColor: Theme.colors.gold + '40',
+  },
+  chainLinkText: { fontSize: 12 },
+  chainFooter: {
+    fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted,
+    textAlign: 'center', marginTop: 10,
+  },
 
   // Achievements
   achievementsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
