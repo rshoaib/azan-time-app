@@ -17,7 +17,6 @@ import {
   RadioCategory,
   RadioStation,
 } from '@/data/radioStations';
-import { useInterstitialAd } from '@/services/adsService';
 import { getAudioModule } from '@/services/audioModuleLoader';
 import { configureAudio } from '@/services/audioService';
 import { useNavigation } from 'expo-router';
@@ -33,10 +32,6 @@ export default function RadioScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const barHeights = useRef([16, 28, 20, 32, 24]).current;
-
-  // Preload an interstitial. Shown before playback starts; frequency-capped
-  // and non-blocking (see useInterstitialAd in adsService).
-  const { tryShow: tryShowInterstitial } = useInterstitialAd('interstitialRadioPlay');
 
   useEffect(() => {
     if (isPlaying) {
@@ -144,12 +139,7 @@ export default function RadioScreen() {
       await stopPlayback();
       return;
     }
-    // Show interstitial (if ready + not frequency-capped), then start playback.
-    // `tryShow` calls the callback immediately when no ad is shown, so the
-    // user is never blocked.
-    tryShowInterstitial(() => {
-      playStation(station).catch((err) => console.warn('playStation error:', err));
-    });
+    playStation(station).catch((err) => console.warn('playStation error:', err));
   };
 
   const filteredStations = useMemo(

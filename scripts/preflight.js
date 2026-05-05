@@ -22,11 +22,6 @@ const CHECKS = [
         'Replace APP_STORE_ID with the real numeric iOS App Store ID from App Store Connect.',
     ],
     [
-        'app.json',
-        /ca-app-pub-3166995085202346~0000000000/,
-        'Replace the iosAppId placeholder in app.json > plugins > react-native-google-mobile-ads with the real AdMob app ID.',
-    ],
-    [
         'marketing/website/index.html',
         /id0000000000/,
         'Replace id0000000000 in marketing/website/index.html with the real App Store ID.',

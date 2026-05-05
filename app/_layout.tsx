@@ -3,10 +3,8 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { initializeAds, maybeShowAppOpenAd } from '@/services/adsService';
 import { bootstrapAnalytics } from '@/services/analyticsService';
 import { bootstrapCrashlytics, recordNonFatal } from '@/services/crashlyticsService';
 import { bootstrapPerformance } from '@/services/performanceService';
@@ -50,12 +48,6 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  // Initialize AdMob SDK + UMP consent once at app start. Fire-and-forget;
-  // it is safe to call before rendering and idempotent if called again.
-  useEffect(() => {
-    initializeAds();
-  }, []);
-
   // Bootstrap Firebase Analytics — records the install date on first run and
   // fires `app_open_day_2` on the day-after-install return. Safe to call in
   // Expo Go / web (silently no-ops).
@@ -86,23 +78,6 @@ export default function RootLayout() {
       }
       if (previous) previous(err, isFatal);
     });
-  }, []);
-
-  // Show an App Open Ad when the app returns to the foreground, subject to
-  // the 4-hour frequency cap and the 60-second post-prayer-notification
-  // suppression window (enforced inside maybeShowAppOpenAd).
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (next) => {
-      const prev = appStateRef.current;
-      appStateRef.current = next;
-      if (prev.match(/inactive|background/) && next === 'active') {
-        // Small delay so the app has a tick to render the current screen
-        // before overlaying the ad — reduces layout jank on Android.
-        setTimeout(() => maybeShowAppOpenAd(), 200);
-      }
-    });
-    return () => sub.remove();
   }, []);
 
   if (!loaded) {

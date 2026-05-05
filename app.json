@@ -3,7 +3,7 @@
     "name": "Azan Time",
     "slug": "azan-time",
     "version": "1.2.0",
-    "description": "Free prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker. No subscription, no ads between prayers.",
+    "description": "Free prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker. No subscription, no ads.",
     "primaryColor": "#D4AF37",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -71,13 +71,6 @@
         "expo-sensors",
         {
           "motionPermission": "We need access to device sensors for the Qibla compass."
-        }
-      ],
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-3166995085202346~7372137520",
-          "iosAppId": "ca-app-pub-3166995085202346~9205339156"
         }
       ],
       "@react-native-firebase/app",

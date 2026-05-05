@@ -28,12 +28,8 @@ async function getNotifications() {
 
         // Also play Azan via expo-av when app is in foreground (richer audio)
         const { playAzan } = require('./audioService');
-        const { markPrayerNotificationFired } = require('./adsService');
         const { maybeFireFirstAdhanHeard } = require('./analyticsService');
         Notifications!.addNotificationReceivedListener(async () => {
-            // Suppress App Open Ad briefly when a prayer notification fires —
-            // the user opens the app expecting the prayer moment, not an ad.
-            try { markPrayerNotificationFired(); } catch {}
             // Fire the first-adhan-heard engagement conversion once per install.
             try { maybeFireFirstAdhanHeard('foreground'); } catch {}
             const azanEnabled = await getAzanSoundEnabled();
@@ -42,9 +38,7 @@ async function getNotifications() {
             }
         });
 
-        // Also mark suppression when user taps the notification to open the app.
         Notifications!.addNotificationResponseReceivedListener(() => {
-            try { markPrayerNotificationFired(); } catch {}
             // User tapping the adhan notification still counts as "heard".
             try { maybeFireFirstAdhanHeard('notification_tap'); } catch {}
         });
@@ -178,4 +172,3 @@ export async function cancelAllNotifications(): Promise<void> {
     if (!notif) return;
     await notif.cancelAllScheduledNotificationsAsync();
 }
-

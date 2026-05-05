@@ -318,7 +318,7 @@ You can't improve what you don't measure. Free tools:
 ## What NOT to Do (common indie-app time-wasters)
 
 - **Don't buy paid ads yet.** With $0 budget and weak retention mechanics, you'll just subsidize churn. Fix ASO + retention first. In 6 months, if you want to spend, $1 of Apple Search Ads on your own branded keywords is still the best first paid spend.
-- **Don't build a subscription tier right now.** Your app runs on AdMob. Free + ads is the right monetization for your current download range. Launch Pro only after 100K+ users.
+- **Don't build a subscription tier right now.** The app is fully free with no ads (AdMob was removed on 2026-05-05). Stay free until you have a clear retention story and 100K+ users; then revisit a one-time IAP unlock for premium features rather than a subscription.
 - **Don't chase Facebook/Meta organic.** Algorithm has crushed organic reach. Save the energy for TikTok/Reels/Shorts.
 - **Don't redesign the app.** Design is good. Ship features and ASO instead.
 - **Don't ignore Ramadan.** Pre-Ramadan (1 month prior) is when 70% of annual prayer-app installs happen. In 2027, Ramadan starts ~Feb 17. By December 2026, you should have everything polished for that surge.

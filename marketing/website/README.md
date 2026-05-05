@@ -35,7 +35,6 @@ That's the whole deploy. First index by Google: 48–72 hours.
 - `sitemap.xml` — for Google Search Console
 - `robots.txt` — allow all crawlers
 - `CNAME` — GitHub Pages custom domain marker
-- `app-ads.txt` — AdMob authorized-sellers declaration (must be at the domain root, e.g. `https://azantime.app/app-ads.txt`)
 - `privacy/index.html` — privacy policy (required by both app stores)
 - `blog/index.html` — blog landing (stub; add articles as `.md` or `.html`)
 - `prayer-times/index.html` — city directory
@@ -49,18 +48,10 @@ That's the whole deploy. First index by Google: 48–72 hours.
 1. Open `https://azantime.app/` — page loads, cities link out.
 2. Open `https://azantime.app/prayer-times/mecca/` — prayer times appear as numbers within a second (not "Loading...").
 3. Open `https://azantime.app/sitemap.xml` — valid XML.
-4. Open `https://azantime.app/app-ads.txt` — single line `google.com, pub-3166995085202346, DIRECT, f08c47fec0942fa0` renders as plain text.
-5. Google → "site:azantime.app" in 72 hours to confirm indexing.
-6. PageSpeed Insights: target 95+ on mobile performance.
-7. Submit sitemap in Google Search Console: https://search.google.com/search-console
-8. Request indexing for the homepage and the top 5 city pages.
-
-## AdMob verification (post-deploy)
-
-1. In Google Play Console → Store listing → set **Website** = `https://azantime.app`. Save and publish the listing change.
-2. In AdMob → Apps → Azan Time → App settings → re-run app verification (it should now find the developer website).
-3. In AdMob → Settings → app-ads.txt → click **Check status**. Once `https://azantime.app/app-ads.txt` is live and AdMob has crawled it (usually within 24h), the badge flips to **Authorized**.
-4. After both verifications pass, the "Limited ad serving" cap is fully lifted and programmatic exchanges that require app-ads.txt will start bidding.
+4. Google → "site:azantime.app" in 72 hours to confirm indexing.
+5. PageSpeed Insights: target 95+ on mobile performance.
+6. Submit sitemap in Google Search Console: https://search.google.com/search-console
+7. Request indexing for the homepage and the top 5 city pages.
 
 ## SEO notes
 
