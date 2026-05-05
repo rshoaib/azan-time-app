@@ -87,6 +87,30 @@ export async function logEvent(
 }
 
 /**
+ * Log a Firebase `screen_view` event. Use the canonical Firebase API rather
+ * than logEvent('screen_view', ...) so the data lands in the standard
+ * Pages and screens report instead of as a custom event. expo-router does
+ * NOT auto-fire this — without this wiring, Firebase reports the Android
+ * Activity name (BrowserProxyActivity, LicenseActivity) as the "screen".
+ */
+export async function logScreenView(
+  screenName: string,
+  screenClass?: string,
+): Promise<void> {
+  const analytics = loadAnalyticsModule();
+  if (!analytics) return;
+  try {
+    await analytics().logScreenView({
+      screen_name: screenName,
+      screen_class: screenClass ?? screenName,
+    });
+    if (__DEV__) console.log(`[analytics] logScreenView ${screenName}`);
+  } catch (err) {
+    console.warn(`[analytics] logScreenView failed (${screenName}):`, err);
+  }
+}
+
+/**
  * Set a persistent user property (e.g., selected calculation method, chosen
  * reciter). Useful for Firebase audiences but not required for ad conversions.
  */

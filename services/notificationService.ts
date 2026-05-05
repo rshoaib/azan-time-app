@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
 import { getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
-import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm } from './analyticsService';
+import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -57,8 +57,18 @@ export async function requestNotificationPermission(): Promise<boolean> {
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
+        // Funnel diagnostic — fires every time the OS prompt is actually shown,
+        // so we can compare against `notification_granted` and `notification_denied`
+        // and tell whether users are seeing the prompt at all (vs. seeing it
+        // but saying no). Not fire-once — this is a per-prompt event by design.
+        try { await logEvent('notification_prompt_shown', { previous_status: existingStatus }); } catch {}
         const { status } = await notif.requestPermissionsAsync();
         finalStatus = status;
+        if (status !== 'granted') {
+            // Per-prompt event (not fire-once) — captures the deny reason granularly.
+            // Use this against `notification_prompt_shown` to compute deny rate.
+            try { await logEvent('notification_denied', { result_status: status }); } catch {}
+        }
     }
 
     if (finalStatus !== 'granted') {

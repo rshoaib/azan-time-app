@@ -1,11 +1,11 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { bootstrapAnalytics } from '@/services/analyticsService';
+import { bootstrapAnalytics, logScreenView } from '@/services/analyticsService';
 import { bootstrapCrashlytics, recordNonFatal } from '@/services/crashlyticsService';
 import { bootstrapPerformance } from '@/services/performanceService';
 
@@ -54,6 +54,20 @@ export default function RootLayout() {
   useEffect(() => {
     bootstrapAnalytics();
   }, []);
+
+  // Fire a Firebase `screen_view` event whenever the route changes. expo-router
+  // does NOT do this automatically — without this hook, Firebase reports the
+  // Android Activity name (BrowserProxyActivity etc.) as the "screen", which
+  // makes the Pages & Screens report useless for understanding in-app behavior.
+  const pathname = usePathname();
+  useEffect(() => {
+    if (!pathname) return;
+    // Normalize: '/' -> 'home'; otherwise take the last path segment so
+    // group/parent layout names don't pollute the report.
+    const segment =
+      pathname === '/' ? 'home' : pathname.split('/').filter(Boolean).pop() ?? pathname;
+    logScreenView(segment);
+  }, [pathname]);
 
   // Bootstrap Crashlytics + Performance Monitoring. Both are no-ops in Expo Go
   // and on web. Crashlytics is enabled defensively; Performance auto-captures
