@@ -1,8 +1,14 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
-import { getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
+import {
+    getAzanSoundEnabled,
+    getCalculationMethod,
+    getSavedLocation,
+    getPrayerAzanStyles,
+} from './storageService';
 import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
+import { AzanStyle } from '../constants/azanStyles';
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -27,13 +33,20 @@ async function getNotifications() {
         });
 
         // Also play Azan via expo-av when app is in foreground (richer audio)
-        const { playAzan } = require('./audioService');
+        const { playAzan, playAzanForPrayer } = require('./audioService');
         const { maybeFireFirstAdhanHeard } = require('./analyticsService');
-        Notifications!.addNotificationReceivedListener(async () => {
+        Notifications!.addNotificationReceivedListener(async (notification: any) => {
             // Fire the first-adhan-heard engagement conversion once per install.
             try { maybeFireFirstAdhanHeard('foreground'); } catch {}
             const azanEnabled = await getAzanSoundEnabled();
-            if (azanEnabled) {
+            if (!azanEnabled) return;
+            // Use the per-prayer style if we can identify the prayer from the
+            // notification payload; otherwise fall back to full azan.
+            const prayerName: PrayerName | undefined =
+                notification?.request?.content?.data?.prayer;
+            if (prayerName) {
+                playAzanForPrayer(prayerName);
+            } else {
                 playAzan();
             }
         });
@@ -78,28 +91,69 @@ export async function requestNotificationPermission(): Promise<boolean> {
     // Day-1 retention funnel — step 3. Fires at most once per install.
     try { await maybeFireNotificationGranted(); } catch {}
 
-    // Android notification channels
+    // Android notification channels — one per azan style.
+    // Channel sounds are immutable once created, so each style gets its own
+    // distinct channel ID. Re-naming a channel ID later (e.g. v2 suffix)
+    // forces Android to re-register with the new sound.
     if (Platform.OS === 'android') {
-        // Channel WITH Azan sound (for prayer notifications when Azan is enabled)
-        await notif.setNotificationChannelAsync('prayer-azan', {
-            name: 'Prayer Times (Azan)',
-            description: 'Prayer time notifications with Azan sound',
+        await notif.setNotificationChannelAsync('prayer-azan-full', {
+            name: 'Prayer Times — Full Azan',
+            description: 'Plays the full adhan when a prayer arrives',
             importance: notif.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
             sound: 'azan.mp3',
         });
 
-        // Channel with default sound (for prayer notifications when Azan is off)
-        await notif.setNotificationChannelAsync('prayer-times', {
-            name: 'Prayer Times',
-            description: 'Prayer time notifications with default sound',
+        await notif.setNotificationChannelAsync('prayer-azan-short', {
+            name: 'Prayer Times — Short Azan',
+            description: 'Plays an abbreviated ~30 sec adhan',
             importance: notif.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
-            sound: 'default',
+            sound: 'azan_short.mp3',
+        });
+
+        await notif.setNotificationChannelAsync('prayer-azan-takbir', {
+            name: 'Prayer Times — Takbir Only',
+            description: 'Plays a brief Allahu Akbar reminder (~5 sec)',
+            importance: notif.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            sound: 'takbir.mp3',
+        });
+
+        await notif.setNotificationChannelAsync('prayer-silent', {
+            name: 'Prayer Times — Silent',
+            description: 'Banner notification only, no sound',
+            importance: notif.AndroidImportance.HIGH,
+            vibrationPattern: [0, 250, 250, 250],
+            sound: null,
+        });
+
+        // Keep the legacy channel registered so existing scheduled
+        // notifications (from older app versions) still fire.
+        await notif.setNotificationChannelAsync('prayer-azan', {
+            name: 'Prayer Times (Legacy)',
+            description: 'Legacy prayer channel from previous app versions',
+            importance: notif.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            sound: 'azan.mp3',
         });
     }
 
     return true;
+}
+
+function resolveChannelAndSound(style: AzanStyle): { channelId: string; soundFile: string | undefined } {
+    switch (style) {
+        case 'short':
+            return { channelId: 'prayer-azan-short', soundFile: 'azan_short.mp3' };
+        case 'takbir':
+            return { channelId: 'prayer-azan-takbir', soundFile: 'takbir.mp3' };
+        case 'silent':
+            return { channelId: 'prayer-silent', soundFile: undefined };
+        case 'full':
+        default:
+            return { channelId: 'prayer-azan-full', soundFile: 'azan.mp3' };
+    }
 }
 
 const PRAYER_MESSAGES: Record<PrayerName, string> = {
@@ -141,17 +195,21 @@ export async function schedulePrayerNotifications(
         }
     }
 
+    // Per-prayer azan style — picked here so each scheduled notification
+    // uses the right channel + sound file.
+    const prayerStyles = await getPrayerAzanStyles();
+
     let scheduled = 0;
     for (const prayer of allPrayers) {
         if (!enabledPrayers[prayer.name]) continue;
 
         const notificationTime = new Date(prayer.time.getTime() - advanceMinutes * 60 * 1000);
-
         if (notificationTime <= now) continue;
 
-        // Use Azan sound channel if enabled, otherwise default sound
-        const channelId = azanEnabled ? 'prayer-azan' : 'prayer-times';
-        const soundFile = azanEnabled ? 'azan.mp3' : 'default';
+        // Resolve channel + sound for this prayer. When the master azan
+        // toggle is off, everything routes to the silent channel.
+        const effectiveStyle: AzanStyle = azanEnabled ? (prayerStyles[prayer.name] ?? 'full') : 'silent';
+        const { channelId, soundFile } = resolveChannelAndSound(effectiveStyle);
 
         await notif.scheduleNotificationAsync({
             content: {
@@ -159,11 +217,12 @@ export async function schedulePrayerNotifications(
                 body: PRAYER_MESSAGES[prayer.name],
                 sound: soundFile,
                 priority: notif.AndroidNotificationPriority.HIGH,
+                data: { prayer: prayer.name, style: effectiveStyle },
             },
             trigger: {
                 type: notif.SchedulableTriggerInputTypes.DATE,
                 date: notificationTime,
-                channelId: channelId,
+                channelId,
             },
         });
         scheduled++;

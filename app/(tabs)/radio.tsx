@@ -28,6 +28,7 @@ export default function RadioScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [audioAvailable, setAudioAvailable] = useState(true);
   const soundRef = useRef<any>(null);
+  const playGenRef = useRef(0);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -61,6 +62,7 @@ export default function RadioScreen() {
   // Stop playback when navigating away from this tab
   useEffect(() => {
     const unsubscribe = navigation.addListener('blur', () => {
+      playGenRef.current++;
       if (soundRef.current) {
         soundRef.current.stopAsync().catch(() => {});
         soundRef.current.unloadAsync().catch(() => {});
@@ -73,7 +75,11 @@ export default function RadioScreen() {
   }, [navigation]);
 
   const playStation = async (station: RadioStation) => {
+    const myGen = ++playGenRef.current;
+    const isSuperseded = () => myGen !== playGenRef.current;
+
     const Audio = await getAudioModule();
+    if (isSuperseded()) return;
     if (!Audio) {
       setAudioAvailable(false);
       setCurrentStation(station);
@@ -88,6 +94,7 @@ export default function RadioScreen() {
         await previousSound.unloadAsync();
       } catch {}
     }
+    if (isSuperseded()) return;
 
     setIsPlaying(false);
     setIsLoading(true);
@@ -95,17 +102,25 @@ export default function RadioScreen() {
 
     try {
       await configureAudio();
+      if (isSuperseded()) return;
 
       const { sound } = await Audio.Sound.createAsync(
         { uri: station.url },
         { shouldPlay: true, volume: 1.0, isLooping: false },
       );
 
+      if (isSuperseded()) {
+        try { await sound.stopAsync(); } catch {}
+        try { await sound.unloadAsync(); } catch {}
+        return;
+      }
+
       soundRef.current = sound;
       setIsPlaying(true);
       setIsLoading(false);
 
       sound.setOnPlaybackStatusUpdate((status: any) => {
+        if (soundRef.current !== sound) return;
         if (status.isLoaded && status.didJustFinish) {
           setIsPlaying(false);
         }
@@ -116,6 +131,7 @@ export default function RadioScreen() {
         }
       });
     } catch (error) {
+      if (isSuperseded()) return;
       console.warn('Failed to play radio:', error);
       setIsPlaying(false);
       setIsLoading(false);
@@ -123,6 +139,7 @@ export default function RadioScreen() {
   };
 
   const stopPlayback = async () => {
+    playGenRef.current++;
     if (soundRef.current) {
       try {
         await soundRef.current.stopAsync();
@@ -137,6 +154,9 @@ export default function RadioScreen() {
   const togglePlayback = async (station: RadioStation) => {
     if (currentStation?.id === station.id && isPlaying) {
       await stopPlayback();
+      return;
+    }
+    if (currentStation?.id === station.id && isLoading) {
       return;
     }
     playStation(station).catch((err) => console.warn('playStation error:', err));

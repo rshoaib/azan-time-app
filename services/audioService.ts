@@ -1,6 +1,8 @@
-import { getAzanReciter, getAzanSoundEnabled } from './storageService';
+import { getAzanReciter, getAzanSoundEnabled, getPrayerAzanStyles } from './storageService';
 import { getAudioModule } from './audioModuleLoader';
 import { getReciter } from '../constants/reciters';
+import { getAzanStyleMeta } from '../constants/azanStyles';
+import { PrayerName } from './prayerService';
 
 let currentSound: any = null;
 
@@ -65,6 +67,55 @@ export async function playAzan(): Promise<void> {
         });
     } catch (error) {
         console.warn('Failed to play Azan audio:', error);
+    }
+}
+
+/**
+ * Play the azan for a specific prayer, honoring the user's per-prayer
+ * azan style choice. Falls back to playAzan() (full + selected reciter)
+ * if no per-prayer style is stored.
+ */
+export async function playAzanForPrayer(prayer: PrayerName): Promise<void> {
+    const enabled = await getAzanSoundEnabled();
+    if (!enabled) return;
+
+    const styles = await getPrayerAzanStyles();
+    const style = styles[prayer] ?? 'full';
+
+    if (style === 'silent') return;
+    if (style === 'full') {
+        await playAzan();
+        return;
+    }
+
+    const meta = getAzanStyleMeta(style);
+    if (!meta.audioSource) {
+        // Asset missing — fall back gracefully to the full azan.
+        await playAzan();
+        return;
+    }
+
+    await stopAzan();
+
+    try {
+        await configureAudio();
+        const AudioModule = await getAudioModule();
+        if (!AudioModule) return;
+
+        const { sound } = await AudioModule.Sound.createAsync(meta.audioSource, {
+            shouldPlay: true,
+            volume: 1.0,
+        });
+
+        currentSound = sound;
+        sound.setOnPlaybackStatusUpdate((status: any) => {
+            if (status.isLoaded && status.didJustFinish) {
+                sound.unloadAsync();
+                currentSound = null;
+            }
+        });
+    } catch (error) {
+        console.warn(`Failed to play ${style} azan:`, error);
     }
 }
 

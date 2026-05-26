@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PrayerName } from './prayerService';
+import { AzanStyle, DEFAULT_PRAYER_AZAN_STYLES } from '../constants/azanStyles';
 
 const KEYS = {
     CALCULATION_METHOD: 'calculation_method',
@@ -9,6 +10,7 @@ const KEYS = {
     SAVED_LOCATION: 'saved_location',
     AZAN_SOUND_ENABLED: 'azan_sound_enabled',
     AZAN_RECITER: 'azan_reciter',
+    PRAYER_AZAN_STYLES: 'prayer_azan_styles',
 };
 
 export interface SavedLocation {
@@ -101,6 +103,27 @@ export async function getAzanReciter(): Promise<string> {
 
 export async function setAzanReciter(reciterId: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.AZAN_RECITER, reciterId);
+}
+
+// Per-prayer azan style (full / short / takbir / silent).
+// Lets users mix full adhan for Fajr/Maghrib with short or silent for
+// midday prayers when they're at work or in public.
+export async function getPrayerAzanStyles(): Promise<Record<PrayerName, AzanStyle>> {
+    const value = await AsyncStorage.getItem(KEYS.PRAYER_AZAN_STYLES);
+    if (!value) return { ...DEFAULT_PRAYER_AZAN_STYLES };
+    // Merge stored with defaults so new prayers added later (e.g. sunrise)
+    // get sensible defaults without wiping the user's existing choices.
+    return { ...DEFAULT_PRAYER_AZAN_STYLES, ...JSON.parse(value) };
+}
+
+export async function setPrayerAzanStyle(prayer: PrayerName, style: AzanStyle): Promise<void> {
+    const current = await getPrayerAzanStyles();
+    current[prayer] = style;
+    await AsyncStorage.setItem(KEYS.PRAYER_AZAN_STYLES, JSON.stringify(current));
+}
+
+export async function setPrayerAzanStyles(styles: Record<PrayerName, AzanStyle>): Promise<void> {
+    await AsyncStorage.setItem(KEYS.PRAYER_AZAN_STYLES, JSON.stringify(styles));
 }
 
 // ============ Prayer Tracker ============

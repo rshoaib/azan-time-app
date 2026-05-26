@@ -42,9 +42,11 @@ export async function playDuaAudio(
         arabicVoices.find((v) => /male/i.test(v.name) && !/female/i.test(v.name))
         // 2. Known male Arabic voice identifiers on Android
         ?? arabicVoices.find((v) => /ar-xa-x-arc|ar-xa-x-ard|ar-xa-x-are/i.test(v.identifier ?? ''))
-        // 3. Pick a lower-quality voice (often male on Android) if multiple exist
+        // 3. Pick a lower-quality voice (often male on Android) if multiple exist.
+        // expo-speech's `quality` enum stringifies to 'Default' / 'Enhanced'; lower
+        // quality is empirically more often male on Android TTS.
         ?? (arabicVoices.length > 1
-            ? arabicVoices.find((v) => v.quality && v.quality < 300)
+            ? arabicVoices.find((v) => String(v.quality).toLowerCase() === 'default')
             : null);
 
     console.log('Selected Arabic voice:', maleVoice?.identifier ?? 'default');

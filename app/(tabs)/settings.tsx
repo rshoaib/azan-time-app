@@ -16,6 +16,7 @@ import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { Theme, CALCULATION_METHODS, PRAYER_CONFIG } from '@/constants/theme';
 import { RECITERS } from '@/constants/reciters';
+import { AZAN_STYLES, AzanStyle, getAzanStyleMeta } from '@/constants/azanStyles';
 import { PrayerName } from '@/services/prayerService';
 import {
   getCalculationMethod,
@@ -31,8 +32,10 @@ import {
   setAzanSoundEnabled,
   getAzanReciter,
   setAzanReciter,
+  getPrayerAzanStyles,
+  setPrayerAzanStyle,
 } from '@/services/storageService';
-import { stopAzan } from '@/services/audioService';
+import { stopAzan, playAzanForPrayer } from '@/services/audioService';
 
 const ADVANCE_OPTIONS = [
   { value: 0, label: 'At prayer time' },
@@ -55,6 +58,10 @@ export default function SettingsScreen() {
   const [azanSoundOn, setAzanSoundOn] = useState(true);
   const [reciter, setReciter] = useState('default');
   const [locationInfo, setLocationInfo] = useState('');
+  const [prayerStyles, setPrayerStyles] = useState<Record<PrayerName, AzanStyle>>({
+    fajr: 'full', sunrise: 'silent', dhuhr: 'short', asr: 'short', maghrib: 'full', isha: 'short',
+  });
+  const [styleModalFor, setStyleModalFor] = useState<PrayerName | null>(null);
 
   useEffect(() => { loadSettings(); }, []);
 
@@ -65,8 +72,22 @@ export default function SettingsScreen() {
     const a = await getAdvanceMinutes(); setAdvance(a);
     const azanOn = await getAzanSoundEnabled(); setAzanSoundOn(azanOn);
     const r = await getAzanReciter(); setReciter(r);
+    const ps = await getPrayerAzanStyles(); setPrayerStyles(ps);
     const loc = await getSavedLocation();
     if (loc) setLocationInfo(`${loc.city}, ${loc.country}`);
+  };
+
+  const handlePrayerStyleChange = async (prayer: PrayerName, style: AzanStyle) => {
+    const updated = { ...prayerStyles, [prayer]: style };
+    setPrayerStyles(updated);
+    await setPrayerAzanStyle(prayer, style);
+    setStyleModalFor(null);
+    // Preview the sound so the user knows what they just picked.
+    if (style !== 'silent') {
+      try { await playAzanForPrayer(prayer); } catch {}
+    } else {
+      await stopAzan();
+    }
   };
 
   const handleMethodChange = async (key: string) => {
@@ -217,6 +238,39 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        {/* Per-Prayer Azan Style */}
+        {azanSoundOn && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🎚️ AZAN STYLE PER PRAYER</Text>
+            <Text style={[styles.subSectionTitle, { marginTop: 0, marginBottom: 10 }]}>
+              Pick Full, Short, Takbir Only, or Silent for each prayer.
+            </Text>
+            {(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as PrayerName[]).map((key) => {
+              const meta = getAzanStyleMeta(prayerStyles[key]);
+              return (
+                <Pressable
+                  key={key}
+                  style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed, { marginBottom: 6 }]}
+                  onPress={() => setStyleModalFor(key)}
+                >
+                  <View style={styles.settingLeft}>
+                    <View style={[styles.settingIcon, { backgroundColor: PRAYER_CONFIG[key].color + '20' }]}>
+                      <Text style={{ fontSize: 16 }}>{PRAYER_CONFIG[key].emoji}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.settingLabel}>{PRAYER_CONFIG[key].name}</Text>
+                      <Text style={styles.settingValue}>
+                        {meta.emoji} {meta.label}{meta.durationLabel ? ` · ${meta.durationLabel}` : ''}
+                      </Text>
+                    </View>
+                  </View>
+                  <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+
         {/* Location */}
         {locationInfo ? (
           <View style={styles.section}>
@@ -324,6 +378,42 @@ export default function SettingsScreen() {
                 {opt.value === advance && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
               </Pressable>
             ))}
+          </LinearGradient>
+        </View>
+      </Modal>
+
+      {/* Per-Prayer Azan Style Modal */}
+      <Modal visible={styleModalFor !== null} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <LinearGradient colors={['#FFFFFF', '#F5F6FA']} style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {styleModalFor ? `${PRAYER_CONFIG[styleModalFor].emoji} ${PRAYER_CONFIG[styleModalFor].name}` : ''} Azan Style
+              </Text>
+              <Pressable onPress={() => setStyleModalFor(null)} style={styles.modalClose}>
+                <FontAwesome name="times" size={20} color={Theme.colors.textSecondary} />
+              </Pressable>
+            </View>
+            {AZAN_STYLES.map((s) => {
+              const isActive = styleModalFor !== null && prayerStyles[styleModalFor] === s.id;
+              return (
+                <Pressable
+                  key={s.id}
+                  style={[styles.modalItem, isActive && styles.modalItemActive]}
+                  onPress={() => styleModalFor && handlePrayerStyleChange(styleModalFor, s.id)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.modalItemText, isActive && styles.modalItemTextActive]}>
+                      {s.emoji}  {s.label}{s.durationLabel ? ` · ${s.durationLabel}` : ''}
+                    </Text>
+                    <Text style={{ fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 2 }}>
+                      {s.description}
+                    </Text>
+                  </View>
+                  {isActive && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
+                </Pressable>
+              );
+            })}
           </LinearGradient>
         </View>
       </Modal>

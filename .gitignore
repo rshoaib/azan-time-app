@@ -49,3 +49,6 @@ google-play-key.json
 # generated native folders
 /ios
 /android
+
+# local test/debug screenshots (adb screencaps, ui dumps)
+.test-shots/
