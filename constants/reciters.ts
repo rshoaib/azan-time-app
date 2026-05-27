@@ -77,3 +77,22 @@ export const RECITERS: Reciter[] = [
 export function getReciter(id: string): Reciter {
     return RECITERS.find(r => r.id === id) ?? RECITERS[0];
 }
+
+/**
+ * Prayer-specific audio overrides. When a prayer name has an entry here,
+ * that audio plays instead of the selected reciter's audio for that prayer.
+ *
+ * Fajr's adhan includes an extra line — "As-salatu khayrun min an-nawm"
+ * ("Prayer is better than sleep") — that the other four daily prayers
+ * don't have, so it needs a different recording.
+ *
+ * To enable Fajr-specific azan:
+ *   1. Drop `azan-fajr.mp3` into `assets/audio/`
+ *   2. Add `./assets/audio/azan-fajr.mp3` to `expo.plugins[expo-notifications].sounds` in app.json
+ *   3. Uncomment the `fajr` line below
+ *   4. (Android background) Uncomment the `prayer-azan-fajr` channel block in services/notificationService.ts
+ */
+import type { PrayerName } from '../services/prayerService';
+export const PRAYER_SPECIFIC_AUDIO: Partial<Record<PrayerName, any>> = {
+    // fajr: require('../assets/audio/azan-fajr.mp3'),
+};

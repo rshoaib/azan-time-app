@@ -1,8 +1,13 @@
 import { getAzanReciter, getAzanSoundEnabled } from './storageService';
 import { getAudioModule } from './audioModuleLoader';
-import { getReciter } from '../constants/reciters';
+import { getReciter, PRAYER_SPECIFIC_AUDIO } from '../constants/reciters';
+import type { PrayerName } from './prayerService';
 
 let currentSound: any = null;
+// Guard against concurrent playAzan() calls racing during the async
+// createAsync setup — without this, two near-simultaneous notifications
+// can each spawn their own sound and the first one plays orphaned.
+let isStarting = false;
 
 /**
  * Configure audio session for Azan playback.
@@ -22,32 +27,42 @@ export async function configureAudio(): Promise<void> {
 }
 
 /**
- * Play the default Azan sound.
- * Check the user's preference before playing.
+ * Play the Azan sound for the given prayer.
+ * Falls back to the user's selected reciter if no prayer-specific audio exists
+ * (e.g. Fajr has its own recording with "As-salatu khayrun min an-nawm").
  */
-export async function playAzan(): Promise<void> {
+export async function playAzan(prayerName?: PrayerName): Promise<void> {
     const enabled = await getAzanSoundEnabled();
     if (!enabled) return;
 
-    // Stop any currently playing Azan
-    await stopAzan();
+    // Reject overlapping starts — keeps a second notification firing in the
+    // same tick from creating a second Sound that we lose track of.
+    if (isStarting) return;
+    isStarting = true;
 
     try {
+        // Stop any currently playing Azan
+        await stopAzan();
+
         await configureAudio();
 
         const AudioModule = await getAudioModule();
         if (!AudioModule) return;
 
-        // Load the user's selected reciter (falls back to default if missing)
+        // Pick the audio source: prayer-specific (e.g. Fajr) takes precedence
+        // over the user's selected reciter.
         const reciterId = await getAzanReciter();
         const reciter = getReciter(reciterId);
-        if (!reciter?.audioSource) {
-            console.warn(`Reciter ${reciterId} has no audio source`);
+        const audioSource =
+            (prayerName && PRAYER_SPECIFIC_AUDIO[prayerName]) ?? reciter.audioSource;
+
+        if (!audioSource) {
+            console.warn(`No audio source for reciter ${reciterId}`);
             return;
         }
 
         const { sound } = await AudioModule.Sound.createAsync(
-            reciter.audioSource,
+            audioSource,
             {
                 shouldPlay: true,
                 volume: 1.0,
@@ -65,6 +80,8 @@ export async function playAzan(): Promise<void> {
         });
     } catch (error) {
         console.warn('Failed to play Azan audio:', error);
+    } finally {
+        isStarting = false;
     }
 }
 
