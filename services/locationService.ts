@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { maybeFireLocationGranted } from './analyticsService';
+import { E2E, E2E_LOCATION } from './e2eConfig';
 
 export interface LocationResult {
     latitude: number;
@@ -86,6 +87,10 @@ async function getPositionWithRetry(
 }
 
 export async function getCurrentLocation(): Promise<LocationResult> {
+    // E2E: return a fixed location so prayer times / Qibla bearing are
+    // deterministic and tests don't depend on real GPS. Stripped in production.
+    if (E2E) return E2E_LOCATION;
+
     // 1. Check / request permission
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {

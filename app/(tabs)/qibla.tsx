@@ -4,6 +4,7 @@ import { findNearbyMosques, formatDistance, Mosque, navigateToMosque } from '@/s
 import { getQiblaDirection } from '@/services/prayerService';
 import { recordQiblaUse } from '@/services/reviewPromptService';
 import { getSavedLocation } from '@/services/storageService';
+import { E2E } from '@/services/e2eConfig';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -66,6 +67,7 @@ export default function QiblaScreen() {
   };
 
   const startCompass = () => {
+    if (E2E) return; // E2E: heading is driven to the Qibla bearing (see effect below)
     Magnetometer.setUpdateInterval(100);
     Magnetometer.addListener((data: MagnetometerMeasurement) => {
       const { x, y } = data;
@@ -90,6 +92,12 @@ export default function QiblaScreen() {
     }
     wasAlignedRef.current = isAligned;
   }, [isAligned]);
+
+  // E2E: drive the heading to the Qibla bearing so the "Facing Qibla" aligned
+  // state is deterministic (the real magnetometer can't be controlled in a test).
+  useEffect(() => {
+    if (E2E && qiblaAngle !== null) setHeading(qiblaAngle);
+  }, [qiblaAngle]);
 
   return (
     <View style={styles.container}>

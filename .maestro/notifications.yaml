@@ -1,0 +1,19 @@
+# Verifies the notification scheduling pipeline end-to-end: with notifications
+# permitted, the home screen schedules prayer alarms across the next 3 days. An
+# EXPO_PUBLIC_E2E-only readout in Settings surfaces the count; we assert it's >= 1
+# (the text contains a non-zero digit, so "E2E scheduled: 0" would fail).
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 30000
+- tapOn:
+    id: "home-open-settings"
+- assertVisible: "Customize your Azan experience"
+- assertVisible:
+    id: "e2e-scheduled-count"
+    text: ".*[1-9].*"

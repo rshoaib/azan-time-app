@@ -33,6 +33,8 @@ import {
   setAzanReciter,
 } from '@/services/storageService';
 import { stopAzan } from '@/services/audioService';
+import { getScheduledNotificationCount } from '@/services/notificationService';
+import { E2E } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
   { value: 0, label: 'At prayer time' },
@@ -55,6 +57,7 @@ export default function SettingsScreen() {
   const [azanSoundOn, setAzanSoundOn] = useState(true);
   const [reciter, setReciter] = useState('default');
   const [locationInfo, setLocationInfo] = useState('');
+  const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
 
   useEffect(() => { loadSettings(); }, []);
 
@@ -67,6 +70,7 @@ export default function SettingsScreen() {
     const r = await getAzanReciter(); setReciter(r);
     const loc = await getSavedLocation();
     if (loc) setLocationInfo(`${loc.city}, ${loc.country}`);
+    if (E2E) setE2eScheduled(await getScheduledNotificationCount());
   };
 
   const handleMethodChange = async (key: string) => {
@@ -125,6 +129,11 @@ export default function SettingsScreen() {
         {/* Notifications */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🔔 NOTIFICATIONS</Text>
+          {E2E && (
+            <Text testID="e2e-scheduled-count" style={styles.settingValue}>
+              E2E scheduled: {e2eScheduled ?? '…'}
+            </Text>
+          )}
 
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>

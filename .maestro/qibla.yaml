@@ -1,0 +1,19 @@
+# Deterministic Qibla check. Under EXPO_PUBLIC_E2E the location is fixed (London),
+# so the Qibla bearing is stable, and the heading is driven to that bearing so the
+# "Facing Qibla" aligned state is guaranteed (the real magnetometer can't be
+# controlled in a test).
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Qibla"
+    timeout: 30000
+- tapOn: "Qibla"
+- assertVisible: "Direction to the Holy Kaaba"
+- assertVisible: "London"
+- assertVisible: "HEADING"
+- assertVisible: "QIBLA"
+- assertVisible: "Facing Qibla"

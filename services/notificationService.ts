@@ -57,6 +57,17 @@ async function getNotifications() {
     return Notifications;
 }
 
+/**
+ * Number of local notifications currently scheduled. Used by an
+ * EXPO_PUBLIC_E2E-gated readout in Settings to verify the scheduling pipeline.
+ */
+export async function getScheduledNotificationCount(): Promise<number> {
+    const notif = await getNotifications();
+    if (!notif) return 0;
+    const scheduled = await notif.getAllScheduledNotificationsAsync();
+    return scheduled.length;
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
     const notif = await getNotifications();
     if (!notif) {
