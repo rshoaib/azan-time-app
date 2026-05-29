@@ -166,6 +166,7 @@ export default function RadioScreen() {
         {currentStation && (
           <View style={styles.nowPlayingSection}>
             <Animated.View
+              testID="radio-now-playing"
               style={[
                 styles.nowPlayingCard,
                 isPlaying && {

@@ -139,6 +139,7 @@ export default function TrackerScreen() {
             return (
               <Pressable
                 key={prayer}
+                testID={`tracker-prayer-${prayer}`}
                 style={({ pressed }) => [
                   styles.prayerRow,
                   status === 'prayed' && styles.prayerRowPrayed,

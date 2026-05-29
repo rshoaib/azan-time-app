@@ -79,6 +79,7 @@ export default function DuaScreen() {
           {tabs.map((tab) => (
             <Pressable
               key={tab.key}
+              testID={`dua-tab-${tab.key}`}
               style={[styles.tab, activeTab === tab.key && styles.tabActive]}
               onPress={() => setActiveTab(tab.key)}
             >
@@ -111,14 +112,14 @@ export default function DuaScreen() {
             </ScrollView>
 
             {/* Counter circle */}
-            <Pressable onPress={handleTasbihTap} style={styles.tasbihTapArea}>
+            <Pressable testID="dua-tasbih-counter" onPress={handleTasbihTap} style={styles.tasbihTapArea}>
               <View style={styles.tasbihOuter}>
                 <LinearGradient
                   colors={['#0D9488', '#0F766E']}
                   style={styles.tasbihCircle}
                 >
                   <Text style={styles.tasbihArabic}>{currentTasbih.label}</Text>
-                  <Text style={styles.tasbihCountText}>{tasbihCount}</Text>
+                  <Text testID="dua-tasbih-count" style={styles.tasbihCountText}>{tasbihCount}</Text>
                   <Text style={styles.tasbihTarget}>of {currentTasbih.target}</Text>
                 </LinearGradient>
               </View>

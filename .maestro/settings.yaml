@@ -1,0 +1,16 @@
+# Opens Settings via the home cog and changes the calculation method,
+# verifying the new method is shown on the settings card.
+appId: com.azantime.app
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 30000
+- tapOn:
+    id: "home-open-settings"
+- assertVisible: "Customize your Azan experience"
+- tapOn: "Calculation Method"
+- tapOn: "Egyptian General Authority"
+- assertVisible: "Egyptian General Authority"

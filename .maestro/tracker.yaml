@@ -1,0 +1,18 @@
+# Marks a prayer on the Tracker and verifies the "Today" count updates.
+# clearState gives a deterministic empty day (0/5). After clearState the home
+# tab re-detects location in the background, but Tracker doesn't depend on it.
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Tracker"
+    timeout: 30000
+- tapOn: "Tracker"
+- assertVisible: "Track your daily prayers"
+- assertVisible: "0/5"
+- tapOn:
+    id: "tracker-prayer-fajr"
+- assertVisible: "1/5"

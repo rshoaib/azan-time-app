@@ -1,0 +1,28 @@
+# Switches Dua sub-tabs and exercises the tasbih counter. clearState gives a
+# deterministic tasbih count of 0. The count is asserted via testID (the target
+# value e.g. "of 33" can contain digits, so a bare "0"/"1" match is ambiguous).
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Dua"
+    timeout: 30000
+- tapOn: "Dua"
+- assertVisible: "Daily remembrance of Allah"
+# Maestro matches the FULL text, so wildcard the emoji-prefixed labels
+# ("▼ Tap for translation", "🔄 Reset Counter").
+- assertVisible: ".*Tap for translation.*"
+- tapOn:
+    id: "dua-tab-tasbih"
+- assertVisible: ".*Reset Counter.*"
+- assertVisible:
+    id: "dua-tasbih-count"
+    text: "0"
+- tapOn:
+    id: "dua-tasbih-counter"
+- assertVisible:
+    id: "dua-tasbih-count"
+    text: "1"

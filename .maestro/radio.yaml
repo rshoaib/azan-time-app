@@ -1,0 +1,16 @@
+# Plays a radio station and verifies the Now Playing card appears. The assertion
+# targets the card's testID so it passes regardless of whether the network stream
+# connects (Connecting / Now Playing / Paused all render the same card).
+appId: com.azantime.app
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Radio"
+    timeout: 30000
+- tapOn: "Radio"
+- assertVisible: "Listen to beautiful Quran recitations 24/7"
+- tapOn: "Main Quran Radio"
+- assertVisible:
+    id: "radio-now-playing"

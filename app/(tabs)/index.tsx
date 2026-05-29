@@ -227,6 +227,7 @@ export default function HomeScreen() {
           style={styles.header}
         >
           <Pressable
+            testID="home-open-settings"
             style={styles.settingsButton}
             onPress={() => router.push('/(tabs)/settings')}
             hitSlop={10}
