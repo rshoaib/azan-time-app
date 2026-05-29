@@ -1,0 +1,13 @@
+# Smoke test: app launches and the home (Prayers) screen renders without crashing.
+appId: com.azantime.app
+---
+- launchApp:
+    permissions:
+      all: allow
+# Home shows a loading state first ("Finding your prayer times...") while it
+# resolves location + computes times, so wait generously for the loaded screen.
+- extendedWaitUntil:
+    visible: "Azan Time"
+    timeout: 30000
+- assertVisible: "Today's Prayers"
+- assertVisible: "NEXT PRAYER"

@@ -5,6 +5,7 @@ import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { LogBox } from 'react-native';
 import { bootstrapAnalytics, logScreenView } from '@/services/analyticsService';
 import { bootstrapCrashlytics, recordNonFatal } from '@/services/crashlyticsService';
 import { bootstrapPerformance } from '@/services/performanceService';
@@ -16,6 +17,24 @@ export {
 export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
+
+// React Native Firebase v22 logs a deprecation warning on every namespaced-API
+// call (analytics/crashlytics/perf). They're harmless migration nags, but in dev
+// they raise a warning overlay anchored at the bottom of the screen whose touch
+// layer covers the tab bar and swallows taps (manual use + Maestro E2E). This is
+// RNFirebase's official opt-out — it stops the warnings at the source.
+(globalThis as any).RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+
+// In a dev build, every console.warn/error raises a notification overlay whose
+// touch layer covers the bottom tab bar and silently swallows taps — which breaks
+// Maestro E2E navigation (the app legitimately warns on network failures, optional
+// audio, geocoding retries, etc.). Disable the overlay ONLY during E2E runs: start
+// Metro with EXPO_PUBLIC_E2E=1 (the value is inlined at bundle time). Normal dev
+// keeps its red/yellow error boxes. LogBox is dev-only, so this is a no-op in
+// release builds regardless.
+if (process.env.EXPO_PUBLIC_E2E === '1') {
+  LogBox.ignoreAllLogs(true);
+}
 
 SplashScreen.preventAutoHideAsync();
 

@@ -106,7 +106,9 @@ export async function requestNotificationPermission(): Promise<boolean> {
             description: 'Prayer time notifications with default sound',
             importance: notif.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
-            sound: 'default',
+            // Omit `sound` to use the system default chime. Passing the string
+            // 'default' makes expo-notifications hunt for a bundled sound file
+            // literally named "default" and throw "Custom sound not found".
         });
 
         // Fajr-specific channel — enable once `azan-fajr.mp3` is bundled. Until
@@ -189,7 +191,9 @@ export async function schedulePrayerNotifications(
         //       ? 'default'
         //       : prayer.name === 'fajr' ? 'azan-fajr.mp3' : 'azan.mp3';
         const channelId = azanEnabled ? 'prayer-azan' : 'prayer-times';
-        const soundFile = azanEnabled ? 'azan.mp3' : 'default';
+        // `true` = system default sound. The bundled custom file ('azan.mp3')
+        // resolves fine; the string 'default' does not — it throws.
+        const soundFile: string | boolean = azanEnabled ? 'azan.mp3' : true;
 
         await notif.scheduleNotificationAsync({
             content: {

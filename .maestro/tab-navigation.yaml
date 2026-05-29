@@ -1,0 +1,30 @@
+# Navigates through all 5 bottom tabs and asserts each screen's unique subtitle,
+# proving navigation actually switches screens (not just that a tab label exists).
+appId: com.azantime.app
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 30000
+
+# Tracker tab
+- tapOn: "Tracker"
+- assertVisible: "Track your daily prayers"
+
+# Dua tab
+- tapOn: "Dua"
+- assertVisible: "Daily remembrance of Allah"
+
+# Radio tab
+- tapOn: "Radio"
+- assertVisible: "Listen to beautiful Quran recitations 24/7"
+
+# Qibla tab
+- tapOn: "Qibla"
+- assertVisible: "Direction to the Holy Kaaba"
+
+# Back to Prayers (home)
+- tapOn: "Prayers"
+- assertVisible: "Today's Prayers"
