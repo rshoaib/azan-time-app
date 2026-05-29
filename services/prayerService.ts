@@ -6,6 +6,7 @@ import {
     Qibla,
     CalculationParameters,
 } from 'adhan';
+import { e2eNow } from './e2eConfig';
 
 export type PrayerName = 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 
@@ -71,9 +72,8 @@ export function getPrayerTimes(
         { name: 'isha', label: 'Isha', time: prayerTimes.isha },
     ];
 
-    // Determine next prayer
-    const now = new Date();
-    const nextAdhanPrayer = prayerTimes.nextPrayer();
+    // Determine next prayer relative to e2eNow() (the real clock in production).
+    const nextAdhanPrayer = prayerTimes.nextPrayer(e2eNow());
     let nextPrayer: PrayerName | null = null;
     let nextPrayerTime: Date | null = null;
 
@@ -107,7 +107,7 @@ export function formatTime(date: Date): string {
 }
 
 export function getTimeRemaining(target: Date): string {
-    const now = new Date();
+    const now = e2eNow();
     let diff = target.getTime() - now.getTime();
 
     if (diff < 0) return '—';

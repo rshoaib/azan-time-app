@@ -68,6 +68,28 @@ export async function getScheduledNotificationCount(): Promise<number> {
     return scheduled.length;
 }
 
+/**
+ * E2E helper: fire a notification a second from now so the foreground
+ * `addNotificationReceivedListener` runs and plays the azan — lets a test verify
+ * the delivery -> azan-playback path without waiting for a real prayer time.
+ */
+export async function fireTestNotification(): Promise<void> {
+    const notif = await getNotifications();
+    if (!notif) return;
+    await notif.scheduleNotificationAsync({
+        content: {
+            title: 'Azan Time 🕌',
+            body: 'E2E test notification',
+            sound: true,
+            data: { prayer: 'dhuhr' },
+        },
+        trigger: {
+            type: notif.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: 1,
+        },
+    });
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
     const notif = await getNotifications();
     if (!notif) {

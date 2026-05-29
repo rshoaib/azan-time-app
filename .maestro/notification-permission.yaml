@@ -1,0 +1,13 @@
+# Exercises the real Android notification-permission dialog. `unset` leaves the
+# permission in the OS "ask" state so the system prompt appears; we tap Allow and
+# confirm the app proceeds.
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: unset
+- tapOn: "Allow"
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 30000

@@ -32,9 +32,9 @@ import {
   getAzanReciter,
   setAzanReciter,
 } from '@/services/storageService';
-import { stopAzan } from '@/services/audioService';
-import { getScheduledNotificationCount } from '@/services/notificationService';
-import { E2E } from '@/services/e2eConfig';
+import { stopAzan, isAzanPlaying } from '@/services/audioService';
+import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
+import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
   { value: 0, label: 'At prayer time' },
@@ -58,8 +58,16 @@ export default function SettingsScreen() {
   const [reciter, setReciter] = useState('default');
   const [locationInfo, setLocationInfo] = useState('');
   const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
+  const [azanPlaying, setAzanPlaying] = useState(false);
 
   useEffect(() => { loadSettings(); }, []);
+
+  // E2E: poll azan playback state so a test can assert it after firing a notification.
+  useEffect(() => {
+    if (!E2E) return;
+    const id = setInterval(() => setAzanPlaying(isAzanPlaying()), 300);
+    return () => clearInterval(id);
+  }, []);
 
   const loadSettings = async () => {
     const m = await getCalculationMethod(); setMethod(m);
@@ -130,9 +138,20 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🔔 NOTIFICATIONS</Text>
           {E2E && (
-            <Text testID="e2e-scheduled-count" style={styles.settingValue}>
-              E2E scheduled: {e2eScheduled ?? '…'}
-            </Text>
+            <>
+              <Text testID="e2e-scheduled-count" style={styles.settingValue}>
+                E2E scheduled: {e2eScheduled ?? '…'}
+              </Text>
+              <Text testID="e2e-azan-state" style={styles.settingValue}>
+                azan: {azanPlaying ? 'playing' : 'idle'}
+              </Text>
+              <Pressable testID="e2e-fire-azan" onPress={() => fireTestNotification()}>
+                <Text style={styles.settingLabel}>E2E: fire test azan</Text>
+              </Pressable>
+              <Pressable testID="e2e-force-error" onPress={() => e2eSetForceError()}>
+                <Text style={styles.settingLabel}>E2E: force home error</Text>
+              </Pressable>
+            </>
           )}
 
           <View style={styles.settingCard}>

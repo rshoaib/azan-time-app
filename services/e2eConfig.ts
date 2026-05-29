@@ -12,3 +12,22 @@ export const E2E_LOCATION = {
   city: 'London',
   country: 'United Kingdom',
 };
+
+// Fixed "now" for deterministic time-based UI (next prayer + countdown). Returns
+// the real clock in normal/production builds, so behavior there is unchanged.
+const E2E_NOW_ISO = '2026-05-29T10:00:00.000Z';
+export function e2eNow(): Date {
+  return E2E ? new Date(E2E_NOW_ISO) : new Date();
+}
+
+// One-shot error trigger: a test arms it (via a hidden Settings control), and the
+// next home load consumes it and throws — driving the error/Retry screen on demand.
+let _forceError = false;
+export function e2eSetForceError(): void {
+  _forceError = true;
+}
+export function e2eConsumeForceError(): boolean {
+  const v = _forceError;
+  _forceError = false;
+  return v;
+}

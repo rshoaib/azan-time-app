@@ -1,0 +1,18 @@
+# Deterministic prayer-time / countdown check. Under EXPO_PUBLIC_E2E the clock is
+# frozen (e2eNow) and the location is fixed (London), so the "next prayer" and its
+# countdown are stable: at the fixed instant the next prayer is Dhuhr, 1h 59m out.
+# The countdown is a duration from the fixed clock, so it's timezone-independent.
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Azan Time"
+    timeout: 30000
+- assertVisible: "NEXT PRAYER"
+- assertVisible: "Dhuhr"
+- extendedWaitUntil:
+    visible: "1h 59m"
+    timeout: 10000

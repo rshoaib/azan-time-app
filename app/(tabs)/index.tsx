@@ -18,6 +18,7 @@ import {
     getSavedLocation,
     setSavedLocation,
 } from '@/services/storageService';
+import { E2E, e2eConsumeForceError, e2eNow } from '@/services/e2eConfig';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -55,6 +56,7 @@ export default function HomeScreen() {
 
     try {
       setError(null);
+      if (E2E && e2eConsumeForceError()) throw new Error('E2E: simulated load failure');
 
       let loc = await getSavedLocation();
       if (!loc) {
@@ -66,7 +68,7 @@ export default function HomeScreen() {
 
       const method = await getCalculationMethod();
       setCalcMethod(method);
-      const times = getPrayerTimes(loc.latitude, loc.longitude, new Date(), method);
+      const times = getPrayerTimes(loc.latitude, loc.longitude, e2eNow(), method);
       setPrayerTimes(times);
 
       // Schedule notifications (dynamically imported to avoid Expo Go errors)
@@ -166,7 +168,7 @@ export default function HomeScreen() {
     );
   }
 
-  const today = new Date();
+  const today = e2eNow();
   const dateStr = today.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',

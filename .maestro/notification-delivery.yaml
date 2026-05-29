@@ -1,0 +1,25 @@
+# Fires an immediate notification via an E2E-only control in Settings. When it
+# fires, the foreground listener plays the azan, so isAzanPlaying() flips to true
+# — verifying notification delivery + azan playback together. (Audio relies on the
+# default azanSoundEnabled=true, which clearState restores.)
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 30000
+- tapOn:
+    id: "home-open-settings"
+- assertVisible:
+    id: "e2e-azan-state"
+    text: ".*idle.*"
+- tapOn:
+    id: "e2e-fire-azan"
+- extendedWaitUntil:
+    visible:
+      id: "e2e-azan-state"
+      text: ".*playing.*"
+    timeout: 20000

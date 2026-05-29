@@ -1,0 +1,21 @@
+# Drives the home error/Retry screen on demand via a one-shot E2E trigger:
+# arm it in Settings, go back to home (which reloads and throws once), assert the
+# Retry screen, tap Retry, and confirm the screen recovers.
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 30000
+- tapOn:
+    id: "home-open-settings"
+- assertVisible: "Customize your Azan experience"
+- tapOn:
+    id: "e2e-force-error"
+- back
+- assertVisible: "Retry"
+- tapOn: "Retry"
+- assertVisible: "Today's Prayers"
