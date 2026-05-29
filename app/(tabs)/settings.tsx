@@ -31,6 +31,8 @@ import {
   setAzanSoundEnabled,
   getAzanReciter,
   setAzanReciter,
+  getAzanShortEnabled,
+  setAzanShortEnabled,
 } from '@/services/storageService';
 import { stopAzan, isAzanPlaying } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
@@ -55,6 +57,7 @@ export default function SettingsScreen() {
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showReciterModal, setShowReciterModal] = useState(false);
   const [azanSoundOn, setAzanSoundOn] = useState(true);
+  const [azanShortOn, setAzanShortOn] = useState(false);
   const [reciter, setReciter] = useState('default');
   const [locationInfo, setLocationInfo] = useState('');
   const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
@@ -75,6 +78,7 @@ export default function SettingsScreen() {
     const e = await getEnabledPrayers(); setEnabledPrayersState(e);
     const a = await getAdvanceMinutes(); setAdvance(a);
     const azanOn = await getAzanSoundEnabled(); setAzanSoundOn(azanOn);
+    const short = await getAzanShortEnabled(); setAzanShortOn(short);
     const r = await getAzanReciter(); setReciter(r);
     const loc = await getSavedLocation();
     if (loc) setLocationInfo(`${loc.city}, ${loc.country}`);
@@ -97,6 +101,9 @@ export default function SettingsScreen() {
   const handleAzanSoundToggle = async (value: boolean) => {
     setAzanSoundOn(value); await setAzanSoundEnabled(value);
     if (!value) await stopAzan();
+  };
+  const handleAzanShortToggle = async (value: boolean) => {
+    setAzanShortOn(value); await setAzanShortEnabled(value);
   };
   const handleReciterChange = async (id: string) => {
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
@@ -225,6 +232,28 @@ export default function SettingsScreen() {
               thumbColor={azanSoundOn ? Theme.colors.gold : '#666'}
             />
           </View>
+
+          {azanSoundOn && (
+            <View style={[styles.settingCard, { marginTop: 8 }]}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: Theme.colors.teal + '20' }]}>
+                  <Text style={{ fontSize: 16 }}>⏱️</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.settingLabel}>Short Azan</Text>
+                  <Text style={styles.settingValue}>
+                    {azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={azanShortOn}
+                onValueChange={handleAzanShortToggle}
+                trackColor={{ false: Theme.colors.textMuted + '40', true: Theme.colors.gold + '50' }}
+                thumbColor={azanShortOn ? Theme.colors.gold : '#666'}
+              />
+            </View>
+          )}
 
           {azanSoundOn && RECITERS.length > 1 && (
             <Pressable

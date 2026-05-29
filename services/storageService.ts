@@ -9,6 +9,7 @@ const KEYS = {
     SAVED_LOCATION: 'saved_location',
     AZAN_SOUND_ENABLED: 'azan_sound_enabled',
     AZAN_RECITER: 'azan_reciter',
+    AZAN_SHORT: 'azan_short',
 };
 
 export interface SavedLocation {
@@ -101,6 +102,16 @@ export async function getAzanReciter(): Promise<string> {
 
 export async function setAzanReciter(reciterId: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.AZAN_RECITER, reciterId);
+}
+
+// Short azan toggle — play a brief adhan instead of the full recording.
+export async function getAzanShortEnabled(): Promise<boolean> {
+    const value = await AsyncStorage.getItem(KEYS.AZAN_SHORT);
+    return value === 'true';
+}
+
+export async function setAzanShortEnabled(enabled: boolean): Promise<void> {
+    await AsyncStorage.setItem(KEYS.AZAN_SHORT, enabled.toString());
 }
 
 // ============ Prayer Tracker ============

@@ -74,6 +74,10 @@ export const RECITERS: Reciter[] = [
     // },
 ];
 
+// Short adhan clip — a brief takbir, used when the "Short Azan" setting is on.
+// Overrides the selected reciter and any prayer-specific audio.
+export const SHORT_AZAN_AUDIO = require('../assets/audio/azanshort.mp3');
+
 export function getReciter(id: string): Reciter {
     return RECITERS.find(r => r.id === id) ?? RECITERS[0];
 }

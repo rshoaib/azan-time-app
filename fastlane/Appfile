@@ -1,0 +1,4 @@
+# fastlane Appfile — defaults for the Google Play upload.
+# The service-account key is gitignored (google-play-key.json in the repo root).
+json_key_file("google-play-key.json")
+package_name("com.azantime.app")

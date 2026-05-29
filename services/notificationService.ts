@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
-import { getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
+import { getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
 import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
@@ -133,6 +133,15 @@ export async function requestNotificationPermission(): Promise<boolean> {
             sound: 'azan.mp3',
         });
 
+        // Channel with the SHORT azan (when "Short Azan" is enabled)
+        await notif.setNotificationChannelAsync('prayer-azan-short', {
+            name: 'Prayer Times (Short Azan)',
+            description: 'Prayer time notifications with a short azan',
+            importance: notif.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            sound: 'azanshort.mp3',
+        });
+
         // Channel with default sound (for prayer notifications when Azan is off)
         await notif.setNotificationChannelAsync('prayer-times', {
             name: 'Prayer Times',
@@ -188,6 +197,7 @@ export async function schedulePrayerNotifications(
 
     const now = new Date();
     const azanEnabled = await getAzanSoundEnabled();
+    const azanShort = await getAzanShortEnabled();
 
     // Schedule notifications for today + the next 2 days (3 days total)
     const loc = await getSavedLocation();
@@ -223,10 +233,14 @@ export async function schedulePrayerNotifications(
         //   const soundFile = !azanEnabled
         //       ? 'default'
         //       : prayer.name === 'fajr' ? 'azan-fajr.mp3' : 'azan.mp3';
-        const channelId = azanEnabled ? 'prayer-azan' : 'prayer-times';
-        // `true` = system default sound. The bundled custom file ('azan.mp3')
-        // resolves fine; the string 'default' does not — it throws.
-        const soundFile: string | boolean = azanEnabled ? 'azan.mp3' : true;
+        const channelId = !azanEnabled
+            ? 'prayer-times'
+            : azanShort ? 'prayer-azan-short' : 'prayer-azan';
+        // `true` = system default sound. Bundled files ('azan.mp3' / 'azanshort.mp3')
+        // resolve fine; the string 'default' does not — it throws.
+        const soundFile: string | boolean = !azanEnabled
+            ? true
+            : azanShort ? 'azanshort.mp3' : 'azan.mp3';
 
         await notif.scheduleNotificationAsync({
             content: {

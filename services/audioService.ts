@@ -1,6 +1,6 @@
-import { getAzanReciter, getAzanSoundEnabled } from './storageService';
+import { getAzanReciter, getAzanShortEnabled, getAzanSoundEnabled } from './storageService';
 import { getAudioModule } from './audioModuleLoader';
-import { getReciter, PRAYER_SPECIFIC_AUDIO } from '../constants/reciters';
+import { getReciter, PRAYER_SPECIFIC_AUDIO, SHORT_AZAN_AUDIO } from '../constants/reciters';
 import type { PrayerName } from './prayerService';
 
 let currentSound: any = null;
@@ -51,10 +51,13 @@ export async function playAzan(prayerName?: PrayerName): Promise<void> {
 
         // Pick the audio source: prayer-specific (e.g. Fajr) takes precedence
         // over the user's selected reciter.
+        const short = await getAzanShortEnabled();
         const reciterId = await getAzanReciter();
         const reciter = getReciter(reciterId);
-        const audioSource =
-            (prayerName && PRAYER_SPECIFIC_AUDIO[prayerName]) ?? reciter.audioSource;
+        // Short azan overrides reciter + prayer-specific recordings.
+        const audioSource = short
+            ? SHORT_AZAN_AUDIO
+            : (prayerName && PRAYER_SPECIFIC_AUDIO[prayerName]) ?? reciter.audioSource;
 
         if (!audioSource) {
             console.warn(`No audio source for reciter ${reciterId}`);
