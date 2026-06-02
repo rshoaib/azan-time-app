@@ -7,7 +7,13 @@ appId: com.azantime.app
     clearState: true
     permissions:
       notifications: unset
+# The app requests notification permission only after it has loaded far enough to
+# schedule prayers (location → lazy-import notificationService → request), which on
+# a dev build is tens of seconds in — so wait for the system dialog before tapping.
+- extendedWaitUntil:
+    visible: "Allow"
+    timeout: 90000
 - tapOn: "Allow"
 - extendedWaitUntil:
     visible: "Today's Prayers"
-    timeout: 30000
+    timeout: 90000

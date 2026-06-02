@@ -9,7 +9,7 @@ appId: com.azantime.app
       all: allow
 - extendedWaitUntil:
     visible: "Tracker"
-    timeout: 30000
+    timeout: 90000
 - tapOn: "Tracker"
 - assertVisible: "Track your daily prayers"
 - assertVisible: "0/5"

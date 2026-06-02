@@ -1,0 +1,19 @@
+diff --git a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/Os.kt b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/Os.kt
+index 12c7119..854d9fa 100644
+--- a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/Os.kt
++++ b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/Os.kt
+@@ -5,9 +5,9 @@ object Os {
+     System.getProperty("os.name")?.lowercase()?.contains("windows") == true
+ 
+   fun windowsAwareCommandLine(args: List<String>): List<String> =
+-    if (isWindows()) {
+-      listOf("cmd", "/c") + args
+-    } else {
+-      args
+-    }
++    // Windows build fix (persisted via patch-package): exec node directly instead of
++    // via `cmd /c`, which mis-parses the `--eval "require('expo/bin/autolinking')"`
++    // argument (parentheses are grouping operators), making autolinking exit 1 at
++    // Gradle settings evaluation. node.exe is on PATH.
++    args
+ }

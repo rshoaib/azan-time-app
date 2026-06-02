@@ -1,4 +1,4 @@
-# Navigates through all 5 bottom tabs and asserts each screen's unique subtitle,
+# Navigates through all 6 bottom tabs and asserts each screen's unique subtitle,
 # proving navigation actually switches screens (not just that a tab label exists).
 appId: com.azantime.app
 ---
@@ -7,7 +7,7 @@ appId: com.azantime.app
       all: allow
 - extendedWaitUntil:
     visible: "Today's Prayers"
-    timeout: 30000
+    timeout: 90000
 
 # Tracker tab
 - tapOn: "Tracker"
@@ -17,13 +17,17 @@ appId: com.azantime.app
 - tapOn: "Dua"
 - assertVisible: "Daily remembrance of Allah"
 
-# Radio tab
-- tapOn: "Radio"
+# Tilawat tab
+- tapOn: "Tilawat"
 - assertVisible: "Listen to beautiful Quran recitations 24/7"
 
 # Qibla tab
 - tapOn: "Qibla"
 - assertVisible: "Direction to the Holy Kaaba"
+
+# Settings tab (now a visible tab, not just the home cog)
+- tapOn: "Settings"
+- assertVisible: "Customize your Azan experience"
 
 # Back to Prayers (home)
 - tapOn: "Prayers"

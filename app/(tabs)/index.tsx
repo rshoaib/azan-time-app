@@ -1,7 +1,7 @@
 import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme } from '@/constants/theme';
 import { getDailyAyah } from '@/data/dailyAyah';
-import { getCurrentLocation, LocationResult } from '@/services/locationService';
+import { getCurrentLocation, LocationResult, maybeRefreshLocation } from '@/services/locationService';
 import {
     formatTime,
     getPrayerTimes,
@@ -49,7 +49,33 @@ export default function HomeScreen() {
   const [calcMethod, setCalcMethod] = useState('MuslimWorldLeague');
   const isLoadingRef = useRef(false);
 
-  const loadPrayerTimes = useCallback(async () => {
+  // Render prayer times for a location and (re)schedule its notifications.
+  // Called once with the cached location for an instant first paint, and again
+  // with a fresh location when the user has travelled to a new city.
+  const applyLocation = useCallback(async (loc: LocationResult) => {
+    setLocation(loc);
+
+    const method = await getCalculationMethod();
+    setCalcMethod(method);
+    const times = getPrayerTimes(loc.latitude, loc.longitude, e2eNow(), method);
+    setPrayerTimes(times);
+
+    // Schedule notifications (dynamically imported to avoid Expo Go errors)
+    try {
+      const { requestNotificationPermission, schedulePrayerNotifications } =
+        await import('@/services/notificationService');
+      const hasPermission = await requestNotificationPermission();
+      if (hasPermission) {
+        const enabled = await getEnabledPrayers();
+        const advance = await getAdvanceMinutes();
+        await schedulePrayerNotifications(times.prayers, enabled, advance);
+      }
+    } catch {
+      // Notification module not available (e.g. Expo Go)
+    }
+  }, []);
+
+  const loadPrayerTimes = useCallback(async (opts: { force?: boolean } = {}) => {
     // Prevent concurrent calls (race between focus + countdown)
     if (isLoadingRef.current) return;
     isLoadingRef.current = true;
@@ -58,39 +84,27 @@ export default function HomeScreen() {
       setError(null);
       if (E2E && e2eConsumeForceError()) throw new Error('E2E: simulated load failure');
 
+      // 1. Paint instantly from the cached location (also the offline fallback).
+      //    Only block on GPS on a true first run, when nothing is cached yet.
       let loc = await getSavedLocation();
       if (!loc) {
-        const detected = await getCurrentLocation();
-        loc = detected;
-        await setSavedLocation(detected);
+        loc = await getCurrentLocation();
+        await setSavedLocation(loc);
       }
-      setLocation(loc as LocationResult);
+      await applyLocation(loc as LocationResult);
+      setLoading(false); // content is on screen — don't block it on revalidation
 
-      const method = await getCalculationMethod();
-      setCalcMethod(method);
-      const times = getPrayerTimes(loc.latitude, loc.longitude, e2eNow(), method);
-      setPrayerTimes(times);
-
-      // Schedule notifications (dynamically imported to avoid Expo Go errors)
-      try {
-        const { requestNotificationPermission, schedulePrayerNotifications } =
-          await import('@/services/notificationService');
-        const hasPermission = await requestNotificationPermission();
-        if (hasPermission) {
-          const enabled = await getEnabledPrayers();
-          const advance = await getAdvanceMinutes();
-          await schedulePrayerNotifications(times.prayers, enabled, advance);
-        }
-      } catch {
-        // Notification module not available (e.g. Expo Go)
-      }
+      // 2. Revalidate against GPS so prayer times follow the user when they
+      //    travel. Throttled, unless the user forced it via pull-to-refresh.
+      const fresh = await maybeRefreshLocation(loc as LocationResult, { force: opts.force });
+      if (fresh) await applyLocation(fresh);
     } catch (e: any) {
       setError(e.message || 'Failed to load prayer times');
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, []);
+  }, [applyLocation]);
 
   // Load prayer times on mount AND whenever the tab comes into focus
   // (useFocusEffect fires on mount too, so no separate useEffect needed)
@@ -118,7 +132,9 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadPrayerTimes();
+    // Pull-to-refresh is an explicit user request — force a fresh GPS fix so a
+    // traveller can pull down to update their city/prayer times immediately.
+    await loadPrayerTimes({ force: true });
     setRefreshing(false);
   }, [loadPrayerTimes]);
 

@@ -9,6 +9,7 @@ import {
   Modal,
   FlatList,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +28,7 @@ import {
   getAdvanceMinutes,
   setAdvanceMinutes,
   getSavedLocation,
+  setSavedLocation,
   getAzanSoundEnabled,
   setAzanSoundEnabled,
   getAzanReciter,
@@ -36,6 +38,7 @@ import {
 } from '@/services/storageService';
 import { stopAzan, isAzanPlaying } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
+import { getCurrentLocation } from '@/services/locationService';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
@@ -60,6 +63,8 @@ export default function SettingsScreen() {
   const [azanShortOn, setAzanShortOn] = useState(false);
   const [reciter, setReciter] = useState('default');
   const [locationInfo, setLocationInfo] = useState('');
+  const [updatingLocation, setUpdatingLocation] = useState(false);
+  const [locationMsg, setLocationMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
   const [azanPlaying, setAzanPlaying] = useState(false);
 
@@ -107,6 +112,27 @@ export default function SettingsScreen() {
   };
   const handleReciterChange = async (id: string) => {
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
+  };
+
+  // Explicit, user-driven location refresh. Unlike the home screen's throttled
+  // background revalidation, this always re-detects via GPS and saves the result
+  // so a traveller can correct their city on demand. The home tab picks up the
+  // new saved location the next time it gains focus.
+  const handleUpdateLocation = async () => {
+    if (updatingLocation) return;
+    setUpdatingLocation(true);
+    setLocationMsg(null);
+    try {
+      const fresh = await getCurrentLocation();
+      await setSavedLocation(fresh);
+      const label = fresh.country ? `${fresh.city}, ${fresh.country}` : fresh.city;
+      setLocationInfo(label);
+      setLocationMsg({ text: `Updated to ${label}`, ok: true });
+    } catch (e: any) {
+      setLocationMsg({ text: e?.message || 'Could not get your location', ok: false });
+    } finally {
+      setUpdatingLocation(false);
+    }
   };
 
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
@@ -275,19 +301,39 @@ export default function SettingsScreen() {
         </View>
 
         {/* Location */}
-        {locationInfo ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📍 LOCATION</Text>
-            <View style={styles.settingCard}>
-              <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: Theme.colors.sunrise + '20' }]}>
-                  <Text style={{ fontSize: 16 }}>🌍</Text>
-                </View>
-                <Text style={styles.settingValue}>{locationInfo}</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📍 LOCATION</Text>
+          <Pressable
+            testID="settings-update-location"
+            style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]}
+            onPress={handleUpdateLocation}
+            disabled={updatingLocation}
+          >
+            <View style={styles.settingLeft}>
+              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.sunrise + '20' }]}>
+                <Text style={{ fontSize: 16 }}>🌍</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingLabel}>
+                  {updatingLocation ? 'Updating location…' : 'Update Location'}
+                </Text>
+                <Text
+                  style={[
+                    styles.settingValue,
+                    locationMsg ? { color: locationMsg.ok ? Theme.colors.emerald : Theme.colors.danger } : null,
+                  ]}
+                >
+                  {locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your current location'}
+                </Text>
               </View>
             </View>
-          </View>
-        ) : null}
+            {updatingLocation ? (
+              <ActivityIndicator size="small" color={Theme.colors.gold} />
+            ) : (
+              <FontAwesome name="location-arrow" size={16} color={Theme.colors.gold} />
+            )}
+          </Pressable>
+        </View>
 
         {/* About */}
         <View style={styles.section}>

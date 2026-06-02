@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { maybeFireLocationGranted } from './analyticsService';
+import { setSavedLocation } from './storageService';
 import { E2E, E2E_LOCATION } from './e2eConfig';
 
 export interface LocationResult {
@@ -125,4 +126,83 @@ export async function getCurrentLocation(): Promise<LocationResult> {
     }
 
     return { latitude, longitude, city, country };
+}
+
+// ─── Stale-while-revalidate refresh ──────────────────────────────────────────
+// The app renders instantly from the cached `saved_location` (fast first paint
+// and an offline fallback), then calls maybeRefreshLocation() to follow the user
+// when they travel to a new city — without this the cache is written once and
+// never updated, so prayer times / Qibla stay stuck on the old city.
+
+// How far the device must move from the cached location before we treat the user
+// as having travelled. GPS jitter is a few metres and prayer times barely change
+// across a city, so 5 km cleanly separates "same place" from "travelled" without
+// false positives from normal location noise.
+const MOVE_THRESHOLD_METERS = 5000;
+
+// Don't hit GPS on every screen focus. Auto-revalidate at most once per interval;
+// a manual pull-to-refresh passes `force` to bypass this.
+const REVALIDATE_INTERVAL_MS = 10 * 60 * 1000;
+let lastRevalidateAt = 0;
+
+/** Great-circle distance between two coordinates, in metres (Haversine). */
+function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371000; // Earth's radius in metres
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Check whether the user has travelled since the cached location was saved, and
+ * if so persist the new location and hand it back so the caller can recompute
+ * prayer times / Qibla / nearby mosques.
+ *
+ * Returns `null` when nothing should change — the user hasn't moved far enough,
+ * the call was throttled, or GPS is unavailable (offline-safe: we keep the cached
+ * location rather than surfacing an error). Never throws.
+ *
+ * @param current   the location currently on screen (from the cache)
+ * @param opts.force bypass the throttle — used by manual pull-to-refresh
+ */
+export async function maybeRefreshLocation(
+    current: LocationResult,
+    opts: { force?: boolean } = {},
+): Promise<LocationResult | null> {
+    // E2E uses a fixed location; it never "moves". Stripped in production.
+    if (E2E) return null;
+
+    const now = Date.now();
+    if (!opts.force && now - lastRevalidateAt < REVALIDATE_INTERVAL_MS) {
+        return null;
+    }
+    // Stamp before the attempt so repeated failures don't hammer GPS every focus.
+    lastRevalidateAt = now;
+
+    let fresh: LocationResult;
+    try {
+        fresh = await getCurrentLocation();
+    } catch {
+        // Offline, GPS off, or permission revoked — keep the cached location.
+        return null;
+    }
+
+    const moved =
+        distanceMeters(current.latitude, current.longitude, fresh.latitude, fresh.longitude) >
+        MOVE_THRESHOLD_METERS;
+    if (!moved) return null;
+
+    await setSavedLocation(fresh);
+    return fresh;
+}
+
+/** Test seam — reset the revalidation throttle between cases. */
+export function __resetLocationRevalidateThrottle(): void {
+    lastRevalidateAt = 0;
 }

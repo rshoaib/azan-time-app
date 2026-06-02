@@ -1,0 +1,20 @@
+diff --git a/node_modules/@react-native/gradle-plugin/shared/src/main/kotlin/com/facebook/react/utils/TaskUtils.kt b/node_modules/@react-native/gradle-plugin/shared/src/main/kotlin/com/facebook/react/utils/TaskUtils.kt
+index a4482ab..5f281f9 100644
+--- a/node_modules/@react-native/gradle-plugin/shared/src/main/kotlin/com/facebook/react/utils/TaskUtils.kt
++++ b/node_modules/@react-native/gradle-plugin/shared/src/main/kotlin/com/facebook/react/utils/TaskUtils.kt
+@@ -10,11 +10,10 @@ package com.facebook.react.utils
+ fun windowsAwareCommandLine(vararg args: Any): List<Any> = windowsAwareCommandLine(args.toList())
+ 
+ fun windowsAwareCommandLine(args: List<Any>): List<Any> =
+-    if (Os.isWindows()) {
+-      listOf("cmd", "/c") + args
+-    } else {
+-      args
+-    }
++    // Windows build fix (persisted via patch-package): exec node directly instead of
++    // via `cmd /c`, which mis-parses the `--eval "require('…')"` argument
++    // (parentheses) and makes codegen / createExpoConfig exit 1.
++    args
+ 
+ fun windowsAwareBashCommandLine(
+     vararg args: String,

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Azan Time",
     "slug": "azan-time",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "description": "Free prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker. No subscription, no ads.",
     "primaryColor": "#D4AF37",
     "orientation": "portrait",
@@ -30,7 +30,7 @@
       }
     },
     "android": {
-      "versionCode": 20,
+      "versionCode": 21,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0F1B45"

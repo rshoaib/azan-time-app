@@ -57,7 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="radio"
         options={{
-          title: 'Radio',
+          title: 'Tilawat',
           tabBarIcon: ({ color }) => <TabBarIcon name="headphones" color={color} />,
         }}
       />
@@ -71,7 +71,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          href: null,
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
         }}
       />
     </Tabs>

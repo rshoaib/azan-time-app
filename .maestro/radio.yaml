@@ -1,16 +1,22 @@
-# Plays a radio station and verifies the Now Playing card appears. The assertion
-# targets the card's testID so it passes regardless of whether the network stream
-# connects (Connecting / Now Playing / Paused all render the same card).
+# Plays a Quran recitation (Tilawat) station and verifies the Now Playing card
+# appears. The assertion targets the card's testID so it passes regardless of
+# whether the network stream connects (Connecting / Now Playing / Paused all
+# render the same card).
 appId: com.azantime.app
 ---
 - launchApp:
     permissions:
       all: allow
 - extendedWaitUntil:
-    visible: "Radio"
-    timeout: 30000
-- tapOn: "Radio"
+    visible: "Tilawat"
+    timeout: 90000
+- tapOn: "Tilawat"
 - assertVisible: "Listen to beautiful Quran recitations 24/7"
 - tapOn: "Main Quran Radio"
-- assertVisible:
-    id: "radio-now-playing"
+# The first station tap lazily imports expo-av; on a dev build Metro compiles that
+# chunk on demand, and setCurrentStation only runs after that await — so wait
+# generously for the Now Playing card rather than asserting immediately.
+- extendedWaitUntil:
+    visible:
+      id: "radio-now-playing"
+    timeout: 60000

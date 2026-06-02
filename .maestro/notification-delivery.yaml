@@ -10,7 +10,7 @@ appId: com.azantime.app
       all: allow
 - extendedWaitUntil:
     visible: "Today's Prayers"
-    timeout: 30000
+    timeout: 90000
 - tapOn:
     id: "home-open-settings"
 - assertVisible:
@@ -18,8 +18,10 @@ appId: com.azantime.app
     text: ".*idle.*"
 - tapOn:
     id: "e2e-fire-azan"
+# Playing the azan lazily imports expo-av (cold-compiled on demand in a dev
+# build), so allow generous time for the state to flip from idle to playing.
 - extendedWaitUntil:
     visible:
       id: "e2e-azan-state"
       text: ".*playing.*"
-    timeout: 20000
+    timeout: 60000

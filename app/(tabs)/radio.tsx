@@ -158,7 +158,7 @@ export default function RadioScreen() {
       >
         {/* Header */}
         <LinearGradient colors={['#F5F6FA', '#EEF0F6']} style={styles.header}>
-          <Text style={styles.title}>📻 Quran Radio</Text>
+          <Text style={styles.title}>📖 Quran Tilawat</Text>
           <Text style={styles.subtitle}>Listen to beautiful Quran recitations 24/7</Text>
         </LinearGradient>
 
@@ -232,7 +232,7 @@ export default function RadioScreen() {
             {!audioAvailable && (
               <View style={styles.audioNotice}>
                 <Text style={styles.audioNoticeText}>
-                  ⚠️ Audio not available in Expo Go. Use a development build to stream radio.
+                  ⚠️ Audio not available in Expo Go. Use a development build to stream recitations.
                 </Text>
               </View>
             )}
@@ -341,7 +341,7 @@ export default function RadioScreen() {
         {/* Footer credit */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Powered by mp3quran.net • Free Quran Radio
+            Powered by mp3quran.net • Free Quran Recitations
           </Text>
         </View>
       </ScrollView>

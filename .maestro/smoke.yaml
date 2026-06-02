@@ -8,6 +8,6 @@ appId: com.azantime.app
 # resolves location + computes times, so wait generously for the loaded screen.
 - extendedWaitUntil:
     visible: "Azan Time"
-    timeout: 30000
+    timeout: 90000
 - assertVisible: "Today's Prayers"
 - assertVisible: "NEXT PRAYER"

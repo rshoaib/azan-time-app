@@ -24,7 +24,29 @@ jest.mock('expo-location', () => ({
   Accuracy: { Balanced: 3 },
 }));
 
-import { requestLocationPermission, getCurrentLocation } from '@/services/locationService';
+// Mock the location cache so maybeRefreshLocation's persistence is observable
+// without pulling in AsyncStorage.
+jest.mock('@/services/storageService', () => ({
+  setSavedLocation: jest.fn().mockResolvedValue(undefined),
+  getSavedLocation: jest.fn().mockResolvedValue(null),
+}));
+
+// analyticsService transitively imports expo-constants (ESM), which jest can't
+// parse and which this suite doesn't exercise. locationService only uses the one
+// fire-once helper below, so stub it to keep the module graph loadable.
+jest.mock('@/services/analyticsService', () => ({
+  maybeFireLocationGranted: jest.fn().mockResolvedValue(undefined),
+}));
+
+import {
+  requestLocationPermission,
+  getCurrentLocation,
+  maybeRefreshLocation,
+  __resetLocationRevalidateThrottle,
+} from '@/services/locationService';
+import { setSavedLocation } from '@/services/storageService';
+
+const mockSetSavedLocation = setSavedLocation as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -171,6 +193,73 @@ describe('locationService', () => {
 
       const result = await getCurrentLocation();
       expect(result.city).toBe('Abu Dhabi');
+    });
+  });
+
+  // ─── maybeRefreshLocation ───────────────────────────────────────
+  // Regression: the saved location used to be written once and never
+  // refreshed, so a user who travelled kept seeing their old city and
+  // its prayer times. maybeRefreshLocation re-checks GPS and updates the
+  // cache only when the device has actually moved.
+  describe('maybeRefreshLocation', () => {
+    const current = {
+      latitude: 51.5074,
+      longitude: -0.1278,
+      city: 'London',
+      country: 'United Kingdom',
+    };
+
+    function mockGpsAt(latitude: number, longitude: number, city = 'Elsewhere') {
+      mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+      mockHasServicesEnabledAsync.mockResolvedValue(true);
+      mockGetCurrentPositionAsync.mockResolvedValue({ coords: { latitude, longitude } });
+      mockReverseGeocodeAsync.mockResolvedValue([
+        { city, country: 'X', subregion: null, region: null },
+      ]);
+    }
+
+    beforeEach(() => {
+      __resetLocationRevalidateThrottle();
+    });
+
+    it('updates and persists when the user has travelled (>5km)', async () => {
+      mockGpsAt(48.8566, 2.3522, 'Paris'); // ~340 km from London
+      const result = await maybeRefreshLocation(current, { force: true });
+      expect(result).toEqual({ latitude: 48.8566, longitude: 2.3522, city: 'Paris', country: 'X' });
+      expect(mockSetSavedLocation).toHaveBeenCalledWith(result);
+    });
+
+    it('returns null and keeps the cache when the user has not moved (<5km)', async () => {
+      mockGpsAt(51.5080, -0.1290, 'London'); // ~120 m away
+      const result = await maybeRefreshLocation(current, { force: true });
+      expect(result).toBeNull();
+      expect(mockSetSavedLocation).not.toHaveBeenCalled();
+    });
+
+    it('returns null and never throws when GPS is unavailable (offline-safe)', async () => {
+      mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+      mockHasServicesEnabledAsync.mockResolvedValue(true);
+      mockGetCurrentPositionAsync.mockRejectedValue(new Error('GPS unavailable'));
+      const result = await maybeRefreshLocation(current, { force: true });
+      expect(result).toBeNull();
+      expect(mockSetSavedLocation).not.toHaveBeenCalled();
+    }, 15000);
+
+    it('throttles auto (non-forced) revalidations — second call skips GPS', async () => {
+      mockGpsAt(48.8566, 2.3522, 'Paris');
+      await maybeRefreshLocation(current); // first: hits GPS
+      const callsAfterFirst = mockGetCurrentPositionAsync.mock.calls.length;
+      const result = await maybeRefreshLocation(current); // second: throttled
+      expect(result).toBeNull();
+      expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(callsAfterFirst);
+    });
+
+    it('force bypasses the throttle', async () => {
+      mockGpsAt(48.8566, 2.3522, 'Paris');
+      await maybeRefreshLocation(current); // sets the throttle stamp
+      const callsAfterFirst = mockGetCurrentPositionAsync.mock.calls.length;
+      await maybeRefreshLocation(current, { force: true }); // forced → hits GPS again
+      expect(mockGetCurrentPositionAsync.mock.calls.length).toBeGreaterThan(callsAfterFirst);
     });
   });
 });

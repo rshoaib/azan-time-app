@@ -1,0 +1,30 @@
+# Verifies the Settings "Update Location" control re-detects and persists the
+# user's location on demand. Under EXPO_PUBLIC_E2E getCurrentLocation() returns a
+# fixed location (London), so the result is deterministic. The "Updated to …"
+# text only renders AFTER the button is tapped, so the assertion proves the action
+# actually ran rather than just reading the pre-existing saved city.
+appId: com.azantime.app
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Today's Prayers"
+    timeout: 90000
+- tapOn:
+    id: "home-open-settings"
+- assertVisible: "Customize your Azan experience"
+# Location card is the LAST item, below Calculation / Notifications / Azan Sound.
+# Settings is now a bottom tab, so center the card to clear the tab bar — otherwise
+# the tap target and the "Updated to …" value line sit under it and are occluded.
+- scrollUntilVisible:
+    element:
+      id: "settings-update-location"
+    direction: DOWN
+    centerElement: true
+    timeout: 15000
+- tapOn:
+    id: "settings-update-location"
+# Maestro matches the full element text (regex), so anchor with .* — the value
+# line reads "Updated to London, United Kingdom" under EXPO_PUBLIC_E2E.
+- assertVisible: "Updated to London.*"

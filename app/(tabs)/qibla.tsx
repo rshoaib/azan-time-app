@@ -1,9 +1,9 @@
 import { Theme } from '@/constants/theme';
-import { getCurrentLocation } from '@/services/locationService';
+import { getCurrentLocation, LocationResult, maybeRefreshLocation } from '@/services/locationService';
 import { findNearbyMosques, formatDistance, Mosque, navigateToMosque } from '@/services/mosqueService';
 import { getQiblaDirection } from '@/services/prayerService';
 import { recordQiblaUse } from '@/services/reviewPromptService';
-import { getSavedLocation } from '@/services/storageService';
+import { getSavedLocation, setSavedLocation } from '@/services/storageService';
 import { E2E } from '@/services/e2eConfig';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as Haptics from 'expo-haptics';
@@ -45,21 +45,32 @@ export default function QiblaScreen() {
     };
   }, []);
 
+  // Point the compass and load nearby mosques for a location. Called with the
+  // cached location first, then again with a fresh one if the user has travelled.
+  const applyLocation = async (loc: LocationResult) => {
+    setQiblaAngle(getQiblaDirection(loc.latitude, loc.longitude));
+    setLocationName(loc.city || '');
+
+    // Load mosques
+    setLoadingMosques(true);
+    const nearby = await findNearbyMosques(loc.latitude, loc.longitude, 5000);
+    setMosques(nearby);
+    setLoadingMosques(false);
+  };
+
   const loadQibla = async () => {
     try {
+      // Paint instantly from cache; detect + persist on a true first run.
       let loc = await getSavedLocation();
       if (!loc) {
         loc = await getCurrentLocation();
+        await setSavedLocation(loc);
       }
-      const angle = getQiblaDirection(loc.latitude, loc.longitude);
-      setQiblaAngle(angle);
-      setLocationName(loc.city || '');
+      await applyLocation(loc as LocationResult);
 
-      // Load mosques
-      setLoadingMosques(true);
-      const nearby = await findNearbyMosques(loc.latitude, loc.longitude, 5000);
-      setMosques(nearby);
-      setLoadingMosques(false);
+      // Follow the user when they travel — refresh Qibla + mosques for the new city.
+      const fresh = await maybeRefreshLocation(loc as LocationResult);
+      if (fresh) await applyLocation(fresh);
     } catch (e: any) {
       setError(e.message || 'Failed to determine Qibla direction');
       setLoadingMosques(false);
