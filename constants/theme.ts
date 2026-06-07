@@ -62,7 +62,7 @@ export const Theme = {
         ramadanText: '#A5D6A7',
         ramadanTextDim: '#81C784',
         ramadanBorder: '#2E7D32',
-        ayahGradient: ['#F0EDE6', '#E8E4DB'] as const,
+        ayahGradient: ['#F0EDE6', '#E8E4DB'] as [string, string],
         ayahBorder: '#D5CFC4',
         ayahArabicText: '#2C2C2C',
         ayahBodyText: '#5C5C5C',
@@ -119,6 +119,41 @@ export const Theme = {
             elevation: 6,
         },
     },
+};
+
+// ── Dark mode ──────────────────────────────────────────────────────────────
+// The static `Theme.colors` above IS the light palette (screens that haven't
+// been migrated to the reactive theme keep referencing it directly and stay
+// light). `darkColors` overrides only the keys that change; prayer accent hues,
+// status colors, and the navy hero / green ramadan cards inherit unchanged
+// because they already read well on a dark surface.
+export type ThemeColors = typeof Theme.colors;
+
+export const lightColors: ThemeColors = Theme.colors;
+
+export const darkColors: ThemeColors = {
+    ...Theme.colors,
+    background: '#0E1117',
+    backgroundLight: '#151A23',
+    surfaceDark: '#1B2230',
+    card: '#161C28',
+    cardBorder: '#2A3140',
+    cardHighlight: '#1E2738',
+    cardGlass: 'rgba(18, 22, 30, 0.85)',
+    goldDark: '#E0A82E',
+    goldText: '#F2C24B',            // bright gold — high contrast on dark surfaces
+    textPrimary: '#F2F4F8',
+    textSecondary: '#B6BECE',
+    textMuted: '#8A93A7',
+    tabBar: '#10151E',
+    tabBarBorder: '#222A38',
+    tabActive: '#2DD4BF',
+    tabInactive: '#6E7787',
+    gradientPrimary: ['#0E1117', '#151A23'],
+    ayahGradient: ['#1E2533', '#171D29'] as [string, string],
+    ayahBorder: '#2A3140',
+    ayahArabicText: '#F2F4F8',
+    ayahBodyText: '#C2C8D6',
 };
 
 // Prayer names and their icons (FontAwesome)

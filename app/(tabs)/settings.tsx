@@ -35,11 +35,13 @@ import {
   setAzanReciter,
   getAzanShortEnabled,
   setAzanShortEnabled,
+  ThemeMode,
 } from '@/services/storageService';
 import { stopAzan, isAzanPlaying } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
+import { useTheme } from '@/constants/ThemeContext';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
@@ -138,6 +140,8 @@ export default function SettingsScreen() {
     }
   };
 
+  const { mode: themeMode, setMode: setThemeModePref } = useTheme();
+
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
   const currentAdvanceLabel = ADVANCE_OPTIONS.find((o) => o.value === advance)?.label || `${advance} min before`;
   const currentReciterLabel = RECITERS.find((r) => r.id === reciter)?.name || 'Default';
@@ -168,6 +172,35 @@ export default function SettingsScreen() {
             </View>
             <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
           </Pressable>
+        </View>
+
+        {/* Appearance */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🌗 APPEARANCE</Text>
+          <View style={styles.settingCard}>
+            <View style={styles.settingLeft}>
+              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.isha + '20' }]}>
+                <Text style={{ fontSize: 16 }}>🌗</Text>
+              </View>
+              <Text style={styles.settingLabel}>Theme</Text>
+            </View>
+            <View style={styles.segment}>
+              {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => (
+                <Pressable
+                  key={m}
+                  onPress={() => setThemeModePref(m)}
+                  style={[styles.segmentBtn, themeMode === m && styles.segmentBtnActive]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: themeMode === m }}
+                  accessibilityLabel={`${m === 'system' ? 'Auto' : m} theme`}
+                >
+                  <Text style={[styles.segmentText, themeMode === m && styles.segmentTextActive]}>
+                    {m === 'light' ? 'Light' : m === 'dark' ? 'Dark' : 'Auto'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         </View>
 
         {/* Notifications */}
@@ -506,6 +539,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingLeft: 4,
   },
+
+  // Appearance segmented control
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: Theme.colors.surfaceDark,
+    borderRadius: Theme.borderRadius.full,
+    padding: 3,
+  },
+  segmentBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Theme.borderRadius.full,
+  },
+  segmentBtnActive: { backgroundColor: Theme.colors.gold },
+  segmentText: {
+    fontSize: Theme.fontSize.xs,
+    fontWeight: Theme.fontWeight.semibold,
+    color: Theme.colors.textSecondary,
+  },
+  segmentTextActive: { color: Theme.colors.textPrimary },
 
   // Setting cards
   settingCard: {

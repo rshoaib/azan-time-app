@@ -10,7 +10,10 @@ const KEYS = {
     AZAN_SOUND_ENABLED: 'azan_sound_enabled',
     AZAN_RECITER: 'azan_reciter',
     AZAN_SHORT: 'azan_short',
+    THEME_MODE: 'theme_mode',
 };
+
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface SavedLocation {
     latitude: number;
@@ -36,6 +39,16 @@ export async function getCalculationMethod(): Promise<string> {
 
 export async function setCalculationMethod(method: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.CALCULATION_METHOD, method);
+}
+
+// Theme mode — 'light' | 'dark' | 'system' (defaults to following the OS)
+export async function getThemeMode(): Promise<ThemeMode> {
+    const value = await AsyncStorage.getItem(KEYS.THEME_MODE);
+    return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+}
+
+export async function setThemeMode(mode: ThemeMode): Promise<void> {
+    await AsyncStorage.setItem(KEYS.THEME_MODE, mode);
 }
 
 // Notification master toggle

@@ -1,7 +1,9 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { Stack, usePathname } from 'expo-router';
+import { ThemeProvider as AppThemeProvider, useTheme } from '@/constants/ThemeContext';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -38,7 +40,7 @@ if (process.env.EXPO_PUBLIC_E2E === '1') {
 
 SplashScreen.preventAutoHideAsync();
 
-// Custom light theme matching our Islamic light palette
+// React Navigation themes matching our Islamic light/dark palettes.
 const AzanLightTheme = {
   ...DefaultTheme,
   colors: {
@@ -48,6 +50,18 @@ const AzanLightTheme = {
     text: '#1A1D2E',
     border: '#E2E5F0',
     primary: '#0D9488',
+  },
+};
+
+const AzanDarkTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: '#0E1117',
+    card: '#10151E',
+    text: '#F2F4F8',
+    border: '#222A38',
+    primary: '#2DD4BF',
   },
 };
 
@@ -118,7 +132,19 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={AzanLightTheme}>
+    <AppThemeProvider>
+      <RootNavigation />
+    </AppThemeProvider>
+  );
+}
+
+// Consumes the app theme (inside AppThemeProvider) so the navigation theme and
+// status bar flip together with light/dark.
+function RootNavigation() {
+  const { scheme } = useTheme();
+  return (
+    <ThemeProvider value={scheme === 'dark' ? AzanDarkTheme : AzanLightTheme}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
