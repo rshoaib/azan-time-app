@@ -19,6 +19,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCalculationMethod, getAzanReciter } from './storageService';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Storage keys — sentinel flags + install date
@@ -165,12 +166,29 @@ export async function bootstrapAnalytics(): Promise<void> {
       } catch (err) {
         console.warn('[analytics] setAnalyticsCollectionEnabled failed:', err);
       }
-      // Diagnostic probe — fires on every launch so we can confirm the
-      // native pipeline is alive in Realtime / DebugView even before the
-      // day-2 event becomes eligible. Cheap and low-cardinality.
-      await logEvent('debug_bootstrap_probe', {
-        platform: Platform.OS,
-      });
+      // Diagnostic probe — fires ONLY on dev builds so we can confirm the
+      // native pipeline is alive in Realtime / DebugView. Gated behind __DEV__
+      // so it never adds event volume to the production property.
+      if (__DEV__) {
+        await logEvent('debug_bootstrap_probe', {
+          platform: Platform.OS,
+        });
+      }
+
+      // Seed user properties from persisted settings so GA4 audiences can
+      // segment by calculation method and chosen reciter. Runs every launch,
+      // so it captures pre-existing installs and reflects later changes on the
+      // next open (settings.tsx also updates these immediately on change).
+      try {
+        const [method, reciter] = await Promise.all([
+          getCalculationMethod(),
+          getAzanReciter(),
+        ]);
+        await setUserProperty('calculation_method', method);
+        await setUserProperty('azan_reciter', reciter);
+      } catch (err) {
+        console.warn('[analytics] seeding user properties failed:', err);
+      }
     }
 
     const today = isoDate();

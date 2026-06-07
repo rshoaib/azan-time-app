@@ -40,7 +40,8 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED"
+        "RECEIVE_BOOT_COMPLETED",
+        "com.google.android.gms.permission.AD_ID"
       ],
       "package": "com.azantime.app",
       "googleServicesFile": "./google-services.json"

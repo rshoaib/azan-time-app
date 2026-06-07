@@ -39,6 +39,7 @@ import {
 import { stopAzan, isAzanPlaying } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
 import { getCurrentLocation } from '@/services/locationService';
+import { setUserProperty } from '@/services/analyticsService';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
@@ -92,6 +93,7 @@ export default function SettingsScreen() {
 
   const handleMethodChange = async (key: string) => {
     setMethod(key); await setCalculationMethod(key); setShowMethodModal(false);
+    setUserProperty('calculation_method', key);
   };
   const handleNotificationToggle = async (value: boolean) => {
     setNotificationsOn(value); await setNotificationEnabled(value);
@@ -112,6 +114,7 @@ export default function SettingsScreen() {
   };
   const handleReciterChange = async (id: string) => {
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
+    setUserProperty('azan_reciter', id);
   };
 
   // Explicit, user-driven location refresh. Unlike the home screen's throttled
