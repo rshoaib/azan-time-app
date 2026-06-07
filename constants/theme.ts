@@ -37,7 +37,8 @@ export const Theme = {
         // Text
         textPrimary: '#1A1D2E',
         textSecondary: '#5A6180',
-        textMuted: '#9098B1',
+        textMuted: '#6B7290',          // darkened from #9098B1 → ~4.7:1 on white (AA)
+        goldText: '#8A6A00',           // accessible gold for text on light surfaces (~4.6:1)
 
         // Tab bar
         tabBar: '#FFFFFF',
@@ -54,6 +55,17 @@ export const Theme = {
         gradientPrimary: ['#F5F6FA', '#E8EAF2'],
         gradientGold: ['#F5BD42', '#D4930D'],
         gradientNextPrayer: ['#0D9488', '#0F766E'],
+
+        // Home-screen card surfaces (consolidated from inline literals)
+        heroGradient: ['#1A2C6B', '#0F1840'] as const,
+        ramadanGradient: ['#1A472A', '#0D2818'] as const,
+        ramadanText: '#A5D6A7',
+        ramadanTextDim: '#81C784',
+        ramadanBorder: '#2E7D32',
+        ayahGradient: ['#F0EDE6', '#E8E4DB'] as const,
+        ayahBorder: '#D5CFC4',
+        ayahArabicText: '#2C2C2C',
+        ayahBodyText: '#5C5C5C',
     },
 
     spacing: {

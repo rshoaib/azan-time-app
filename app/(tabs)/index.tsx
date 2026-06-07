@@ -170,6 +170,8 @@ export default function HomeScreen() {
         <Text style={styles.errorText}>{error}</Text>
         <Pressable
           style={styles.retryButton}
+          accessibilityRole="button"
+          accessibilityLabel="Retry"
           onPress={() => {
             setLoading(true);
             setError(null);
@@ -249,6 +251,8 @@ export default function HomeScreen() {
             style={styles.settingsButton}
             onPress={() => router.push('/(tabs)/settings')}
             hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
           >
             <FontAwesome name="cog" size={22} color={Theme.colors.textSecondary} />
           </Pressable>
@@ -256,7 +260,7 @@ export default function HomeScreen() {
           <Text style={styles.appTitle}>Azan Time</Text>
           {location && (
             <View style={styles.locationBadge}>
-              <FontAwesome name="map-marker" size={12} color={Theme.colors.gold} />
+              <FontAwesome name="map-marker" size={12} color={Theme.colors.goldText} />
               <Text style={styles.locationText}>
                 {location.city}{location.country ? `, ${location.country}` : ''}
               </Text>
@@ -270,7 +274,7 @@ export default function HomeScreen() {
         {ramadan.isRamadan && (
           <View style={styles.ramadanWrapper}>
             <LinearGradient
-              colors={['#1A472A', '#0D2818']}
+              colors={Theme.colors.ramadanGradient}
               style={styles.ramadanCard}
             >
               <View style={styles.ramadanHeader}>
@@ -302,7 +306,7 @@ export default function HomeScreen() {
         {prayerTimes?.nextPrayer && prayerTimes.nextPrayerTime && nextPrayerConfig && (
           <View style={styles.heroWrapper}>
             <LinearGradient
-              colors={['#1A2C6B', '#0F1840']}
+              colors={Theme.colors.heroGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}
@@ -320,7 +324,7 @@ export default function HomeScreen() {
                 {formatTime(prayerTimes.nextPrayerTime)}
               </Text>
               <View style={styles.countdownPill}>
-                <FontAwesome name="clock-o" size={14} color="#F5BD42" />
+                <FontAwesome name="clock-o" size={14} color={Theme.colors.goldLight} />
                 <Text style={styles.countdownText}>{countdown}</Text>
               </View>
             </LinearGradient>
@@ -344,7 +348,7 @@ export default function HomeScreen() {
         {/* Daily Ayah Card */}
         <View style={styles.ayahWrapper}>
           <LinearGradient
-            colors={['#F0EDE6', '#E8E4DB']}
+            colors={Theme.colors.ayahGradient}
             style={styles.ayahCard}
           >
             <Text style={styles.ayahSectionLabel}>📖 VERSE OF THE DAY</Text>
@@ -354,6 +358,9 @@ export default function HomeScreen() {
               <Text style={styles.ayahReference}>{ayah.reference}</Text>
               <Pressable
                 style={styles.shareButton}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="Share verse of the day"
                 onPress={() => Share.share({
                   // Share text includes store install links from constants/storeLinks —
                   // every share is a free install surface.
@@ -379,7 +386,7 @@ export default function HomeScreen() {
                   <View style={[styles.comparisonBar, styles.comparisonBarMaghrib, { height: day.maghribHeight }]} />
                 </View>
                 <Text style={styles.comparisonTime}>{day.fajrStr}</Text>
-                <Text style={[styles.comparisonTime, { color: Theme.colors.maghrib }]}>{day.maghribStr}</Text>
+                <Text style={styles.comparisonTime}>{day.maghribStr}</Text>
               </View>
             ))}
           </View>
@@ -545,7 +552,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.gold,
+    color: Theme.colors.goldText,
     fontWeight: Theme.fontWeight.semibold,
   },
   dateText: {
@@ -608,7 +615,7 @@ const styles = StyleSheet.create({
   heroName: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.bold,
-    color: '#F5BD42',
+    color: Theme.colors.goldLight,
   },
   heroTime: {
     fontSize: Theme.fontSize.hero,
@@ -630,7 +637,7 @@ const styles = StyleSheet.create({
   },
   countdownText: {
     fontSize: Theme.fontSize.md,
-    color: '#F5BD42',
+    color: Theme.colors.goldLight,
     fontWeight: Theme.fontWeight.semibold,
   },
 
@@ -676,14 +683,14 @@ const styles = StyleSheet.create({
   prayerIconGradient: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: Theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   prayerIconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: Theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -741,30 +748,30 @@ const styles = StyleSheet.create({
   // Hijri date
   hijriText: {
     fontSize: Theme.fontSize.xs,
-    color: Theme.colors.goldDark,
+    color: Theme.colors.goldText,
     marginTop: 2,
     fontWeight: Theme.fontWeight.medium,
   },
 
   // Ramadan banner
   ramadanWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: 8, marginBottom: 16 },
-  ramadanCard: { borderRadius: Theme.borderRadius.xl, padding: 20, borderWidth: 1, borderColor: '#2E7D32' + '40' },
+  ramadanCard: { borderRadius: Theme.borderRadius.xl, padding: 20, borderWidth: 1, borderColor: Theme.colors.ramadanBorder + '40' },
   ramadanHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  ramadanTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: '#A5D6A7' },
-  ramadanDay: { fontSize: Theme.fontSize.sm, color: '#81C784', marginTop: 2 },
+  ramadanTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.ramadanText },
+  ramadanDay: { fontSize: Theme.fontSize.sm, color: Theme.colors.ramadanTextDim, marginTop: 2 },
   ramadanTimes: { flexDirection: 'row', gap: 12 },
   ramadanTimeBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: Theme.borderRadius.lg, padding: 12, alignItems: 'center' },
-  ramadanTimeLabel: { fontSize: Theme.fontSize.xs, color: '#A5D6A7', marginBottom: 4 },
+  ramadanTimeLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.ramadanText, marginBottom: 4 },
   ramadanTimeValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
 
   // Daily Ayah
-  ayahWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: 20 },
-  ayahCard: { borderRadius: Theme.borderRadius.xl, padding: 24, borderWidth: 1, borderColor: '#D5CFC4' },
-  ayahSectionLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.goldDark, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 16 },
-  ayahArabic: { fontSize: 22, color: '#2C2C2C', textAlign: 'right', lineHeight: 44, fontWeight: '600', marginBottom: 12 },
-  ayahTranslation: { fontSize: Theme.fontSize.md, color: '#5C5C5C', lineHeight: 24, fontStyle: 'italic', marginBottom: 12 },
+  ayahWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: Theme.spacing.lg },
+  ayahCard: { borderRadius: Theme.borderRadius.xl, padding: 24, borderWidth: 1, borderColor: Theme.colors.ayahBorder },
+  ayahSectionLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.goldText, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 16 },
+  ayahArabic: { fontSize: 22, color: Theme.colors.ayahArabicText, textAlign: 'right', lineHeight: 44, fontWeight: '600', marginBottom: 12 },
+  ayahTranslation: { fontSize: Theme.fontSize.md, color: Theme.colors.ayahBodyText, lineHeight: 24, fontStyle: 'italic', marginBottom: 12 },
   ayahFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  ayahReference: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldDark, fontWeight: Theme.fontWeight.semibold },
+  ayahReference: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldText, fontWeight: Theme.fontWeight.semibold },
   shareButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Theme.colors.teal + '15', paddingHorizontal: 14, paddingVertical: 7, borderRadius: Theme.borderRadius.full },
   shareText: { fontSize: Theme.fontSize.sm, color: Theme.colors.teal, fontWeight: Theme.fontWeight.semibold },
 
@@ -773,12 +780,12 @@ const styles = StyleSheet.create({
   comparisonTitle: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 12 },
   comparisonChart: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg, padding: 16, borderWidth: 1, borderColor: Theme.colors.cardBorder },
   comparisonDay: { alignItems: 'center', flex: 1 },
-  comparisonLabel: { fontSize: 10, color: Theme.colors.textMuted, marginBottom: 6, fontWeight: Theme.fontWeight.semibold },
+  comparisonLabel: { fontSize: 11, color: Theme.colors.textMuted, marginBottom: 6, fontWeight: Theme.fontWeight.semibold },
   comparisonBars: { flexDirection: 'row', gap: 3, alignItems: 'flex-end', marginBottom: 6 },
   comparisonBar: { width: 8, borderRadius: 4 },
   comparisonBarFajr: { backgroundColor: Theme.colors.fajr },
   comparisonBarMaghrib: { backgroundColor: Theme.colors.maghrib },
-  comparisonTime: { fontSize: 8, color: Theme.colors.fajr, fontWeight: Theme.fontWeight.medium },
+  comparisonTime: { fontSize: 11, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.medium },
   comparisonLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
