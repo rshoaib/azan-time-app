@@ -1,4 +1,5 @@
-import { Theme } from '@/constants/theme';
+import { Theme, ThemeColors } from '@/constants/theme';
+import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getCurrentLocation, LocationResult, maybeRefreshLocation } from '@/services/locationService';
 import { findNearbyMosques, formatDistance, Mosque, navigateToMosque } from '@/services/mosqueService';
 import { getQiblaDirection } from '@/services/prayerService';
@@ -25,6 +26,8 @@ const { width } = Dimensions.get('window');
 const COMPASS_SIZE = Math.min(width * 0.65, 280);
 
 export default function QiblaScreen() {
+  const { colors: c, scheme } = useTheme();
+  const styles = useThemeStyles(makeStyles);
   const [heading, setHeading] = useState(0);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -112,16 +115,16 @@ export default function QiblaScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.background} />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={['#F5F6FA', '#EEF0F6']} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
           <Text style={styles.title}>🕋 Qibla & Mosques</Text>
           <Text style={styles.subtitle}>Direction to the Holy Kaaba</Text>
           {locationName ? (
             <View style={styles.locationBadge}>
-              <FontAwesome name="map-marker" size={11} color={Theme.colors.gold} />
+              <FontAwesome name="map-marker" size={11} color={c.gold} />
               <Text style={styles.locationText}>{locationName}</Text>
             </View>
           ) : null}
@@ -129,7 +132,7 @@ export default function QiblaScreen() {
 
         {error ? (
           <View style={styles.errorContainer}>
-            <FontAwesome name="exclamation-circle" size={40} color={Theme.colors.danger} />
+            <FontAwesome name="exclamation-circle" size={40} color={c.danger} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : (
@@ -165,7 +168,7 @@ export default function QiblaScreen() {
                     </View>
                   )}
 
-                  <LinearGradient colors={isAligned ? ['#00E676', '#00C853'] : [Theme.colors.gold, Theme.colors.goldDark]} style={styles.centerDot} />
+                  <LinearGradient colors={isAligned ? ['#00E676', '#00C853'] : [c.gold, c.goldDark]} style={styles.centerDot} />
                 </View>
               </View>
 
@@ -185,7 +188,7 @@ export default function QiblaScreen() {
                 {qiblaAngle !== null && (
                   <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
                     <Text style={styles.infoLabel}>QIBLA</Text>
-                    <Text style={[styles.infoValue, { color: Theme.colors.gold }]}>{Math.round(qiblaAngle)}°</Text>
+                    <Text style={[styles.infoValue, { color: c.gold }]}>{Math.round(qiblaAngle)}°</Text>
                   </LinearGradient>
                 )}
               </View>
@@ -209,7 +212,7 @@ export default function QiblaScreen() {
                 <FontAwesome
                   name={showMosques ? 'chevron-up' : 'chevron-down'}
                   size={14}
-                  color={Theme.colors.textMuted}
+                  color={c.textMuted}
                 />
               </Pressable>
 
@@ -217,7 +220,7 @@ export default function QiblaScreen() {
                 <View style={styles.mosquesList}>
                   {loadingMosques ? (
                     <View style={styles.mosquesLoading}>
-                      <ActivityIndicator size="small" color={Theme.colors.gold} />
+                      <ActivityIndicator size="small" color={c.gold} />
                       <Text style={styles.mosquesLoadingText}>Finding nearby mosques...</Text>
                     </View>
                   ) : mosques.length === 0 ? (
@@ -247,7 +250,7 @@ export default function QiblaScreen() {
                         <View style={styles.mosqueCardRight}>
                           <Text style={styles.mosqueDistance}>{formatDistance(mosque.distance)}</Text>
                           <View style={styles.navigateBtn}>
-                            <FontAwesome name="location-arrow" size={12} color={Theme.colors.gold} />
+                            <FontAwesome name="location-arrow" size={12} color={c.gold} />
                           </View>
                         </View>
                       </Pressable>
@@ -263,37 +266,37 @@ export default function QiblaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
 
   // Header
   header: { alignItems: 'center', paddingTop: 56, paddingBottom: 12 },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: Theme.colors.textPrimary, marginBottom: 4 },
-  subtitle: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginBottom: 8 },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: 4 },
+  subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: 8 },
   locationBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: Theme.colors.gold + '12', paddingHorizontal: 12, paddingVertical: 4,
-    borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: Theme.colors.gold + '20',
+    backgroundColor: c.gold + '12', paddingHorizontal: 12, paddingVertical: 4,
+    borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: c.gold + '20',
   },
-  locationText: { fontSize: Theme.fontSize.xs, color: Theme.colors.gold, fontWeight: Theme.fontWeight.semibold },
+  locationText: { fontSize: Theme.fontSize.xs, color: c.gold, fontWeight: Theme.fontWeight.semibold },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingTop: 60 },
-  errorText: { color: Theme.colors.danger, fontSize: Theme.fontSize.md, textAlign: 'center', paddingHorizontal: 32 },
+  errorText: { color: c.danger, fontSize: Theme.fontSize.md, textAlign: 'center', paddingHorizontal: 32 },
 
   // Compass
   compassContainer: { alignItems: 'center', paddingTop: 16, paddingBottom: 8 },
   compassGlow: {
     width: COMPASS_SIZE + 14, height: COMPASS_SIZE + 14, borderRadius: (COMPASS_SIZE + 14) / 2,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: Theme.colors.cardBorder,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: c.cardBorder,
   },
   compassGlowAligned: {
-    borderColor: Theme.colors.emerald + '60',
-    shadowColor: Theme.colors.emerald, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 10,
+    borderColor: c.emerald + '60',
+    shadowColor: c.emerald, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 10,
   },
   compassRing: {
     width: COMPASS_SIZE, height: COMPASS_SIZE, borderRadius: COMPASS_SIZE / 2,
-    backgroundColor: Theme.colors.card, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderWidth: 1, borderColor: c.cardBorder,
     justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
   },
   compassCard: {
@@ -301,46 +304,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   cardinalContainer: { position: 'absolute', width: 26, height: 26, justifyContent: 'center', alignItems: 'center' },
-  cardinalText: { fontSize: 14, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textSecondary },
-  cardinalNorth: { color: Theme.colors.danger, fontSize: 16 },
+  cardinalText: { fontSize: 14, fontWeight: Theme.fontWeight.bold, color: c.textSecondary },
+  cardinalNorth: { color: c.danger, fontSize: 16 },
   cardinalNorthPos: { top: 24 },
   cardinalEastPos: { right: 20 },
   cardinalSouthPos: { bottom: 24 },
   cardinalWestPos: { left: 20 },
   degreeMark: { position: 'absolute', width: 1.5, transformOrigin: 'center center' },
-  degreeMarkMajor: { height: 12, backgroundColor: Theme.colors.textSecondary },
-  degreeMarkMinor: { height: 5, backgroundColor: Theme.colors.textMuted + '60' },
+  degreeMarkMajor: { height: 12, backgroundColor: c.textSecondary },
+  degreeMarkMinor: { height: 5, backgroundColor: c.textMuted + '60' },
   qiblaArrowContainer: {
     position: 'absolute', width: COMPASS_SIZE, height: COMPASS_SIZE,
     justifyContent: 'flex-start', alignItems: 'center',
   },
   qiblaArrow: {
-    marginTop: 14, zIndex: 5, backgroundColor: Theme.colors.gold + '15',
+    marginTop: 14, zIndex: 5, backgroundColor: c.gold + '15',
     width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: Theme.colors.gold + '30',
+    borderWidth: 1, borderColor: c.gold + '30',
   },
-  qiblaArrowAligned: { backgroundColor: Theme.colors.emerald + '20', borderColor: Theme.colors.emerald + '50' },
+  qiblaArrowAligned: { backgroundColor: c.emerald + '20', borderColor: c.emerald + '50' },
   qiblaLine: {
     width: 2.5, height: COMPASS_SIZE / 2 - 52,
-    backgroundColor: Theme.colors.gold + '40', marginTop: -2, borderRadius: 2,
+    backgroundColor: c.gold + '40', marginTop: -2, borderRadius: 2,
   },
-  qiblaLineAligned: { backgroundColor: Theme.colors.emerald + '50' },
+  qiblaLineAligned: { backgroundColor: c.emerald + '50' },
   centerDot: {
     width: 14, height: 14, borderRadius: 7, borderWidth: 2,
-    borderColor: Theme.colors.background, zIndex: 10,
+    borderColor: c.background, zIndex: 10,
   },
   alignedBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12,
-    backgroundColor: Theme.colors.emerald + '15', paddingHorizontal: 14, paddingVertical: 6,
-    borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: Theme.colors.emerald + '30',
+    backgroundColor: c.emerald + '15', paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: c.emerald + '30',
   },
-  alignedText: { fontSize: Theme.fontSize.sm, color: Theme.colors.emerald, fontWeight: Theme.fontWeight.bold },
+  alignedText: { fontSize: Theme.fontSize.sm, color: c.emerald, fontWeight: Theme.fontWeight.bold },
 
   // Info pills
   infoContainer: { flexDirection: 'row', marginTop: 16, gap: 14 },
   infoPill: {
     alignItems: 'center', paddingHorizontal: 22, paddingVertical: 10,
-    borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: Theme.colors.cardBorder, minWidth: 90,
+    borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, minWidth: 90,
   },
   infoLabel: {
     fontSize: 10, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase',
@@ -350,46 +353,46 @@ const styles = StyleSheet.create({
 
   // Mosques Section
   mosquesSection: {
-    marginTop: 24, marginHorizontal: 20, backgroundColor: Theme.colors.card,
-    borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: Theme.colors.cardBorder, overflow: 'hidden',
+    marginTop: 24, marginHorizontal: 20, backgroundColor: c.card,
+    borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
   },
   mosquesSectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: 16,
   },
   mosquesSectionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mosquesSectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
-  mosquesSectionCount: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 1 },
+  mosquesSectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
+  mosquesSectionCount: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 1 },
 
   // Mosque list
-  mosquesList: { borderTopWidth: 1, borderTopColor: Theme.colors.cardBorder },
+  mosquesList: { borderTopWidth: 1, borderTopColor: c.cardBorder },
   mosquesLoading: {
     flexDirection: 'row', alignItems: 'center', gap: 10, padding: 20, justifyContent: 'center',
   },
-  mosquesLoadingText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary },
+  mosquesLoadingText: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
   mosquesEmpty: { alignItems: 'center', padding: 24, gap: 6 },
-  mosquesEmptyText: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary },
-  mosquesEmptyHint: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted },
+  mosquesEmptyText: { fontSize: Theme.fontSize.md, color: c.textSecondary },
+  mosquesEmptyHint: { fontSize: Theme.fontSize.xs, color: c.textMuted },
 
   // Mosque Card
   mosqueCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.cardBorder + '50',
+    paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.cardBorder + '50',
   },
-  mosqueCardPressed: { backgroundColor: Theme.colors.cardHighlight },
+  mosqueCardPressed: { backgroundColor: c.cardHighlight },
   mosqueCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   mosqueIndex: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: Theme.colors.emerald + '15',
+    width: 28, height: 28, borderRadius: 14, backgroundColor: c.emerald + '15',
     justifyContent: 'center', alignItems: 'center',
   },
-  mosqueIndexText: { fontSize: 12, fontWeight: Theme.fontWeight.bold, color: Theme.colors.emerald },
+  mosqueIndexText: { fontSize: 12, fontWeight: Theme.fontWeight.bold, color: c.emerald },
   mosqueInfo: { flex: 1 },
-  mosqueName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
-  mosqueAddress: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 1 },
+  mosqueName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
+  mosqueAddress: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 1 },
   mosqueCardRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  mosqueDistance: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.teal },
+  mosqueDistance: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold, color: c.teal },
   navigateBtn: {
-    width: 30, height: 30, borderRadius: 15, backgroundColor: Theme.colors.gold + '15',
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.gold + '25',
+    width: 30, height: 30, borderRadius: 15, backgroundColor: c.gold + '15',
+    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: c.gold + '25',
   },
 });

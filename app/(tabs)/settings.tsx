@@ -15,7 +15,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
-import { Theme, CALCULATION_METHODS, PRAYER_CONFIG } from '@/constants/theme';
+import { Theme, ThemeColors, CALCULATION_METHODS, PRAYER_CONFIG } from '@/constants/theme';
 import { RECITERS } from '@/constants/reciters';
 import { PrayerName } from '@/services/prayerService';
 import {
@@ -41,7 +41,7 @@ import { stopAzan, isAzanPlaying } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
-import { useTheme } from '@/constants/ThemeContext';
+import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
@@ -140,7 +140,8 @@ export default function SettingsScreen() {
     }
   };
 
-  const { mode: themeMode, setMode: setThemeModePref } = useTheme();
+  const { mode: themeMode, setMode: setThemeModePref, colors: c, scheme } = useTheme();
+  const styles = useThemeStyles(makeStyles);
 
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
   const currentAdvanceLabel = ADVANCE_OPTIONS.find((o) => o.value === advance)?.label || `${advance} min before`;
@@ -148,11 +149,11 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.background} />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={['#F5F6FA', '#EEF0F6']} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
           <Text style={styles.title}>⚙️ Settings</Text>
           <Text style={styles.subtitle}>Customize your Azan experience</Text>
         </LinearGradient>
@@ -162,7 +163,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>🧮 PRAYER CALCULATION</Text>
           <Pressable style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]} onPress={() => setShowMethodModal(true)}>
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.fajr + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.fajr + '20' }]}>
                 <Text style={{ fontSize: 16 }}>📐</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -170,7 +171,7 @@ export default function SettingsScreen() {
                 <Text style={styles.settingValue}>{currentMethodLabel}</Text>
               </View>
             </View>
-            <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+            <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
           </Pressable>
         </View>
 
@@ -179,7 +180,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>🌗 APPEARANCE</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.isha + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.isha + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🌗</Text>
               </View>
               <Text style={styles.settingLabel}>Theme</Text>
@@ -225,7 +226,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.emerald + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.emerald + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🔔</Text>
               </View>
               <Text style={styles.settingLabel}>Enable Notifications</Text>
@@ -233,8 +234,8 @@ export default function SettingsScreen() {
             <Switch
               value={notificationsOn}
               onValueChange={handleNotificationToggle}
-              trackColor={{ false: Theme.colors.textMuted + '40', true: Theme.colors.gold + '50' }}
-              thumbColor={notificationsOn ? Theme.colors.gold : '#666'}
+              trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
+              thumbColor={notificationsOn ? c.gold : '#666'}
             />
           </View>
 
@@ -242,7 +243,7 @@ export default function SettingsScreen() {
             <>
               <Pressable style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]} onPress={() => setShowAdvanceModal(true)}>
                 <View style={styles.settingLeft}>
-                  <View style={[styles.settingIcon, { backgroundColor: Theme.colors.teal + '20' }]}>
+                  <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
                     <Text style={{ fontSize: 16 }}>⏰</Text>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -250,7 +251,7 @@ export default function SettingsScreen() {
                     <Text style={styles.settingValue}>{currentAdvanceLabel}</Text>
                   </View>
                 </View>
-                <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+                <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
               </Pressable>
 
               <Text style={styles.subSectionTitle}>Notify for each prayer:</Text>
@@ -263,7 +264,7 @@ export default function SettingsScreen() {
                   <Switch
                     value={enabledPrayers[key]}
                     onValueChange={() => handlePrayerToggle(key)}
-                    trackColor={{ false: Theme.colors.textMuted + '40', true: PRAYER_CONFIG[key].color + '50' }}
+                    trackColor={{ false: c.textMuted + '40', true: PRAYER_CONFIG[key].color + '50' }}
                     thumbColor={enabledPrayers[key] ? PRAYER_CONFIG[key].color : '#666'}
                   />
                 </View>
@@ -277,7 +278,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>🔊 AZAN SOUND</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.isha + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.isha + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🎵</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -290,15 +291,15 @@ export default function SettingsScreen() {
             <Switch
               value={azanSoundOn}
               onValueChange={handleAzanSoundToggle}
-              trackColor={{ false: Theme.colors.textMuted + '40', true: Theme.colors.gold + '50' }}
-              thumbColor={azanSoundOn ? Theme.colors.gold : '#666'}
+              trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
+              thumbColor={azanSoundOn ? c.gold : '#666'}
             />
           </View>
 
           {azanSoundOn && (
             <View style={[styles.settingCard, { marginTop: 8 }]}>
               <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: Theme.colors.teal + '20' }]}>
+                <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
                   <Text style={{ fontSize: 16 }}>⏱️</Text>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -311,8 +312,8 @@ export default function SettingsScreen() {
               <Switch
                 value={azanShortOn}
                 onValueChange={handleAzanShortToggle}
-                trackColor={{ false: Theme.colors.textMuted + '40', true: Theme.colors.gold + '50' }}
-                thumbColor={azanShortOn ? Theme.colors.gold : '#666'}
+                trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
+                thumbColor={azanShortOn ? c.gold : '#666'}
               />
             </View>
           )}
@@ -323,7 +324,7 @@ export default function SettingsScreen() {
               onPress={() => setShowReciterModal(true)}
             >
               <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: Theme.colors.gold + '20' }]}>
+                <View style={[styles.settingIcon, { backgroundColor: c.gold + '20' }]}>
                   <Text style={{ fontSize: 16 }}>🕌</Text>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -331,7 +332,7 @@ export default function SettingsScreen() {
                   <Text style={styles.settingValue}>{currentReciterLabel}</Text>
                 </View>
               </View>
-              <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+              <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
             </Pressable>
           )}
         </View>
@@ -346,7 +347,7 @@ export default function SettingsScreen() {
             disabled={updatingLocation}
           >
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.sunrise + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.sunrise + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🌍</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -356,7 +357,7 @@ export default function SettingsScreen() {
                 <Text
                   style={[
                     styles.settingValue,
-                    locationMsg ? { color: locationMsg.ok ? Theme.colors.emerald : Theme.colors.danger } : null,
+                    locationMsg ? { color: locationMsg.ok ? c.emerald : c.danger } : null,
                   ]}
                 >
                   {locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your current location'}
@@ -364,9 +365,9 @@ export default function SettingsScreen() {
               </View>
             </View>
             {updatingLocation ? (
-              <ActivityIndicator size="small" color={Theme.colors.gold} />
+              <ActivityIndicator size="small" color={c.gold} />
             ) : (
-              <FontAwesome name="location-arrow" size={16} color={Theme.colors.gold} />
+              <FontAwesome name="location-arrow" size={16} color={c.gold} />
             )}
           </Pressable>
         </View>
@@ -376,7 +377,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>ℹ️ ABOUT</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.gold + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.gold + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🕌</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -389,7 +390,7 @@ export default function SettingsScreen() {
           </View>
           <View style={[styles.settingCard, { marginTop: 8 }]}>
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.fajr + '15' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.fajr + '15' }]}>
                 <Text style={{ fontSize: 16 }}>📖</Text>
               </View>
               <Text style={[styles.settingValue, { flex: 1 }]}>
@@ -402,12 +403,12 @@ export default function SettingsScreen() {
             onPress={() => WebBrowser.openBrowserAsync('https://rshoaib.github.io/ovctech/azantime/privacy-policy.html')}
           >
             <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: Theme.colors.teal + '20' }]}>
+              <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🔒</Text>
               </View>
               <Text style={styles.settingLabel}>Privacy Policy</Text>
             </View>
-            <FontAwesome name="chevron-right" size={14} color={Theme.colors.textMuted} />
+            <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
           </Pressable>
         </View>
       </ScrollView>
@@ -415,11 +416,11 @@ export default function SettingsScreen() {
       {/* Calculation Method Modal */}
       <Modal visible={showMethodModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <LinearGradient colors={['#FFFFFF', '#F5F6FA']} style={styles.modalContent}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Calculation Method</Text>
               <Pressable onPress={() => setShowMethodModal(false)} style={styles.modalClose}>
-                <FontAwesome name="times" size={20} color={Theme.colors.textSecondary} />
+                <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
             </View>
             <FlatList
@@ -433,7 +434,7 @@ export default function SettingsScreen() {
                   <Text style={[styles.modalItemText, item.key === method && styles.modalItemTextActive]}>
                     {item.label}
                   </Text>
-                  {item.key === method && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
+                  {item.key === method && <FontAwesome name="check" size={16} color={c.gold} />}
                 </Pressable>
               )}
             />
@@ -444,11 +445,11 @@ export default function SettingsScreen() {
       {/* Advance Time Modal */}
       <Modal visible={showAdvanceModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <LinearGradient colors={['#FFFFFF', '#F5F6FA']} style={styles.modalContent}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Notification Time</Text>
               <Pressable onPress={() => setShowAdvanceModal(false)} style={styles.modalClose}>
-                <FontAwesome name="times" size={20} color={Theme.colors.textSecondary} />
+                <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
             </View>
             {ADVANCE_OPTIONS.map((opt) => (
@@ -460,7 +461,7 @@ export default function SettingsScreen() {
                 <Text style={[styles.modalItemText, opt.value === advance && styles.modalItemTextActive]}>
                   {opt.label}
                 </Text>
-                {opt.value === advance && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
+                {opt.value === advance && <FontAwesome name="check" size={16} color={c.gold} />}
               </Pressable>
             ))}
           </LinearGradient>
@@ -470,11 +471,11 @@ export default function SettingsScreen() {
       {/* Reciter Modal */}
       <Modal visible={showReciterModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <LinearGradient colors={['#FFFFFF', '#F5F6FA']} style={styles.modalContent}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Azan Reciter</Text>
               <Pressable onPress={() => setShowReciterModal(false)} style={styles.modalClose}>
-                <FontAwesome name="times" size={20} color={Theme.colors.textSecondary} />
+                <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
             </View>
             <FlatList
@@ -489,11 +490,11 @@ export default function SettingsScreen() {
                     <Text style={[styles.modalItemText, item.id === reciter && styles.modalItemTextActive]}>
                       {item.name}
                     </Text>
-                    <Text style={{ fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginTop: 2 }}>
+                    <Text style={{ fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 2 }}>
                       {item.location}
                     </Text>
                   </View>
-                  {item.id === reciter && <FontAwesome name="check" size={16} color={Theme.colors.gold} />}
+                  {item.id === reciter && <FontAwesome name="check" size={16} color={c.gold} />}
                 </Pressable>
               )}
             />
@@ -504,8 +505,8 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
 
@@ -514,12 +515,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.heavy,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
   },
 
   // Sections
@@ -527,14 +528,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Theme.fontSize.xs,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 2,
     marginBottom: 12,
     paddingLeft: 4,
   },
   subSectionTitle: {
     fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     marginTop: 12,
     marginBottom: 8,
     paddingLeft: 4,
@@ -543,7 +544,7 @@ const styles = StyleSheet.create({
   // Appearance segmented control
   segment: {
     flexDirection: 'row',
-    backgroundColor: Theme.colors.surfaceDark,
+    backgroundColor: c.surfaceDark,
     borderRadius: Theme.borderRadius.full,
     padding: 3,
   },
@@ -552,28 +553,28 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: Theme.borderRadius.full,
   },
-  segmentBtnActive: { backgroundColor: Theme.colors.gold },
+  segmentBtnActive: { backgroundColor: c.gold },
   segmentText: {
     fontSize: Theme.fontSize.xs,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
   },
-  segmentTextActive: { color: Theme.colors.textPrimary },
+  segmentTextActive: { color: c.textPrimary },
 
   // Setting cards
   settingCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Theme.colors.card,
+    backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg,
     padding: 16,
     borderWidth: 1,
-    borderColor: Theme.colors.cardBorder,
+    borderColor: c.cardBorder,
     marginBottom: 2,
   },
   settingCardPressed: {
-    backgroundColor: Theme.colors.cardHighlight,
+    backgroundColor: c.cardHighlight,
   },
   settingLeft: {
     flexDirection: 'row',
@@ -590,12 +591,12 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     fontWeight: Theme.fontWeight.semibold,
   },
   settingValue: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     marginTop: 2,
   },
 
@@ -604,12 +605,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Theme.colors.card,
+    backgroundColor: c.card,
     borderRadius: Theme.borderRadius.md,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: Theme.colors.cardBorder,
+    borderColor: c.cardBorder,
     marginBottom: 6,
   },
 
@@ -625,7 +626,7 @@ const styles = StyleSheet.create({
     maxHeight: '70%',
     paddingBottom: 40,
     borderWidth: 1,
-    borderColor: Theme.colors.cardBorder,
+    borderColor: c.cardBorder,
     borderBottomWidth: 0,
   },
   modalHeader: {
@@ -635,18 +636,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.lg,
     paddingVertical: Theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.cardBorder,
+    borderBottomColor: c.cardBorder,
   },
   modalTitle: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   modalClose: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Theme.colors.textMuted + '20',
+    backgroundColor: c.textMuted + '20',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -657,17 +658,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.lg,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.cardBorder + '40',
+    borderBottomColor: c.cardBorder + '40',
   },
   modalItemActive: {
-    backgroundColor: Theme.colors.gold + '10',
+    backgroundColor: c.gold + '10',
   },
   modalItemText: {
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   modalItemTextActive: {
-    color: Theme.colors.gold,
+    color: c.gold,
     fontWeight: Theme.fontWeight.bold,
   },
 });

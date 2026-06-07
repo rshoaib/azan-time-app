@@ -1,4 +1,5 @@
-import { Theme } from '@/constants/theme';
+import { Theme, ThemeColors } from '@/constants/theme';
+import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { DAILY_DUAS, DuaItem, EVENING_ADHKAR, MORNING_ADHKAR, TASBIH_TYPES } from '@/data/duas';
 import { isDuaPlaying, playDuaAudio, stopDuaAudio } from '@/services/duaAudioService';
 import { getTasbihCount, setTasbihCount } from '@/services/storageService';
@@ -19,6 +20,8 @@ import {
 type DuaTab = 'morning' | 'evening' | 'daily' | 'tasbih';
 
 export default function DuaScreen() {
+  const { colors: c, scheme } = useTheme();
+  const styles = useThemeStyles(makeStyles);
   const [activeTab, setActiveTab] = useState<DuaTab>('morning');
   const [tasbihCount, setTasbihCountState] = useState(0);
   const [tasbihType, setTasbihType] = useState(0);
@@ -65,11 +68,11 @@ export default function DuaScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.background} />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={['#F5F6FA', '#EEF0F6']} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
           <Text style={styles.title}>📿 Dua & Dhikr</Text>
           <Text style={styles.subtitle}>Daily remembrance of Allah</Text>
         </LinearGradient>
@@ -150,6 +153,7 @@ export default function DuaScreen() {
 }
 
 function DuaCard({ dua }: { dua: DuaItem }) {
+  const styles = useThemeStyles(makeStyles);
   const [expanded, setExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -232,78 +236,78 @@ function DuaCard({ dua }: { dua: DuaItem }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
   header: { alignItems: 'center', paddingTop: 56, paddingBottom: 12 },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: Theme.colors.textPrimary, marginBottom: 4 },
-  subtitle: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: 4 },
+  subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
 
   // Tabs
   tabBar: {
     flexDirection: 'row', marginHorizontal: 20, marginTop: 12, marginBottom: 20,
-    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg,
-    padding: 4, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
+    padding: 4, borderWidth: 1, borderColor: c.cardBorder,
   },
   tab: {
     flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: Theme.borderRadius.md,
   },
   tabActive: {
-    backgroundColor: Theme.colors.cardHighlight, borderWidth: 1, borderColor: Theme.colors.gold + '30',
+    backgroundColor: c.cardHighlight, borderWidth: 1, borderColor: c.gold + '30',
   },
   tabEmoji: { fontSize: 16, marginBottom: 2 },
-  tabLabel: { fontSize: 11, color: Theme.colors.textMuted, fontWeight: Theme.fontWeight.medium },
-  tabLabelActive: { color: Theme.colors.gold, fontWeight: Theme.fontWeight.bold },
+  tabLabel: { fontSize: 11, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
+  tabLabelActive: { color: c.gold, fontWeight: Theme.fontWeight.bold },
 
   // Dua cards
   duaList: { paddingHorizontal: 20 },
   duaCard: {
-    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg,
-    padding: 20, marginBottom: 12, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
+    padding: 20, marginBottom: 12, borderWidth: 1, borderColor: c.cardBorder,
   },
-  duaCardExpanded: { borderColor: Theme.colors.gold + '30' },
+  duaCardExpanded: { borderColor: c.gold + '30' },
   occasionBadge: {
-    alignSelf: 'flex-start', backgroundColor: Theme.colors.gold + '15',
+    alignSelf: 'flex-start', backgroundColor: c.gold + '15',
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: Theme.borderRadius.full,
-    marginBottom: 12, borderWidth: 1, borderColor: Theme.colors.gold + '20',
+    marginBottom: 12, borderWidth: 1, borderColor: c.gold + '20',
   },
-  occasionText: { fontSize: 11, color: Theme.colors.gold, fontWeight: Theme.fontWeight.semibold },
+  occasionText: { fontSize: 11, color: c.gold, fontWeight: Theme.fontWeight.semibold },
   duaArabic: {
-    fontSize: 22, color: Theme.colors.textPrimary, textAlign: 'right',
+    fontSize: 22, color: c.textPrimary, textAlign: 'right',
     lineHeight: 38, fontWeight: Theme.fontWeight.medium, marginBottom: 8,
   },
   duaTransliteration: {
-    fontSize: Theme.fontSize.sm, color: Theme.colors.teal, fontStyle: 'italic',
+    fontSize: Theme.fontSize.sm, color: c.teal, fontStyle: 'italic',
     marginBottom: 8, lineHeight: 20,
   },
-  duaDivider: { height: 1, backgroundColor: Theme.colors.cardBorder, marginVertical: 8 },
+  duaDivider: { height: 1, backgroundColor: c.cardBorder, marginVertical: 8 },
   duaTranslation: {
-    fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, lineHeight: 20,
+    fontSize: Theme.fontSize.sm, color: c.textSecondary, lineHeight: 20,
   },
   duaFooter: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10,
   },
   repeatBadge: {
-    backgroundColor: Theme.colors.isha + '20', paddingHorizontal: 10, paddingVertical: 3,
+    backgroundColor: c.isha + '20', paddingHorizontal: 10, paddingVertical: 3,
     borderRadius: Theme.borderRadius.full,
   },
-  repeatText: { fontSize: 11, color: Theme.colors.isha, fontWeight: Theme.fontWeight.bold },
-  tapToExpand: { fontSize: 11, color: Theme.colors.textMuted },
+  repeatText: { fontSize: 11, color: c.isha, fontWeight: Theme.fontWeight.bold },
+  tapToExpand: { fontSize: 11, color: c.textMuted },
 
   // Audio button
   footerLeft: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
   audioButton: {
     flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4,
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.teal + '12', borderWidth: 1, borderColor: Theme.colors.teal + '25',
+    backgroundColor: c.teal + '12', borderWidth: 1, borderColor: c.teal + '25',
   },
   audioButtonActive: {
-    backgroundColor: Theme.colors.danger + '12', borderColor: Theme.colors.danger + '25',
+    backgroundColor: c.danger + '12', borderColor: c.danger + '25',
   },
   audioIcon: { fontSize: 14 },
-  audioLabel: { fontSize: 11, color: Theme.colors.teal, fontWeight: Theme.fontWeight.semibold },
-  audioLabelActive: { color: Theme.colors.danger },
+  audioLabel: { fontSize: 11, color: c.teal, fontWeight: Theme.fontWeight.semibold },
+  audioLabelActive: { color: c.danger },
 
   // Tasbih
   tasbihContainer: { alignItems: 'center', paddingHorizontal: 20 },
@@ -311,38 +315,38 @@ const styles = StyleSheet.create({
   tasbihTypeRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
   tasbihTypeChip: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.card, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderWidth: 1, borderColor: c.cardBorder,
   },
   tasbihTypeChipActive: {
-    backgroundColor: Theme.colors.gold + '15', borderColor: Theme.colors.gold + '40',
+    backgroundColor: c.gold + '15', borderColor: c.gold + '40',
   },
-  tasbihTypeText: { fontSize: 12, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.medium },
-  tasbihTypeTextActive: { color: Theme.colors.gold, fontWeight: Theme.fontWeight.bold },
+  tasbihTypeText: { fontSize: 12, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
+  tasbihTypeTextActive: { color: c.gold, fontWeight: Theme.fontWeight.bold },
   tasbihTapArea: { marginBottom: 20 },
   tasbihOuter: {
     width: 220, height: 220, borderRadius: 110,
-    borderWidth: 3, borderColor: Theme.colors.gold + '25',
+    borderWidth: 3, borderColor: c.gold + '25',
     justifyContent: 'center', alignItems: 'center',
   },
   tasbihCircle: {
     width: 200, height: 200, borderRadius: 100,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    borderWidth: 1, borderColor: c.cardBorder,
   },
-  tasbihArabic: { fontSize: 22, color: Theme.colors.gold, marginBottom: 8 },
+  tasbihArabic: { fontSize: 22, color: c.gold, marginBottom: 8 },
   tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
-  tasbihTarget: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: 4 },
+  tasbihTarget: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: 4 },
   progressBarBg: {
     width: '80%', height: 6, borderRadius: 3,
-    backgroundColor: Theme.colors.cardBorder, marginBottom: 12, overflow: 'hidden',
+    backgroundColor: c.cardBorder, marginBottom: 12, overflow: 'hidden',
   },
   progressBarFill: {
-    height: 6, borderRadius: 3, backgroundColor: Theme.colors.gold,
+    height: 6, borderRadius: 3, backgroundColor: c.gold,
   },
-  tasbihTranslation: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: 20 },
+  tasbihTranslation: { fontSize: Theme.fontSize.sm, color: c.textSecondary, textAlign: 'center', marginBottom: 20 },
   resetButton: {
     paddingHorizontal: 20, paddingVertical: 10, borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.card, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderWidth: 1, borderColor: c.cardBorder,
   },
-  resetText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, fontWeight: Theme.fontWeight.medium },
+  resetText: { fontSize: Theme.fontSize.sm, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
 });

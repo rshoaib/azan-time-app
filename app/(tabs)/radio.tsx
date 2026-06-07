@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Theme } from '@/constants/theme';
+import { Theme, ThemeColors } from '@/constants/theme';
+import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import {
   RADIO_CATEGORIES,
   RADIO_STATIONS,
@@ -22,6 +23,8 @@ import { configureAudio } from '@/services/audioService';
 import { useNavigation } from 'expo-router';
 
 export default function RadioScreen() {
+  const { colors: c, scheme } = useTheme();
+  const styles = useThemeStyles(makeStyles);
   const [activeCategory, setActiveCategory] = useState<RadioCategory>('featured');
   const [currentStation, setCurrentStation] = useState<RadioStation | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -149,7 +152,7 @@ export default function RadioScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.background} />
 
       <ScrollView
         style={styles.scrollView}
@@ -157,7 +160,7 @@ export default function RadioScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <LinearGradient colors={['#F5F6FA', '#EEF0F6']} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
           <Text style={styles.title}>📖 Quran Tilawat</Text>
           <Text style={styles.subtitle}>Listen to beautiful Quran recitations 24/7</Text>
         </LinearGradient>
@@ -170,7 +173,7 @@ export default function RadioScreen() {
               style={[
                 styles.nowPlayingCard,
                 isPlaying && {
-                  borderColor: Theme.colors.teal + '60',
+                  borderColor: c.teal + '60',
                   ...Theme.shadows.glow,
                 },
               ]}
@@ -330,7 +333,7 @@ export default function RadioScreen() {
                       <Text style={styles.liveText}>LIVE</Text>
                     </View>
                   ) : (
-                    <FontAwesome name="play-circle" size={28} color={Theme.colors.teal + '80'} />
+                    <FontAwesome name="play-circle" size={28} color={c.teal + '80'} />
                   )}
                 </View>
               </Pressable>
@@ -350,8 +353,8 @@ export default function RadioScreen() {
 }
 
 // ─── Styles ────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
 
@@ -360,12 +363,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.heavy,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
   },
 
   // Now Playing
@@ -428,13 +431,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 10,
     borderRadius: Theme.borderRadius.md,
-    backgroundColor: Theme.colors.warning + '15',
+    backgroundColor: c.warning + '15',
     borderWidth: 1,
-    borderColor: Theme.colors.warning + '25',
+    borderColor: c.warning + '25',
   },
   audioNoticeText: {
     fontSize: 11,
-    color: Theme.colors.warning,
+    color: c.warning,
     textAlign: 'center',
     fontWeight: Theme.fontWeight.medium,
   },
@@ -445,11 +448,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 16,
     marginBottom: 12,
-    backgroundColor: Theme.colors.card,
+    backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg,
     padding: 4,
     borderWidth: 1,
-    borderColor: Theme.colors.cardBorder,
+    borderColor: c.cardBorder,
   },
   categoryTab: {
     flex: 1,
@@ -458,18 +461,18 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.md,
   },
   categoryTabActive: {
-    backgroundColor: Theme.colors.cardHighlight,
+    backgroundColor: c.cardHighlight,
     borderWidth: 1,
-    borderColor: Theme.colors.teal + '30',
+    borderColor: c.teal + '30',
   },
   categoryEmoji: { fontSize: 16, marginBottom: 2 },
   categoryLabel: {
     fontSize: 10,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     fontWeight: Theme.fontWeight.medium,
   },
   categoryLabelActive: {
-    color: Theme.colors.teal,
+    color: c.teal,
     fontWeight: Theme.fontWeight.bold,
   },
 
@@ -480,7 +483,7 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     fontWeight: Theme.fontWeight.semibold,
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -491,46 +494,46 @@ const styles = StyleSheet.create({
   stationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.card,
+    backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: Theme.colors.cardBorder,
+    borderColor: c.cardBorder,
     gap: 12,
   },
   stationCardActive: {
-    borderColor: Theme.colors.teal + '40',
-    backgroundColor: Theme.colors.teal + '06',
+    borderColor: c.teal + '40',
+    backgroundColor: c.teal + '06',
   },
   stationCardPressed: {
-    backgroundColor: Theme.colors.cardHighlight,
+    backgroundColor: c.cardHighlight,
   },
   stationIcon: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: Theme.colors.teal + '12',
+    backgroundColor: c.teal + '12',
     justifyContent: 'center',
     alignItems: 'center',
   },
   stationIconPlaying: {
-    backgroundColor: Theme.colors.teal + '22',
+    backgroundColor: c.teal + '22',
   },
   stationIconText: { fontSize: 20 },
   stationInfo: { flex: 1 },
   stationName: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 2,
   },
   stationNamePlaying: {
-    color: Theme.colors.teal,
+    color: c.teal,
   },
   stationReciter: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
   },
   stationAction: {
     width: 36,
@@ -542,7 +545,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Theme.colors.danger + '15',
+    backgroundColor: c.danger + '15',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: Theme.borderRadius.full,
@@ -551,12 +554,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Theme.colors.danger,
+    backgroundColor: c.danger,
   },
   liveText: {
     fontSize: 9,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.danger,
+    color: c.danger,
     letterSpacing: 1,
   },
 
@@ -568,7 +571,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     textAlign: 'center',
   },
 });

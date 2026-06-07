@@ -1,5 +1,6 @@
 import { SHARE_FOOTER } from '@/constants/storeLinks';
-import { PRAYER_CONFIG, Theme } from '@/constants/theme';
+import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
+import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
 import { onStreakMilestone } from '@/services/reviewPromptService';
 import {
@@ -40,6 +41,8 @@ const statusLabel: Record<string, string> = {
 };
 
 export default function TrackerScreen() {
+  const { colors: c, scheme } = useTheme();
+  const styles = useThemeStyles(makeStyles);
   const [today, setToday] = useState(new Date());
   const [dayLog, setDayLog] = useState<DayLog>({ fajr: null, dhuhr: null, asr: null, maghrib: null, isha: null });
   const [weekLog, setWeekLog] = useState<{ date: Date; log: DayLog }[]>([]);
@@ -100,11 +103,11 @@ export default function TrackerScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.background} />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={['#F5F6FA', '#EEF0F6']} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
           <Text style={styles.title}>📊 Prayer Tracker</Text>
           <Text style={styles.subtitle}>Track your daily prayers</Text>
         </LinearGradient>
@@ -158,9 +161,9 @@ export default function TrackerScreen() {
                       <Text style={styles.statusEmoji}>{statusEmoji[status]}</Text>
                       <Text style={[
                         styles.statusText,
-                        status === 'prayed' && { color: Theme.colors.emerald },
-                        status === 'missed' && { color: Theme.colors.danger },
-                        status === 'qada' && { color: Theme.colors.warning },
+                        status === 'prayed' && { color: c.emerald },
+                        status === 'missed' && { color: c.danger },
+                        status === 'qada' && { color: c.warning },
                       ]}>{statusLabel[status]}</Text>
                     </View>
                   ) : (
@@ -227,7 +230,7 @@ export default function TrackerScreen() {
                                "You've started — keep it up 🤲"}
             </Text>
             <Pressable style={styles.streakShareBtn} onPress={shareStreak} hitSlop={8}>
-              <FontAwesome name="share-alt" size={14} color={Theme.colors.goldDark} />
+              <FontAwesome name="share-alt" size={14} color={c.goldDark} />
             </Pressable>
           </View>
         )}
@@ -238,7 +241,7 @@ export default function TrackerScreen() {
             <View style={styles.chainHeader}>
               <Text style={styles.chainTitle}>🔥 Don't break the chain</Text>
               <Pressable onPress={shareStreak} hitSlop={10} style={styles.chainShareLink}>
-                <FontAwesome name="share-alt" size={12} color={Theme.colors.teal} />
+                <FontAwesome name="share-alt" size={12} color={c.teal} />
                 <Text style={styles.chainShareText}>Share streak</Text>
               </Pressable>
             </View>
@@ -308,19 +311,19 @@ export default function TrackerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
   header: { alignItems: 'center', paddingTop: 56, paddingBottom: 16 },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: Theme.colors.textPrimary, marginBottom: 4 },
-  subtitle: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: 4 },
+  subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
 
   // Stats
   statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginTop: 8, marginBottom: 20 },
   statCard: {
     flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: Theme.borderRadius.lg,
-    borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    borderWidth: 1, borderColor: c.cardBorder,
   },
   statEmoji: { fontSize: 22, marginBottom: 4 },
   statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
@@ -330,69 +333,69 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: 20, marginBottom: 24 },
   sectionTitle: {
     fontSize: Theme.fontSize.xs, fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textMuted, letterSpacing: 2, marginBottom: 8, paddingLeft: 4,
+    color: c.textMuted, letterSpacing: 2, marginBottom: 8, paddingLeft: 4,
   },
-  sectionHint: { fontSize: 11, color: Theme.colors.textMuted, marginBottom: 12, paddingLeft: 4 },
+  sectionHint: { fontSize: 11, color: c.textMuted, marginBottom: 12, paddingLeft: 4 },
 
   // Prayer rows
   prayerRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg,
-    padding: 16, marginBottom: 8, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
+    padding: 16, marginBottom: 8, borderWidth: 1, borderColor: c.cardBorder,
   },
-  prayerRowPrayed: { borderColor: Theme.colors.emerald + '40', backgroundColor: Theme.colors.emerald + '08' },
-  prayerRowMissed: { borderColor: Theme.colors.danger + '30', backgroundColor: Theme.colors.danger + '08' },
+  prayerRowPrayed: { borderColor: c.emerald + '40', backgroundColor: c.emerald + '08' },
+  prayerRowMissed: { borderColor: c.danger + '30', backgroundColor: c.danger + '08' },
   prayerRowPressed: { opacity: 0.8 },
   prayerRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   prayerRowEmoji: { fontSize: 22 },
-  prayerRowName: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
+  prayerRowName: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
   prayerRowRight: {},
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusEmoji: { fontSize: 16 },
   statusText: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold },
   tapHint: {
     paddingHorizontal: 16, paddingVertical: 6, borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.textMuted + '20', borderWidth: 1, borderColor: Theme.colors.textMuted + '30',
+    backgroundColor: c.textMuted + '20', borderWidth: 1, borderColor: c.textMuted + '30',
   },
-  tapHintText: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, fontWeight: Theme.fontWeight.medium },
+  tapHintText: { fontSize: Theme.fontSize.xs, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
 
   // Heatmap
   heatmapContainer: {
-    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg,
-    padding: 16, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
+    padding: 16, borderWidth: 1, borderColor: c.cardBorder,
   },
   heatmapRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
   heatmapLabelCell: { width: 28, alignItems: 'center' },
   heatmapLabel: { fontSize: 14 },
   heatmapHeaderCell: { flex: 1, alignItems: 'center' },
-  heatmapHeaderText: { fontSize: 10, color: Theme.colors.textMuted, fontWeight: Theme.fontWeight.semibold },
+  heatmapHeaderText: { fontSize: 10, color: c.textMuted, fontWeight: Theme.fontWeight.semibold },
   heatmapCell: {
-    flex: 1, height: 30, borderRadius: 6, backgroundColor: Theme.colors.surfaceDark,
+    flex: 1, height: 30, borderRadius: 6, backgroundColor: c.surfaceDark,
     justifyContent: 'center', alignItems: 'center',
   },
-  heatmapPrayed: { backgroundColor: Theme.colors.emerald + '25' },
-  heatmapMissed: { backgroundColor: Theme.colors.danger + '20' },
-  heatmapQada: { backgroundColor: Theme.colors.warning + '20' },
+  heatmapPrayed: { backgroundColor: c.emerald + '25' },
+  heatmapMissed: { backgroundColor: c.danger + '20' },
+  heatmapQada: { backgroundColor: c.warning + '20' },
   heatmapCellText: { fontSize: 12 },
 
   // Motivation
   motivationCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20,
-    backgroundColor: Theme.colors.gold + '10', borderRadius: Theme.borderRadius.lg,
-    padding: 16, borderWidth: 1, borderColor: Theme.colors.gold + '20',
+    backgroundColor: c.gold + '10', borderRadius: Theme.borderRadius.lg,
+    padding: 16, borderWidth: 1, borderColor: c.gold + '20',
   },
-  motivationText: { fontSize: Theme.fontSize.sm, color: Theme.colors.goldDark, flex: 1, fontWeight: Theme.fontWeight.medium },
+  motivationText: { fontSize: Theme.fontSize.sm, color: c.goldDark, flex: 1, fontWeight: Theme.fontWeight.medium },
   streakShareBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: Theme.colors.gold + '18',
+    backgroundColor: c.gold + '18',
     justifyContent: 'center', alignItems: 'center',
   },
 
   // Don't-break-the-chain visualization
   chainSection: {
     marginHorizontal: 20, marginTop: 16, marginBottom: 8,
-    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg,
-    padding: 16, borderWidth: 1, borderColor: Theme.colors.cardBorder,
+    backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
+    padding: 16, borderWidth: 1, borderColor: c.cardBorder,
   },
   chainHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -400,31 +403,31 @@ const styles = StyleSheet.create({
   },
   chainTitle: {
     fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   chainShareLink: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: Theme.colors.teal + '12',
+    backgroundColor: c.teal + '12',
     paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: Theme.borderRadius.full,
   },
   chainShareText: {
-    fontSize: Theme.fontSize.xs, color: Theme.colors.teal,
+    fontSize: Theme.fontSize.xs, color: c.teal,
     fontWeight: Theme.fontWeight.semibold,
   },
   chainRow: { flexDirection: 'row', gap: 4, justifyContent: 'space-between' },
   chainLink: {
     flex: 1, aspectRatio: 1, borderRadius: 6,
-    backgroundColor: Theme.colors.surfaceDark,
+    backgroundColor: c.surfaceDark,
     justifyContent: 'center', alignItems: 'center',
   },
   chainLinkLit: {
-    backgroundColor: Theme.colors.gold + '25',
-    borderWidth: 1, borderColor: Theme.colors.gold + '40',
+    backgroundColor: c.gold + '25',
+    borderWidth: 1, borderColor: c.gold + '40',
   },
   chainLinkText: { fontSize: 12 },
   chainFooter: {
-    fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted,
+    fontSize: Theme.fontSize.xs, color: c.textMuted,
     textAlign: 'center', marginTop: 10,
   },
 
@@ -433,11 +436,11 @@ const styles = StyleSheet.create({
   achievementBadge: { width: '47%', borderRadius: Theme.borderRadius.lg, padding: 14, borderWidth: 1.5, alignItems: 'center' },
   achievementEmoji: { fontSize: 28, marginBottom: 6 },
   achievementTitle: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, textAlign: 'center' },
-  achievementDesc: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, textAlign: 'center', marginTop: 2 },
-  noAchievements: { width: '100%', alignItems: 'center', padding: 24, backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: Theme.colors.cardBorder },
-  noAchievementsText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: 8 },
+  achievementDesc: { fontSize: Theme.fontSize.xs, color: c.textMuted, textAlign: 'center', marginTop: 2 },
+  noAchievements: { width: '100%', alignItems: 'center', padding: 24, backgroundColor: c.card, borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder },
+  noAchievementsText: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: 8 },
   nextAchievement: { marginTop: 14 },
-  nextAchievementLabel: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginBottom: 8, fontWeight: Theme.fontWeight.medium },
-  progressBarBg: { height: 8, backgroundColor: Theme.colors.surfaceDark, borderRadius: 4, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: Theme.colors.gold, borderRadius: 4 },
+  nextAchievementLabel: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: 8, fontWeight: Theme.fontWeight.medium },
+  progressBarBg: { height: 8, backgroundColor: c.surfaceDark, borderRadius: 4, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: c.gold, borderRadius: 4 },
 });
