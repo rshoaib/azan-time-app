@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="R3GL206WKVZ" tests="13" failures="2" time="835.0">
+    <testcase id="dua" name="dua" classname="dua" file=".maestro\dua.yaml" time="21.0" status="SUCCESS"/>
+    <testcase id="error-retry" name="error-retry" classname="error-retry" file=".maestro\error-retry.yaml" time="73.0" status="SUCCESS"/>
+    <testcase id="location-update" name="location-update" classname="location-update" file=".maestro\location-update.yaml" time="77.0" status="SUCCESS"/>
+    <testcase id="notification-delivery" name="notification-delivery" classname="notification-delivery" file=".maestro\notification-delivery.yaml" time="123.0" status="SUCCESS"/>
+    <testcase id="notification-permission" name="notification-permission" classname="notification-permission" file=".maestro\notification-permission.yaml" time="44.0" status="SUCCESS"/>
+    <testcase id="notifications" name="notifications" classname="notifications" file=".maestro\notifications.yaml" time="53.0" status="SUCCESS"/>
+    <testcase id="prayer-clock" name="prayer-clock" classname="prayer-clock" file=".maestro\prayer-clock.yaml" time="71.0" status="SUCCESS"/>
+    <testcase id="qibla" name="qibla" classname="qibla" file=".maestro\qibla.yaml" time="25.0" status="SUCCESS"/>
+    <testcase id="radio" name="radio" classname="radio" file=".maestro\radio.yaml" time="73.0" status="ERROR">
+      <failure>Assertion is false: id: radio-now-playing is visible</failure>
+    </testcase>
+    <testcase id="settings" name="settings" classname="settings" file=".maestro\settings.yaml" time="96.0" status="ERROR">
+      <failure>Assertion is false: "Today's Prayers" is visible</failure>
+    </testcase>
+    <testcase id="smoke" name="smoke" classname="smoke" file=".maestro\smoke.yaml" time="81.0" status="SUCCESS"/>
+    <testcase id="tab-navigation" name="tab-navigation" classname="tab-navigation" file=".maestro\tab-navigation.yaml" time="79.0" status="SUCCESS"/>
+    <testcase id="tracker" name="tracker" classname="tracker" file=".maestro\tracker.yaml" time="19.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>
