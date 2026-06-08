@@ -91,7 +91,8 @@
       "expo-sharing",
       "expo-web-browser",
       "expo-localization",
-      "./plugins/withExactAlarmPermissions"
+      "./plugins/withExactAlarmPermissions",
+      "./plugins/withReactNativeArchitectures"
     ],
     "experiments": {
       "typedRoutes": true
