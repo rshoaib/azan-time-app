@@ -95,7 +95,7 @@ export async function getCurrentLocation(): Promise<LocationResult> {
     // 1. Check / request permission
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-        throw new Error('Location permission not granted. Please allow location access in your device settings.');
+        throw new Error('Azan Time needs your location to calculate accurate prayer times. Enable location access in Settings.');
     }
 
     // 2. Ensure location services (GPS) are on — prompt user if not

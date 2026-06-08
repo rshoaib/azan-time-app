@@ -104,7 +104,7 @@ describe('locationService', () => {
 
     it('throws when permission is denied', async () => {
       mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
-      await expect(getCurrentLocation()).rejects.toThrow(/permission not granted/i);
+      await expect(getCurrentLocation()).rejects.toThrow(/location access/i);
     });
 
     it('throws when location services stay disabled after prompt', async () => {

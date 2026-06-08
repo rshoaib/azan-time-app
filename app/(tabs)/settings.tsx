@@ -134,7 +134,7 @@ export default function SettingsScreen() {
       setLocationInfo(label);
       setLocationMsg({ text: `Updated to ${label}`, ok: true });
     } catch (e: any) {
-      setLocationMsg({ text: e?.message || 'Could not get your location', ok: false });
+      setLocationMsg({ text: e?.message || "Couldn't get your location. Check that location is on.", ok: false });
     } finally {
       setUpdatingLocation(false);
     }
@@ -360,7 +360,7 @@ export default function SettingsScreen() {
                     locationMsg ? { color: locationMsg.ok ? c.emerald : c.danger } : null,
                   ]}
                 >
-                  {locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your current location'}
+                  {locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your location'}
                 </Text>
               </View>
             </View>

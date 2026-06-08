@@ -230,7 +230,7 @@ function DuaCard({ dua }: { dua: DuaItem }) {
             </View>
           )}
         </View>
-        <Text style={styles.tapToExpand}>{expanded ? '▲ Less' : '▼ Tap for translation'}</Text>
+        <Text style={styles.tapToExpand}>{expanded ? '▲ Hide translation' : '▼ Show translation'}</Text>
       </View>
     </Pressable>
   );

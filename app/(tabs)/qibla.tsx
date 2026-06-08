@@ -75,7 +75,7 @@ export default function QiblaScreen() {
       const fresh = await maybeRefreshLocation(loc as LocationResult);
       if (fresh) await applyLocation(fresh);
     } catch (e: any) {
-      setError(e.message || 'Failed to determine Qibla direction');
+      setError(e.message || "Couldn't find the Qibla. Make sure location is on, then move your phone in a figure-8 to calibrate.");
       setLoadingMosques(false);
     }
   };
@@ -226,8 +226,8 @@ export default function QiblaScreen() {
                   ) : mosques.length === 0 ? (
                     <View style={styles.mosquesEmpty}>
                       <Text style={{ fontSize: 32 }}>🏜️</Text>
-                      <Text style={styles.mosquesEmptyText}>No mosques found nearby</Text>
-                      <Text style={styles.mosquesEmptyHint}>Try expanding the search area</Text>
+                      <Text style={styles.mosquesEmptyText}>No mosques within 5 km</Text>
+                      <Text style={styles.mosquesEmptyHint}>Try again later or check your connection</Text>
                     </View>
                   ) : (
                     mosques.slice(0, 15).map((mosque, idx) => (

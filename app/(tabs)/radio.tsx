@@ -162,7 +162,7 @@ export default function RadioScreen() {
         {/* Header */}
         <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
           <Text style={styles.title}>📖 Quran Tilawat</Text>
-          <Text style={styles.subtitle}>Listen to beautiful Quran recitations 24/7</Text>
+          <Text style={styles.subtitle}>Quran recitations, anytime</Text>
         </LinearGradient>
 
         {/* Now Playing Card */}
@@ -235,7 +235,7 @@ export default function RadioScreen() {
             {!audioAvailable && (
               <View style={styles.audioNotice}>
                 <Text style={styles.audioNoticeText}>
-                  ⚠️ Audio not available in Expo Go. Use a development build to stream recitations.
+                  ⚠️ Audio isn't available in this preview. Install the app to listen.
                 </Text>
               </View>
             )}

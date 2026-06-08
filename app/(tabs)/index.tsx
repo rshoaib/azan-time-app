@@ -27,6 +27,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Dimensions,
+    Linking,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -102,7 +103,7 @@ export default function HomeScreen() {
       const fresh = await maybeRefreshLocation(loc as LocationResult, { force: opts.force });
       if (fresh) await applyLocation(fresh);
     } catch (e: any) {
-      setError(e.message || 'Failed to load prayer times');
+      setError(e.message || "Couldn't load prayer times. Check your connection and try again.");
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -184,6 +185,15 @@ export default function HomeScreen() {
         >
           <FontAwesome name="refresh" size={16} color="#FFFFFF" />
           <Text style={styles.retryButtonText}>Retry</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open device settings"
+          onPress={() => Linking.openSettings()}
+          style={{ marginTop: 14 }}
+          hitSlop={8}
+        >
+          <Text style={{ color: c.teal, fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold }}>Open Settings</Text>
         </Pressable>
       </LinearGradient>
     );

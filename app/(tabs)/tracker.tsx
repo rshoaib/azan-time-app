@@ -168,7 +168,7 @@ export default function TrackerScreen() {
                     </View>
                   ) : (
                     <View style={styles.tapHint}>
-                      <Text style={styles.tapHintText}>Tap</Text>
+                      <Text style={styles.tapHintText}>Log</Text>
                     </View>
                   )}
                 </View>
