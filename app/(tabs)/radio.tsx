@@ -206,7 +206,7 @@ export default function RadioScreen() {
               ]}
             >
               <LinearGradient
-                colors={isPlaying ? c.gradientNextPrayer : (['#5A6180', '#3D425A'] as const)}
+                colors={isPlaying ? c.gradientNextPrayer : c.gradientPaused}
                 style={styles.nowPlayingGradient}
               >
                 {/* Sound wave visualizer */}
@@ -441,7 +441,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   nowPlayingName: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: '#FFFFFF',
+    color: c.onAccent,
     marginBottom: 2,
   },
   nowPlayingReciter: {
@@ -470,7 +470,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.warning + '25',
   },
   audioNoticeText: {
-    fontSize: 11,
+    fontSize: Theme.fontSize.xs,
     color: c.warning,
     textAlign: 'center',
     fontWeight: Theme.fontWeight.medium,
@@ -499,7 +499,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.gold + '30',
   },
-  categoryEmoji: { fontSize: 16, marginBottom: 2 },
+  categoryEmoji: { fontSize: Theme.fontSize.body, marginBottom: 2 },
   categoryLabel: {
     fontSize: 10,
     color: c.textMuted,
@@ -554,7 +554,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   stationIconPlaying: {
     backgroundColor: c.teal + '22',
   },
-  stationIconText: { fontSize: 20 },
+  stationIconText: { fontSize: Theme.fontSize.mlg },
   stationInfo: { flex: 1 },
   stationName: {
     fontSize: Theme.fontSize.md,
@@ -604,7 +604,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 20,
   },
   footerText: {
-    fontSize: 11,
+    fontSize: Theme.fontSize.xs,
     color: c.textMuted,
     textAlign: 'center',
   },

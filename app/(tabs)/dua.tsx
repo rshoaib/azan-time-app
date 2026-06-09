@@ -266,8 +266,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   tabActive: {
     backgroundColor: c.cardHighlight, borderWidth: 1, borderColor: c.gold + '30',
   },
-  tabEmoji: { fontSize: 16, marginBottom: 2 },
-  tabLabel: { fontSize: 11, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
+  tabEmoji: { fontSize: Theme.fontSize.body, marginBottom: 2 },
+  tabLabel: { fontSize: Theme.fontSize.xs, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
   tabLabelActive: { color: c.goldText, fontWeight: Theme.fontWeight.bold },
 
   // Dua cards
@@ -282,9 +282,9 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: Theme.borderRadius.full,
     marginBottom: 12, borderWidth: 1, borderColor: c.gold + '20',
   },
-  occasionText: { fontSize: 11, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
+  occasionText: { fontSize: Theme.fontSize.xs, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
   duaArabic: {
-    fontSize: 22, color: c.textPrimary, textAlign: 'right',
+    fontSize: Theme.fontSize.xl, color: c.textPrimary, textAlign: 'right',
     lineHeight: 38, fontWeight: Theme.fontWeight.medium, marginBottom: 8,
   },
   duaTransliteration: {
@@ -302,8 +302,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.isha + '20', paddingHorizontal: 10, paddingVertical: 3,
     borderRadius: Theme.borderRadius.full,
   },
-  repeatText: { fontSize: 11, color: c.isha, fontWeight: Theme.fontWeight.bold },
-  tapToExpand: { fontSize: 11, color: c.textMuted },
+  repeatText: { fontSize: Theme.fontSize.xs, color: c.isha, fontWeight: Theme.fontWeight.bold },
+  tapToExpand: { fontSize: Theme.fontSize.xs, color: c.textMuted },
 
   // Audio button
   footerLeft: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
@@ -315,8 +315,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   audioButtonActive: {
     backgroundColor: c.danger + '12', borderColor: c.danger + '25',
   },
-  audioIcon: { fontSize: 14 },
-  audioLabel: { fontSize: 11, color: c.teal, fontWeight: Theme.fontWeight.semibold },
+  audioIcon: { fontSize: Theme.fontSize.md },
+  audioLabel: { fontSize: Theme.fontSize.xs, color: c.teal, fontWeight: Theme.fontWeight.semibold },
   audioLabelActive: { color: c.danger },
 
   // Tasbih
@@ -330,7 +330,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   tasbihTypeChipActive: {
     backgroundColor: c.gold + '15', borderColor: c.gold + '40',
   },
-  tasbihTypeText: { fontSize: 12, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
+  tasbihTypeText: { fontSize: Theme.fontSize.sm, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
   tasbihTypeTextActive: { color: c.goldText, fontWeight: Theme.fontWeight.bold },
   tasbihTapArea: { marginBottom: 20 },
   tasbihOuter: {
@@ -343,8 +343,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: c.cardBorder,
   },
-  tasbihArabic: { fontSize: 22, color: c.goldLight, marginBottom: 8 },
-  tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+  tasbihArabic: { fontSize: Theme.fontSize.xl, color: c.goldLight, marginBottom: 8 },
+  tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
   tasbihTarget: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: 4 },
   progressBarBg: {
     width: '80%', height: 6, borderRadius: 3,

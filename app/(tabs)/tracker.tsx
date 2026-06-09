@@ -222,7 +222,7 @@ export default function TrackerScreen() {
         {/* Motivational + share */}
         {streak > 0 && (
           <View style={styles.motivationCard}>
-            <Text style={{ fontSize: 28 }}>
+            <Text style={{ fontSize: Theme.fontSize.xxl }}>
               {streak >= 100 ? '💎' : streak >= 30 ? '🌟' : streak >= 7 ? '🔥' : '🤲'}
             </Text>
             <Text style={styles.motivationText}>
@@ -328,8 +328,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: Theme.borderRadius.lg,
     borderWidth: 1, borderColor: c.cardBorder,
   },
-  statEmoji: { fontSize: 22, marginBottom: 4 },
-  statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+  statEmoji: { fontSize: Theme.fontSize.xl, marginBottom: 4 },
+  statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
   statLabel: { fontSize: Theme.fontSize.xs, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
 
   // Sections
@@ -338,7 +338,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: Theme.fontSize.xs, fontWeight: Theme.fontWeight.bold,
     color: c.textMuted, letterSpacing: 2, marginBottom: 8, paddingLeft: 4,
   },
-  sectionHint: { fontSize: 11, color: c.textMuted, marginBottom: 12, paddingLeft: 4 },
+  sectionHint: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginBottom: 12, paddingLeft: 4 },
 
   // Prayer rows
   prayerRow: {
@@ -350,11 +350,11 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   prayerRowMissed: { borderColor: c.danger + '30', backgroundColor: c.danger + '08' },
   prayerRowPressed: { opacity: 0.8 },
   prayerRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  prayerRowEmoji: { fontSize: 22 },
+  prayerRowEmoji: { fontSize: Theme.fontSize.xl },
   prayerRowName: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
   prayerRowRight: {},
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusEmoji: { fontSize: 16 },
+  statusEmoji: { fontSize: Theme.fontSize.body },
   statusText: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold },
   tapHint: {
     paddingHorizontal: 16, paddingVertical: 6, borderRadius: Theme.borderRadius.full,
@@ -369,7 +369,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   heatmapRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
   heatmapLabelCell: { width: 28, alignItems: 'center' },
-  heatmapLabel: { fontSize: 14 },
+  heatmapLabel: { fontSize: Theme.fontSize.md },
   heatmapHeaderCell: { flex: 1, alignItems: 'center' },
   heatmapHeaderText: { fontSize: 10, color: c.textMuted, fontWeight: Theme.fontWeight.semibold },
   heatmapCell: {
@@ -379,7 +379,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   heatmapPrayed: { backgroundColor: c.emerald + '25' },
   heatmapMissed: { backgroundColor: c.danger + '20' },
   heatmapQada: { backgroundColor: c.warning + '20' },
-  heatmapCellText: { fontSize: 12 },
+  heatmapCellText: { fontSize: Theme.fontSize.sm },
 
   // Motivation
   motivationCard: {
@@ -389,7 +389,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   motivationText: { fontSize: Theme.fontSize.sm, color: c.goldText, flex: 1, fontWeight: Theme.fontWeight.medium },
   streakShareBtn: {
-    width: 32, height: 32, borderRadius: 16,
+    width: 32, height: 32, borderRadius: Theme.borderRadius.lg,
     backgroundColor: c.gold + '18',
     justifyContent: 'center', alignItems: 'center',
   },
@@ -428,7 +428,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.gold + '25',
     borderWidth: 1, borderColor: c.gold + '40',
   },
-  chainLinkText: { fontSize: 12 },
+  chainLinkText: { fontSize: Theme.fontSize.sm },
   chainFooter: {
     fontSize: Theme.fontSize.xs, color: c.textMuted,
     textAlign: 'center', marginTop: 10,
@@ -437,7 +437,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   // Achievements
   achievementsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   achievementBadge: { width: '47%', borderRadius: Theme.borderRadius.lg, padding: 14, borderWidth: 1.5, alignItems: 'center' },
-  achievementEmoji: { fontSize: 28, marginBottom: 6 },
+  achievementEmoji: { fontSize: Theme.fontSize.xxl, marginBottom: 6 },
   achievementTitle: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, textAlign: 'center' },
   achievementDesc: { fontSize: Theme.fontSize.xs, color: c.textMuted, textAlign: 'center', marginTop: 2 },
   noAchievements: { width: '100%', alignItems: 'center', padding: 24, backgroundColor: c.card, borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder },

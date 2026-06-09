@@ -162,19 +162,19 @@ export default function QiblaScreen() {
                   {qiblaAngle !== null && (
                     <View style={[styles.qiblaArrowContainer, { transform: [{ rotate: `${qiblaRotation}deg` }] }]}>
                       <View style={[styles.qiblaArrow, isAligned && styles.qiblaArrowAligned]}>
-                        <Text style={{ fontSize: 20 }}>🕋</Text>
+                        <Text style={{ fontSize: Theme.fontSize.mlg }}>🕋</Text>
                       </View>
                       <View style={[styles.qiblaLine, isAligned && styles.qiblaLineAligned]} />
                     </View>
                   )}
 
-                  <LinearGradient colors={isAligned ? ['#00E676', '#00C853'] : [c.gold, c.goldDark]} style={styles.centerDot} />
+                  <LinearGradient colors={isAligned ? c.gradientAligned : [c.gold, c.goldDark]} style={styles.centerDot} />
                 </View>
               </View>
 
               {isAligned && (
                 <View style={styles.alignedBadge}>
-                  <Text style={{ fontSize: 14 }}>✅</Text>
+                  <Text style={{ fontSize: Theme.fontSize.md }}>✅</Text>
                   <Text style={styles.alignedText}>Facing Qibla</Text>
                 </View>
               )}
@@ -201,7 +201,7 @@ export default function QiblaScreen() {
                 onPress={() => setShowMosques(!showMosques)}
               >
                 <View style={styles.mosquesSectionLeft}>
-                  <Text style={{ fontSize: 20 }}>🕌</Text>
+                  <Text style={{ fontSize: Theme.fontSize.mlg }}>🕌</Text>
                   <View>
                     <Text style={styles.mosquesSectionTitle}>Mosques Near Me</Text>
                     <Text style={styles.mosquesSectionCount}>
@@ -304,8 +304,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   cardinalContainer: { position: 'absolute', width: 26, height: 26, justifyContent: 'center', alignItems: 'center' },
-  cardinalText: { fontSize: 14, fontWeight: Theme.fontWeight.bold, color: c.textSecondary },
-  cardinalNorth: { color: c.danger, fontSize: 16 },
+  cardinalText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textSecondary },
+  cardinalNorth: { color: c.danger, fontSize: Theme.fontSize.body },
   cardinalNorthPos: { top: 24 },
   cardinalEastPos: { right: 20 },
   cardinalSouthPos: { bottom: 24 },
@@ -349,7 +349,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: 10, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase',
     letterSpacing: 1.5, fontWeight: Theme.fontWeight.semibold, marginBottom: 2,
   },
-  infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+  infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
 
   // Mosques Section
   mosquesSection: {
@@ -385,7 +385,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     width: 28, height: 28, borderRadius: 14, backgroundColor: c.emerald + '15',
     justifyContent: 'center', alignItems: 'center',
   },
-  mosqueIndexText: { fontSize: 12, fontWeight: Theme.fontWeight.bold, color: c.emerald },
+  mosqueIndexText: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, color: c.emerald },
   mosqueInfo: { flex: 1 },
   mosqueName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
   mosqueAddress: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 1 },
