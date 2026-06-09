@@ -250,15 +250,15 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
-  header: { alignItems: 'center', paddingTop: 56, paddingBottom: 12 },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: 4 },
+  header: { alignItems: 'center', paddingTop: 56, paddingBottom: Theme.spacing.smd },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: Theme.spacing.xs },
   subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
 
   // Tabs
   tabBar: {
-    flexDirection: 'row', marginHorizontal: Theme.spacing.lg, marginTop: 12, marginBottom: 20,
+    flexDirection: 'row', marginHorizontal: Theme.spacing.lg, marginTop: Theme.spacing.smd, marginBottom: Theme.spacing.mlg,
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
-    padding: 4, borderWidth: 1, borderColor: c.cardBorder,
+    padding: Theme.spacing.xs, borderWidth: 1, borderColor: c.cardBorder,
   },
   tab: {
     flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: Theme.borderRadius.md,
@@ -274,24 +274,24 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   duaList: { paddingHorizontal: Theme.spacing.lg },
   duaCard: {
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
-    padding: 20, marginBottom: 12, borderWidth: 1, borderColor: c.cardBorder,
+    padding: Theme.spacing.mlg, marginBottom: Theme.spacing.smd, borderWidth: 1, borderColor: c.cardBorder,
   },
   duaCardExpanded: { borderColor: c.gold + '30' },
   occasionBadge: {
     alignSelf: 'flex-start', backgroundColor: c.gold + '15',
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: Theme.borderRadius.full,
-    marginBottom: 12, borderWidth: 1, borderColor: c.gold + '20',
+    marginBottom: Theme.spacing.smd, borderWidth: 1, borderColor: c.gold + '20',
   },
   occasionText: { fontSize: Theme.fontSize.xs, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
   duaArabic: {
     fontSize: Theme.fontSize.xl, color: c.textPrimary, textAlign: 'right',
-    lineHeight: 38, fontWeight: Theme.fontWeight.medium, marginBottom: 8,
+    lineHeight: 38, fontWeight: Theme.fontWeight.medium, marginBottom: Theme.spacing.sm,
   },
   duaTransliteration: {
     fontSize: Theme.fontSize.sm, color: c.teal, fontStyle: 'italic',
-    marginBottom: 8, lineHeight: 20,
+    marginBottom: Theme.spacing.sm, lineHeight: 20,
   },
-  duaDivider: { height: 1, backgroundColor: c.cardBorder, marginVertical: 8 },
+  duaDivider: { height: 1, backgroundColor: c.cardBorder, marginVertical: Theme.spacing.sm },
   duaTranslation: {
     fontSize: Theme.fontSize.sm, color: c.textSecondary, lineHeight: 20,
   },
@@ -306,9 +306,9 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   tapToExpand: { fontSize: Theme.fontSize.xs, color: c.textMuted },
 
   // Audio button
-  footerLeft: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
+  footerLeft: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: Theme.spacing.sm },
   audioButton: {
-    flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4,
+    flexDirection: 'row' as const, alignItems: 'center' as const, gap: Theme.spacing.xs,
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: Theme.borderRadius.full,
     backgroundColor: c.teal + '12', borderWidth: 1, borderColor: c.teal + '25',
   },
@@ -321,10 +321,10 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Tasbih
   tasbihContainer: { alignItems: 'center', paddingHorizontal: Theme.spacing.lg },
-  tasbihTypeScroll: { marginBottom: 24 },
-  tasbihTypeRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
+  tasbihTypeScroll: { marginBottom: Theme.spacing.lg },
+  tasbihTypeRow: { flexDirection: 'row', gap: Theme.spacing.sm, paddingHorizontal: Theme.spacing.xs },
   tasbihTypeChip: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: Theme.borderRadius.full,
+    paddingHorizontal: 14, paddingVertical: Theme.spacing.sm, borderRadius: Theme.borderRadius.full,
     backgroundColor: c.card, borderWidth: 1, borderColor: c.cardBorder,
   },
   tasbihTypeChipActive: {
@@ -332,7 +332,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   tasbihTypeText: { fontSize: Theme.fontSize.sm, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
   tasbihTypeTextActive: { color: c.goldText, fontWeight: Theme.fontWeight.bold },
-  tasbihTapArea: { marginBottom: 20 },
+  tasbihTapArea: { marginBottom: Theme.spacing.mlg },
   tasbihOuter: {
     width: 220, height: 220, borderRadius: 110,
     borderWidth: 3, borderColor: c.gold + '25',
@@ -343,19 +343,19 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: c.cardBorder,
   },
-  tasbihArabic: { fontSize: Theme.fontSize.xl, color: c.goldLight, marginBottom: 8 },
+  tasbihArabic: { fontSize: Theme.fontSize.xl, color: c.goldLight, marginBottom: Theme.spacing.sm },
   tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
-  tasbihTarget: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: 4 },
+  tasbihTarget: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: Theme.spacing.xs },
   progressBarBg: {
     width: '80%', height: 6, borderRadius: 3,
-    backgroundColor: c.cardBorder, marginBottom: 12, overflow: 'hidden',
+    backgroundColor: c.cardBorder, marginBottom: Theme.spacing.smd, overflow: 'hidden',
   },
   progressBarFill: {
     height: 6, borderRadius: 3, backgroundColor: c.gold,
   },
-  tasbihTranslation: { fontSize: Theme.fontSize.sm, color: c.textSecondary, textAlign: 'center', marginBottom: 20 },
+  tasbihTranslation: { fontSize: Theme.fontSize.sm, color: c.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.mlg },
   resetButton: {
-    paddingHorizontal: 20, paddingVertical: 10, borderRadius: Theme.borderRadius.full,
+    paddingHorizontal: Theme.spacing.mlg, paddingVertical: 10, borderRadius: Theme.borderRadius.full,
     backgroundColor: c.card, borderWidth: 1, borderColor: c.cardBorder,
   },
   resetText: { fontSize: Theme.fontSize.sm, color: c.textMuted, fontWeight: Theme.fontWeight.medium },

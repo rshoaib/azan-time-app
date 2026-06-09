@@ -393,12 +393,12 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   scrollContent: { paddingBottom: 120 },
 
   // Header
-  header: { alignItems: 'center', paddingTop: 56, paddingBottom: 12 },
+  header: { alignItems: 'center', paddingTop: 56, paddingBottom: Theme.spacing.smd },
   title: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.heavy,
     color: c.textPrimary,
-    marginBottom: 4,
+    marginBottom: Theme.spacing.xs,
   },
   subtitle: {
     fontSize: Theme.fontSize.sm,
@@ -406,7 +406,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   // Now Playing
-  nowPlayingSection: { paddingHorizontal: Theme.spacing.lg, marginBottom: 8 },
+  nowPlayingSection: { paddingHorizontal: Theme.spacing.lg, marginBottom: Theme.spacing.sm },
   nowPlayingCard: {
     borderRadius: Theme.borderRadius.xl,
     overflow: 'hidden',
@@ -436,7 +436,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: Theme.fontWeight.bold,
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1.5,
-    marginBottom: 4,
+    marginBottom: Theme.spacing.xs,
   },
   nowPlayingName: {
     fontSize: Theme.fontSize.lg,
@@ -448,7 +448,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: Theme.fontSize.sm,
     color: 'rgba(255,255,255,0.8)',
   },
-  mainPlayButton: { marginLeft: 8 },
+  mainPlayButton: { marginLeft: Theme.spacing.sm },
   mainPlayCircle: {
     width: 52,
     height: 52,
@@ -462,7 +462,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Audio notice
   audioNotice: {
-    marginTop: 8,
+    marginTop: Theme.spacing.sm,
     padding: 10,
     borderRadius: Theme.borderRadius.md,
     backgroundColor: c.warning + '15',
@@ -480,11 +480,11 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   categoryBar: {
     flexDirection: 'row',
     marginHorizontal: Theme.spacing.lg,
-    marginTop: 16,
-    marginBottom: 12,
+    marginTop: Theme.spacing.md,
+    marginBottom: Theme.spacing.smd,
     backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg,
-    padding: 4,
+    padding: Theme.spacing.xs,
     borderWidth: 1,
     borderColor: c.cardBorder,
   },
@@ -512,8 +512,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Count row
   countRow: {
-    paddingHorizontal: 24,
-    marginBottom: 8,
+    paddingHorizontal: Theme.spacing.lg,
+    marginBottom: Theme.spacing.sm,
   },
   countText: {
     fontSize: Theme.fontSize.xs,
@@ -531,10 +531,10 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg,
     padding: 14,
-    marginBottom: 8,
+    marginBottom: Theme.spacing.sm,
     borderWidth: 1,
     borderColor: c.cardBorder,
-    gap: 12,
+    gap: Theme.spacing.smd,
   },
   stationCardActive: {
     borderColor: c.teal + '40',
@@ -578,10 +578,10 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: Theme.spacing.xs,
     backgroundColor: c.danger + '15',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.full,
   },
   liveDot: {
@@ -600,8 +600,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   // Footer
   footer: {
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    paddingVertical: Theme.spacing.mlg,
+    paddingHorizontal: Theme.spacing.mlg,
   },
   footerText: {
     fontSize: Theme.fontSize.xs,

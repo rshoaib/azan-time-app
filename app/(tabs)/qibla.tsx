@@ -272,20 +272,20 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   scrollContent: { paddingBottom: 120 },
 
   // Header
-  header: { alignItems: 'center', paddingTop: 56, paddingBottom: 12 },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: 4 },
-  subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: 8 },
+  header: { alignItems: 'center', paddingTop: 56, paddingBottom: Theme.spacing.smd },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: Theme.spacing.xs },
+  subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: Theme.spacing.sm },
   locationBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: c.gold + '12', paddingHorizontal: 12, paddingVertical: 4,
+    backgroundColor: c.gold + '12', paddingHorizontal: Theme.spacing.smd, paddingVertical: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: c.gold + '20',
   },
   locationText: { fontSize: Theme.fontSize.xs, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingTop: 60 },
-  errorText: { color: c.danger, fontSize: Theme.fontSize.md, textAlign: 'center', paddingHorizontal: 32 },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Theme.spacing.md, paddingTop: 60 },
+  errorText: { color: c.danger, fontSize: Theme.fontSize.md, textAlign: 'center', paddingHorizontal: Theme.spacing.xl },
 
   // Compass
-  compassContainer: { alignItems: 'center', paddingTop: 16, paddingBottom: 8 },
+  compassContainer: { alignItems: 'center', paddingTop: Theme.spacing.md, paddingBottom: Theme.spacing.sm },
   compassGlow: {
     width: COMPASS_SIZE + 14, height: COMPASS_SIZE + 14, borderRadius: (COMPASS_SIZE + 14) / 2,
     justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: c.cardBorder,
@@ -333,14 +333,14 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.background, zIndex: 10,
   },
   alignedBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Theme.spacing.smd,
     backgroundColor: c.emerald + '15', paddingHorizontal: 14, paddingVertical: 6,
     borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: c.emerald + '30',
   },
   alignedText: { fontSize: Theme.fontSize.sm, color: c.emerald, fontWeight: Theme.fontWeight.bold },
 
   // Info pills
-  infoContainer: { flexDirection: 'row', marginTop: 16, gap: 14 },
+  infoContainer: { flexDirection: 'row', marginTop: Theme.spacing.md, gap: 14 },
   infoPill: {
     alignItems: 'center', paddingHorizontal: 22, paddingVertical: 10,
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, minWidth: 90,
@@ -353,34 +353,34 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Mosques Section
   mosquesSection: {
-    marginTop: 24, marginHorizontal: Theme.spacing.lg, backgroundColor: c.card,
+    marginTop: Theme.spacing.lg, marginHorizontal: Theme.spacing.lg, backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
   },
   mosquesSectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: 16,
+    padding: Theme.spacing.md,
   },
-  mosquesSectionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  mosquesSectionLeft: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.smd },
   mosquesSectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
   mosquesSectionCount: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 1 },
 
   // Mosque list
   mosquesList: { borderTopWidth: 1, borderTopColor: c.cardBorder },
   mosquesLoading: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 20, justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 10, padding: Theme.spacing.mlg, justifyContent: 'center',
   },
   mosquesLoadingText: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
-  mosquesEmpty: { alignItems: 'center', padding: 24, gap: 6 },
+  mosquesEmpty: { alignItems: 'center', padding: Theme.spacing.lg, gap: 6 },
   mosquesEmptyText: { fontSize: Theme.fontSize.md, color: c.textSecondary },
   mosquesEmptyHint: { fontSize: Theme.fontSize.xs, color: c.textMuted },
 
   // Mosque Card
   mosqueCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.cardBorder + '50',
+    paddingVertical: Theme.spacing.smd, paddingHorizontal: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: c.cardBorder + '50',
   },
   mosqueCardPressed: { backgroundColor: c.cardHighlight },
-  mosqueCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  mosqueCardLeft: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.smd, flex: 1 },
   mosqueIndex: {
     width: 28, height: 28, borderRadius: 14, backgroundColor: c.emerald + '15',
     justifyContent: 'center', alignItems: 'center',
