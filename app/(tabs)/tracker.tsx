@@ -318,33 +318,33 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
-  header: { alignItems: 'center', paddingTop: 56, paddingBottom: 16 },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: 4 },
+  header: { alignItems: 'center', paddingTop: 56, paddingBottom: Theme.spacing.md },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.textPrimary, marginBottom: Theme.spacing.xs },
   subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
 
   // Stats
-  statsRow: { flexDirection: 'row', paddingHorizontal: Theme.spacing.lg, gap: 10, marginTop: 8, marginBottom: 20 },
+  statsRow: { flexDirection: 'row', paddingHorizontal: Theme.spacing.lg, gap: 10, marginTop: Theme.spacing.sm, marginBottom: Theme.spacing.mlg },
   statCard: {
-    flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: Theme.borderRadius.lg,
+    flex: 1, alignItems: 'center', paddingVertical: Theme.spacing.md, borderRadius: Theme.borderRadius.lg,
     borderWidth: 1, borderColor: c.cardBorder,
   },
-  statEmoji: { fontSize: Theme.fontSize.xl, marginBottom: 4 },
+  statEmoji: { fontSize: Theme.fontSize.xl, marginBottom: Theme.spacing.xs },
   statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
   statLabel: { fontSize: Theme.fontSize.xs, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
 
   // Sections
-  section: { paddingHorizontal: Theme.spacing.lg, marginBottom: 24 },
+  section: { paddingHorizontal: Theme.spacing.lg, marginBottom: Theme.spacing.lg },
   sectionTitle: {
     fontSize: Theme.fontSize.xs, fontWeight: Theme.fontWeight.bold,
-    color: c.textMuted, letterSpacing: 2, marginBottom: 8, paddingLeft: 4,
+    color: c.textMuted, letterSpacing: 2, marginBottom: Theme.spacing.sm, paddingLeft: Theme.spacing.xs,
   },
-  sectionHint: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginBottom: 12, paddingLeft: 4 },
+  sectionHint: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginBottom: Theme.spacing.smd, paddingLeft: Theme.spacing.xs },
 
   // Prayer rows
   prayerRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
-    padding: 16, marginBottom: 8, borderWidth: 1, borderColor: c.cardBorder,
+    padding: Theme.spacing.md, marginBottom: Theme.spacing.sm, borderWidth: 1, borderColor: c.cardBorder,
   },
   prayerRowPrayed: { borderColor: c.emerald + '40', backgroundColor: c.emerald + '08' },
   prayerRowMissed: { borderColor: c.danger + '30', backgroundColor: c.danger + '08' },
@@ -357,7 +357,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   statusEmoji: { fontSize: Theme.fontSize.body },
   statusText: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold },
   tapHint: {
-    paddingHorizontal: 16, paddingVertical: 6, borderRadius: Theme.borderRadius.full,
+    paddingHorizontal: Theme.spacing.md, paddingVertical: 6, borderRadius: Theme.borderRadius.full,
     backgroundColor: c.textMuted + '20', borderWidth: 1, borderColor: c.textMuted + '30',
   },
   tapHintText: { fontSize: Theme.fontSize.xs, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
@@ -365,9 +365,9 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   // Heatmap
   heatmapContainer: {
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
-    padding: 16, borderWidth: 1, borderColor: c.cardBorder,
+    padding: Theme.spacing.md, borderWidth: 1, borderColor: c.cardBorder,
   },
-  heatmapRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  heatmapRow: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.xs, marginBottom: Theme.spacing.xs },
   heatmapLabelCell: { width: 28, alignItems: 'center' },
   heatmapLabel: { fontSize: Theme.fontSize.md },
   heatmapHeaderCell: { flex: 1, alignItems: 'center' },
@@ -383,9 +383,9 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Motivation
   motivationCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: Theme.spacing.lg,
+    flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.smd, marginHorizontal: Theme.spacing.lg,
     backgroundColor: c.gold + '10', borderRadius: Theme.borderRadius.lg,
-    padding: 16, borderWidth: 1, borderColor: c.gold + '20',
+    padding: Theme.spacing.md, borderWidth: 1, borderColor: c.gold + '20',
   },
   motivationText: { fontSize: Theme.fontSize.sm, color: c.goldText, flex: 1, fontWeight: Theme.fontWeight.medium },
   streakShareBtn: {
@@ -396,29 +396,29 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Don't-break-the-chain visualization
   chainSection: {
-    marginHorizontal: Theme.spacing.lg, marginTop: 16, marginBottom: 8,
+    marginHorizontal: Theme.spacing.lg, marginTop: Theme.spacing.md, marginBottom: Theme.spacing.sm,
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
-    padding: 16, borderWidth: 1, borderColor: c.cardBorder,
+    padding: Theme.spacing.md, borderWidth: 1, borderColor: c.cardBorder,
   },
   chainHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 12,
+    alignItems: 'center', marginBottom: Theme.spacing.smd,
   },
   chainTitle: {
     fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold,
     color: c.textPrimary,
   },
   chainShareLink: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
+    flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.xs,
     backgroundColor: c.teal + '12',
-    paddingHorizontal: 10, paddingVertical: 4,
+    paddingHorizontal: 10, paddingVertical: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.full,
   },
   chainShareText: {
     fontSize: Theme.fontSize.xs, color: c.teal,
     fontWeight: Theme.fontWeight.semibold,
   },
-  chainRow: { flexDirection: 'row', gap: 4, justifyContent: 'space-between' },
+  chainRow: { flexDirection: 'row', gap: Theme.spacing.xs, justifyContent: 'space-between' },
   chainLink: {
     flex: 1, aspectRatio: 1, borderRadius: 6,
     backgroundColor: c.surfaceDark,
@@ -440,10 +440,10 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   achievementEmoji: { fontSize: Theme.fontSize.xxl, marginBottom: 6 },
   achievementTitle: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, textAlign: 'center' },
   achievementDesc: { fontSize: Theme.fontSize.xs, color: c.textMuted, textAlign: 'center', marginTop: 2 },
-  noAchievements: { width: '100%', alignItems: 'center', padding: 24, backgroundColor: c.card, borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder },
-  noAchievementsText: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: 8 },
+  noAchievements: { width: '100%', alignItems: 'center', padding: Theme.spacing.lg, backgroundColor: c.card, borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder },
+  noAchievementsText: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: Theme.spacing.sm },
   nextAchievement: { marginTop: 14 },
-  nextAchievementLabel: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: 8, fontWeight: Theme.fontWeight.medium },
+  nextAchievementLabel: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: Theme.spacing.sm, fontWeight: Theme.fontWeight.medium },
   progressBarBg: { height: 8, backgroundColor: c.surfaceDark, borderRadius: 4, overflow: 'hidden' },
   progressBarFill: { height: '100%', backgroundColor: c.gold, borderRadius: 4 },
 });

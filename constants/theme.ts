@@ -78,7 +78,9 @@ export const Theme = {
     spacing: {
         xs: 4,
         sm: 8,
+        smd: 12,    // between sm & md — the most common compact padding / gap
         md: 16,
+        mlg: 20,    // between md & lg
         lg: 24,
         xl: 32,
         xxl: 48,

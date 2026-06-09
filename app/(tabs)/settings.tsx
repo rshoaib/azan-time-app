@@ -286,7 +286,7 @@ export default function SettingsScreen() {
               tint={c.teal}
               label="Short Azan"
               value={azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
-              style={{ marginTop: 8 }}
+              style={{ marginTop: Theme.spacing.sm }}
               right={
                 <Switch
                   value={azanShortOn}
@@ -304,7 +304,7 @@ export default function SettingsScreen() {
               tint={c.gold}
               label="Azan Reciter"
               value={currentReciterLabel}
-              style={{ marginTop: 8 }}
+              style={{ marginTop: Theme.spacing.sm }}
               onPress={() => setShowReciterModal(true)}
             />
           )}
@@ -341,7 +341,7 @@ export default function SettingsScreen() {
             label="Azan Time"
             value={`Version ${Constants.expoConfig?.version ?? '1.0.0'}`}
           />
-          <View style={[styles.settingCard, { marginTop: 8 }]}>
+          <View style={[styles.settingCard, { marginTop: Theme.spacing.sm }]}>
             <View style={styles.settingLeft}>
               <View style={[styles.settingIcon, { backgroundColor: c.fajr + '15' }]}>
                 <Text style={{ fontSize: Theme.fontSize.body }}>📖</Text>
@@ -355,7 +355,7 @@ export default function SettingsScreen() {
             emoji="🔒"
             tint={c.teal}
             label="Privacy Policy"
-            style={{ marginTop: 8 }}
+            style={{ marginTop: Theme.spacing.sm }}
             onPress={() => WebBrowser.openBrowserAsync('https://rshoaib.github.io/ovctech/azantime/privacy-policy.html')}
           />
         </View>
@@ -459,12 +459,12 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   scrollContent: { paddingBottom: 120 },
 
   // Header
-  header: { alignItems: 'center', paddingTop: 56, paddingBottom: 16 },
+  header: { alignItems: 'center', paddingTop: 56, paddingBottom: Theme.spacing.md },
   title: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.heavy,
     color: c.textPrimary,
-    marginBottom: 4,
+    marginBottom: Theme.spacing.xs,
   },
   subtitle: {
     fontSize: Theme.fontSize.sm,
@@ -472,21 +472,21 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   // Sections
-  section: { marginBottom: 24, paddingHorizontal: Theme.spacing.lg },
+  section: { marginBottom: Theme.spacing.lg, paddingHorizontal: Theme.spacing.lg },
   sectionTitle: {
     fontSize: Theme.fontSize.xs,
     fontWeight: Theme.fontWeight.bold,
     color: c.textMuted,
     letterSpacing: 2,
-    marginBottom: 12,
-    paddingLeft: 4,
+    marginBottom: Theme.spacing.smd,
+    paddingLeft: Theme.spacing.xs,
   },
   subSectionTitle: {
     fontSize: Theme.fontSize.xs,
     color: c.textMuted,
-    marginTop: 12,
-    marginBottom: 8,
-    paddingLeft: 4,
+    marginTop: Theme.spacing.smd,
+    marginBottom: Theme.spacing.sm,
+    paddingLeft: Theme.spacing.xs,
   },
 
   // Appearance segmented control
@@ -497,7 +497,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     padding: 3,
   },
   segmentBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: Theme.spacing.smd,
     paddingVertical: 6,
     borderRadius: Theme.borderRadius.full,
   },
@@ -516,7 +516,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg,
-    padding: 16,
+    padding: Theme.spacing.md,
     borderWidth: 1,
     borderColor: c.cardBorder,
     marginBottom: 2,
@@ -552,8 +552,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: c.card,
     borderRadius: Theme.borderRadius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.smd,
     borderWidth: 1,
     borderColor: c.cardBorder,
     marginBottom: 6,
