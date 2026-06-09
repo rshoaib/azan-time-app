@@ -206,7 +206,7 @@ export default function RadioScreen() {
               ]}
             >
               <LinearGradient
-                colors={isPlaying ? ['#0D9488', '#0F766E'] : ['#5A6180', '#3D425A']}
+                colors={isPlaying ? c.gradientNextPrayer : c.gradientPaused}
                 style={styles.nowPlayingGradient}
               >
                 {/* Sound wave visualizer */}
@@ -276,6 +276,9 @@ export default function RadioScreen() {
               key={cat.key}
               style={[styles.categoryTab, activeCategory === cat.key && styles.categoryTabActive]}
               onPress={() => setActiveCategory(cat.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: activeCategory === cat.key }}
+              accessibilityLabel={`${cat.label} stations`}
             >
               <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
               <Text
@@ -313,6 +316,10 @@ export default function RadioScreen() {
                   pressed && styles.stationCardPressed,
                 ]}
                 onPress={() => togglePlayback(station)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`${station.name}, ${station.reciter}`}
+                accessibilityHint={isStationPlaying ? 'Stops playback' : 'Plays this recitation'}
               >
                 {/* Station Icon */}
                 <View
@@ -399,7 +406,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   // Now Playing
-  nowPlayingSection: { paddingHorizontal: 20, marginBottom: 8 },
+  nowPlayingSection: { paddingHorizontal: Theme.spacing.lg, marginBottom: 8 },
   nowPlayingCard: {
     borderRadius: Theme.borderRadius.xl,
     overflow: 'hidden',
@@ -434,12 +441,12 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   nowPlayingName: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: '#FFFFFF',
+    color: c.onAccent,
     marginBottom: 2,
   },
   nowPlayingReciter: {
     fontSize: Theme.fontSize.sm,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.8)',
   },
   mainPlayButton: { marginLeft: 8 },
   mainPlayCircle: {
@@ -463,7 +470,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.warning + '25',
   },
   audioNoticeText: {
-    fontSize: 11,
+    fontSize: Theme.fontSize.xs,
     color: c.warning,
     textAlign: 'center',
     fontWeight: Theme.fontWeight.medium,
@@ -472,7 +479,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   // Category tabs
   categoryBar: {
     flexDirection: 'row',
-    marginHorizontal: 20,
+    marginHorizontal: Theme.spacing.lg,
     marginTop: 16,
     marginBottom: 12,
     backgroundColor: c.card,
@@ -490,16 +497,16 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   categoryTabActive: {
     backgroundColor: c.cardHighlight,
     borderWidth: 1,
-    borderColor: c.teal + '30',
+    borderColor: c.gold + '30',
   },
-  categoryEmoji: { fontSize: 16, marginBottom: 2 },
+  categoryEmoji: { fontSize: Theme.fontSize.body, marginBottom: 2 },
   categoryLabel: {
     fontSize: 10,
     color: c.textMuted,
     fontWeight: Theme.fontWeight.medium,
   },
   categoryLabelActive: {
-    color: c.teal,
+    color: c.goldText,
     fontWeight: Theme.fontWeight.bold,
   },
 
@@ -517,7 +524,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   // Station list
-  stationList: { paddingHorizontal: 20 },
+  stationList: { paddingHorizontal: Theme.spacing.lg },
   stationCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -547,7 +554,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   stationIconPlaying: {
     backgroundColor: c.teal + '22',
   },
-  stationIconText: { fontSize: 20 },
+  stationIconText: { fontSize: Theme.fontSize.mlg },
   stationInfo: { flex: 1 },
   stationName: {
     fontSize: Theme.fontSize.md,
@@ -597,7 +604,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 20,
   },
   footerText: {
-    fontSize: 11,
+    fontSize: Theme.fontSize.xs,
     color: c.textMuted,
     textAlign: 'center',
   },

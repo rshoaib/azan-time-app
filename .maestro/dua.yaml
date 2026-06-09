@@ -13,8 +13,8 @@ appId: com.azantime.app
 - tapOn: "Dua"
 - assertVisible: "Daily remembrance of Allah"
 # Maestro matches the FULL text, so wildcard the emoji-prefixed labels
-# ("▼ Tap for translation", "🔄 Reset Counter").
-- assertVisible: ".*Tap for translation.*"
+# ("▼ Show translation", "🔄 Reset Counter").
+- assertVisible: ".*Show translation.*"
 - tapOn:
     id: "dua-tab-tasbih"
 - assertVisible: ".*Reset Counter.*"

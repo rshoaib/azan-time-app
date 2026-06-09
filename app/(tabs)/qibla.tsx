@@ -124,7 +124,7 @@ export default function QiblaScreen() {
           <Text style={styles.subtitle}>Direction to the Holy Kaaba</Text>
           {locationName ? (
             <View style={styles.locationBadge}>
-              <FontAwesome name="map-marker" size={11} color={c.gold} />
+              <FontAwesome name="map-marker" size={11} color={c.goldText} />
               <Text style={styles.locationText}>{locationName}</Text>
             </View>
           ) : null}
@@ -162,33 +162,33 @@ export default function QiblaScreen() {
                   {qiblaAngle !== null && (
                     <View style={[styles.qiblaArrowContainer, { transform: [{ rotate: `${qiblaRotation}deg` }] }]}>
                       <View style={[styles.qiblaArrow, isAligned && styles.qiblaArrowAligned]}>
-                        <Text style={{ fontSize: 20 }}>🕋</Text>
+                        <Text style={{ fontSize: Theme.fontSize.mlg }}>🕋</Text>
                       </View>
                       <View style={[styles.qiblaLine, isAligned && styles.qiblaLineAligned]} />
                     </View>
                   )}
 
-                  <LinearGradient colors={isAligned ? ['#00E676', '#00C853'] : [c.gold, c.goldDark]} style={styles.centerDot} />
+                  <LinearGradient colors={isAligned ? c.gradientAligned : [c.gold, c.goldDark]} style={styles.centerDot} />
                 </View>
               </View>
 
               {isAligned && (
                 <View style={styles.alignedBadge}>
-                  <Text style={{ fontSize: 14 }}>✅</Text>
+                  <Text style={{ fontSize: Theme.fontSize.md }}>✅</Text>
                   <Text style={styles.alignedText}>Facing Qibla</Text>
                 </View>
               )}
 
               {/* Info pills */}
               <View style={styles.infoContainer}>
-                <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
+                <LinearGradient colors={c.gradientNextPrayer} style={styles.infoPill}>
                   <Text style={styles.infoLabel}>HEADING</Text>
                   <Text style={styles.infoValue}>{Math.round(heading)}°</Text>
                 </LinearGradient>
                 {qiblaAngle !== null && (
-                  <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
+                  <LinearGradient colors={c.gradientNextPrayer} style={styles.infoPill}>
                     <Text style={styles.infoLabel}>QIBLA</Text>
-                    <Text style={[styles.infoValue, { color: c.gold }]}>{Math.round(qiblaAngle)}°</Text>
+                    <Text style={[styles.infoValue, { color: c.goldLight }]}>{Math.round(qiblaAngle)}°</Text>
                   </LinearGradient>
                 )}
               </View>
@@ -201,7 +201,7 @@ export default function QiblaScreen() {
                 onPress={() => setShowMosques(!showMosques)}
               >
                 <View style={styles.mosquesSectionLeft}>
-                  <Text style={{ fontSize: 20 }}>🕌</Text>
+                  <Text style={{ fontSize: Theme.fontSize.mlg }}>🕌</Text>
                   <View>
                     <Text style={styles.mosquesSectionTitle}>Mosques Near Me</Text>
                     <Text style={styles.mosquesSectionCount}>
@@ -280,7 +280,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.gold + '12', paddingHorizontal: 12, paddingVertical: 4,
     borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: c.gold + '20',
   },
-  locationText: { fontSize: Theme.fontSize.xs, color: c.gold, fontWeight: Theme.fontWeight.semibold },
+  locationText: { fontSize: Theme.fontSize.xs, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingTop: 60 },
   errorText: { color: c.danger, fontSize: Theme.fontSize.md, textAlign: 'center', paddingHorizontal: 32 },
 
@@ -304,8 +304,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   cardinalContainer: { position: 'absolute', width: 26, height: 26, justifyContent: 'center', alignItems: 'center' },
-  cardinalText: { fontSize: 14, fontWeight: Theme.fontWeight.bold, color: c.textSecondary },
-  cardinalNorth: { color: c.danger, fontSize: 16 },
+  cardinalText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textSecondary },
+  cardinalNorth: { color: c.danger, fontSize: Theme.fontSize.body },
   cardinalNorthPos: { top: 24 },
   cardinalEastPos: { right: 20 },
   cardinalSouthPos: { bottom: 24 },
@@ -346,14 +346,14 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, minWidth: 90,
   },
   infoLabel: {
-    fontSize: 10, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase',
+    fontSize: 10, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase',
     letterSpacing: 1.5, fontWeight: Theme.fontWeight.semibold, marginBottom: 2,
   },
-  infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+  infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
 
   // Mosques Section
   mosquesSection: {
-    marginTop: 24, marginHorizontal: 20, backgroundColor: c.card,
+    marginTop: 24, marginHorizontal: Theme.spacing.lg, backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
   },
   mosquesSectionHeader: {
@@ -385,7 +385,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     width: 28, height: 28, borderRadius: 14, backgroundColor: c.emerald + '15',
     justifyContent: 'center', alignItems: 'center',
   },
-  mosqueIndexText: { fontSize: 12, fontWeight: Theme.fontWeight.bold, color: c.emerald },
+  mosqueIndexText: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, color: c.emerald },
   mosqueInfo: { flex: 1 },
   mosqueName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
   mosqueAddress: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 1 },

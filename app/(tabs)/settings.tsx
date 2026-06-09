@@ -42,6 +42,7 @@ import { getScheduledNotificationCount, fireTestNotification } from '@/services/
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
+import { SettingRow } from '@/components/ui/SettingRow';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
@@ -161,47 +162,41 @@ export default function SettingsScreen() {
         {/* Calculation Method */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🧮 PRAYER CALCULATION</Text>
-          <Pressable style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]} onPress={() => setShowMethodModal(true)}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.fajr + '20' }]}>
-                <Text style={{ fontSize: 16 }}>📐</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>Calculation Method</Text>
-                <Text style={styles.settingValue}>{currentMethodLabel}</Text>
-              </View>
-            </View>
-            <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
-          </Pressable>
+          <SettingRow
+            emoji="📐"
+            tint={c.fajr}
+            label="Calculation Method"
+            value={currentMethodLabel}
+            onPress={() => setShowMethodModal(true)}
+          />
         </View>
 
         {/* Appearance */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🌗 APPEARANCE</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.isha + '20' }]}>
-                <Text style={{ fontSize: 16 }}>🌗</Text>
+          <SettingRow
+            emoji="🌗"
+            tint={c.isha}
+            label="Theme"
+            right={
+              <View style={styles.segment}>
+                {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => (
+                  <Pressable
+                    key={m}
+                    onPress={() => setThemeModePref(m)}
+                    style={[styles.segmentBtn, themeMode === m && styles.segmentBtnActive]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: themeMode === m }}
+                    accessibilityLabel={`${m === 'system' ? 'Auto' : m} theme`}
+                  >
+                    <Text style={[styles.segmentText, themeMode === m && styles.segmentTextActive]}>
+                      {m === 'light' ? 'Light' : m === 'dark' ? 'Dark' : 'Auto'}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
-              <Text style={styles.settingLabel}>Theme</Text>
-            </View>
-            <View style={styles.segment}>
-              {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => (
-                <Pressable
-                  key={m}
-                  onPress={() => setThemeModePref(m)}
-                  style={[styles.segmentBtn, themeMode === m && styles.segmentBtnActive]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: themeMode === m }}
-                  accessibilityLabel={`${m === 'system' ? 'Auto' : m} theme`}
-                >
-                  <Text style={[styles.segmentText, themeMode === m && styles.segmentTextActive]}>
-                    {m === 'light' ? 'Light' : m === 'dark' ? 'Dark' : 'Auto'}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
+            }
+          />
         </View>
 
         {/* Notifications */}
@@ -224,48 +219,42 @@ export default function SettingsScreen() {
             </>
           )}
 
-          <View style={styles.settingCard}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.emerald + '20' }]}>
-                <Text style={{ fontSize: 16 }}>🔔</Text>
-              </View>
-              <Text style={styles.settingLabel}>Enable Notifications</Text>
-            </View>
-            <Switch
-              value={notificationsOn}
-              onValueChange={handleNotificationToggle}
-              trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-              thumbColor={notificationsOn ? c.gold : '#666'}
-            />
-          </View>
+          <SettingRow
+            emoji="🔔"
+            tint={c.emerald}
+            label="Enable Notifications"
+            right={
+              <Switch
+                value={notificationsOn}
+                onValueChange={handleNotificationToggle}
+                trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
+                thumbColor={notificationsOn ? c.gold : c.switchThumbOff}
+              />
+            }
+          />
 
           {notificationsOn && (
             <>
-              <Pressable style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]} onPress={() => setShowAdvanceModal(true)}>
-                <View style={styles.settingLeft}>
-                  <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
-                    <Text style={{ fontSize: 16 }}>⏰</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.settingLabel}>Notify Before</Text>
-                    <Text style={styles.settingValue}>{currentAdvanceLabel}</Text>
-                  </View>
-                </View>
-                <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
-              </Pressable>
+              <SettingRow
+                emoji="⏰"
+                tint={c.teal}
+                label="Notify Before"
+                value={currentAdvanceLabel}
+                onPress={() => setShowAdvanceModal(true)}
+              />
 
               <Text style={styles.subSectionTitle}>Notify for each prayer:</Text>
               {(Object.keys(PRAYER_CONFIG) as PrayerName[]).map((key) => (
                 <View key={key} style={styles.prayerToggleCard}>
                   <View style={styles.settingLeft}>
-                    <Text style={{ fontSize: 16 }}>{PRAYER_CONFIG[key].emoji}</Text>
+                    <Text style={{ fontSize: Theme.fontSize.body }}>{PRAYER_CONFIG[key].emoji}</Text>
                     <Text style={styles.settingLabel}>{PRAYER_CONFIG[key].name}</Text>
                   </View>
                   <Switch
                     value={enabledPrayers[key]}
                     onValueChange={() => handlePrayerToggle(key)}
                     trackColor={{ false: c.textMuted + '40', true: PRAYER_CONFIG[key].color + '50' }}
-                    thumbColor={enabledPrayers[key] ? PRAYER_CONFIG[key].color : '#666'}
+                    thumbColor={enabledPrayers[key] ? PRAYER_CONFIG[key].color : c.switchThumbOff}
                   />
                 </View>
               ))}
@@ -276,140 +265,99 @@ export default function SettingsScreen() {
         {/* Azan Sound */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🔊 AZAN SOUND</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.isha + '20' }]}>
-                <Text style={{ fontSize: 16 }}>🎵</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>Play Azan Audio</Text>
-                <Text style={styles.settingValue}>
-                  {azanSoundOn ? 'Plays when prayer time arrives' : 'Notification only'}
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={azanSoundOn}
-              onValueChange={handleAzanSoundToggle}
-              trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-              thumbColor={azanSoundOn ? c.gold : '#666'}
-            />
-          </View>
+          <SettingRow
+            emoji="🎵"
+            tint={c.isha}
+            label="Play Azan Audio"
+            value={azanSoundOn ? 'Plays when prayer time arrives' : 'Notification only'}
+            right={
+              <Switch
+                value={azanSoundOn}
+                onValueChange={handleAzanSoundToggle}
+                trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
+                thumbColor={azanSoundOn ? c.gold : c.switchThumbOff}
+              />
+            }
+          />
 
           {azanSoundOn && (
-            <View style={[styles.settingCard, { marginTop: 8 }]}>
-              <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
-                  <Text style={{ fontSize: 16 }}>⏱️</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.settingLabel}>Short Azan</Text>
-                  <Text style={styles.settingValue}>
-                    {azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={azanShortOn}
-                onValueChange={handleAzanShortToggle}
-                trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-                thumbColor={azanShortOn ? c.gold : '#666'}
-              />
-            </View>
+            <SettingRow
+              emoji="⏱️"
+              tint={c.teal}
+              label="Short Azan"
+              value={azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
+              style={{ marginTop: 8 }}
+              right={
+                <Switch
+                  value={azanShortOn}
+                  onValueChange={handleAzanShortToggle}
+                  trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
+                  thumbColor={azanShortOn ? c.gold : c.switchThumbOff}
+                />
+              }
+            />
           )}
 
           {azanSoundOn && RECITERS.length > 1 && (
-            <Pressable
-              style={({ pressed }) => [styles.settingCard, { marginTop: 8 }, pressed && styles.settingCardPressed]}
+            <SettingRow
+              emoji="🕌"
+              tint={c.gold}
+              label="Azan Reciter"
+              value={currentReciterLabel}
+              style={{ marginTop: 8 }}
               onPress={() => setShowReciterModal(true)}
-            >
-              <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: c.gold + '20' }]}>
-                  <Text style={{ fontSize: 16 }}>🕌</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.settingLabel}>Azan Reciter</Text>
-                  <Text style={styles.settingValue}>{currentReciterLabel}</Text>
-                </View>
-              </View>
-              <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
-            </Pressable>
+            />
           )}
         </View>
 
         {/* Location */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>📍 LOCATION</Text>
-          <Pressable
+          <SettingRow
             testID="settings-update-location"
-            style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]}
+            emoji="🌍"
+            tint={c.sunrise}
+            label={updatingLocation ? 'Updating location…' : 'Update Location'}
+            value={locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your location'}
+            valueStyle={locationMsg ? { color: locationMsg.ok ? c.emerald : c.danger } : undefined}
             onPress={handleUpdateLocation}
             disabled={updatingLocation}
-          >
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.sunrise + '20' }]}>
-                <Text style={{ fontSize: 16 }}>🌍</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>
-                  {updatingLocation ? 'Updating location…' : 'Update Location'}
-                </Text>
-                <Text
-                  style={[
-                    styles.settingValue,
-                    locationMsg ? { color: locationMsg.ok ? c.emerald : c.danger } : null,
-                  ]}
-                >
-                  {locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your location'}
-                </Text>
-              </View>
-            </View>
-            {updatingLocation ? (
-              <ActivityIndicator size="small" color={c.gold} />
-            ) : (
-              <FontAwesome name="location-arrow" size={16} color={c.gold} />
-            )}
-          </Pressable>
+            right={
+              updatingLocation ? (
+                <ActivityIndicator size="small" color={c.gold} />
+              ) : (
+                <FontAwesome name="location-arrow" size={16} color={c.gold} />
+              )
+            }
+          />
         </View>
 
         {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ℹ️ ABOUT</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.gold + '20' }]}>
-                <Text style={{ fontSize: 16 }}>🕌</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>Azan Time</Text>
-                <Text style={styles.settingValue}>
-                  Version {Constants.expoConfig?.version ?? '1.0.0'}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <SettingRow
+            emoji="🕌"
+            tint={c.gold}
+            label="Azan Time"
+            value={`Version ${Constants.expoConfig?.version ?? '1.0.0'}`}
+          />
           <View style={[styles.settingCard, { marginTop: 8 }]}>
             <View style={styles.settingLeft}>
               <View style={[styles.settingIcon, { backgroundColor: c.fajr + '15' }]}>
-                <Text style={{ fontSize: 16 }}>📖</Text>
+                <Text style={{ fontSize: Theme.fontSize.body }}>📖</Text>
               </View>
               <Text style={[styles.settingValue, { flex: 1 }]}>
                 Prayer times calculated using the Adhan library with high-precision astronomical algorithms.
               </Text>
             </View>
           </View>
-          <Pressable
-            style={({ pressed }) => [styles.settingCard, { marginTop: 8 }, pressed && styles.settingCardPressed]}
+          <SettingRow
+            emoji="🔒"
+            tint={c.teal}
+            label="Privacy Policy"
+            style={{ marginTop: 8 }}
             onPress={() => WebBrowser.openBrowserAsync('https://rshoaib.github.io/ovctech/azantime/privacy-policy.html')}
-          >
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
-                <Text style={{ fontSize: 16 }}>🔒</Text>
-              </View>
-              <Text style={styles.settingLabel}>Privacy Policy</Text>
-            </View>
-            <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
-          </Pressable>
+          />
         </View>
       </ScrollView>
 
@@ -573,9 +521,6 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderColor: c.cardBorder,
     marginBottom: 2,
   },
-  settingCardPressed: {
-    backgroundColor: c.cardHighlight,
-  },
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -585,7 +530,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   settingIcon: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: Theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -617,7 +562,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   // Modals
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: c.scrim,
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -646,7 +591,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   modalClose: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: Theme.borderRadius.lg,
     backgroundColor: c.textMuted + '20',
     justifyContent: 'center',
     alignItems: 'center',

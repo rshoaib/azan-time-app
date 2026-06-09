@@ -54,7 +54,7 @@ export const Theme = {
         // Gradients
         gradientPrimary: ['#F5F6FA', '#E8EAF2'],
         gradientGold: ['#F5BD42', '#D4930D'],
-        gradientNextPrayer: ['#0D9488', '#0F766E'],
+        gradientNextPrayer: ['#0D9488', '#0F766E'] as [string, string],
 
         // Home-screen card surfaces (consolidated from inline literals)
         heroGradient: ['#1A2C6B', '#0F1840'] as const,
@@ -66,6 +66,13 @@ export const Theme = {
         ayahBorder: '#D5CFC4',
         ayahArabicText: '#2C2C2C',
         ayahBodyText: '#5C5C5C',
+
+        // Controls & overlays (consolidated from per-screen literals)
+        onAccent: '#FFFFFF',                 // text/icons on permanently-colored surfaces (hero, cards, gradient buttons)
+        scrim: 'rgba(0,0,0,0.75)',           // modal / dialog backdrop
+        switchThumbOff: '#666666',           // Switch thumb in the off state
+        gradientAligned: ['#00E676', '#00C853'] as [string, string],  // Qibla "aligned" indicator
+        gradientPaused: ['#5A6180', '#3D425A'] as [string, string],   // Radio paused-state card
     },
 
     spacing: {
@@ -89,7 +96,9 @@ export const Theme = {
         xs: 11,
         sm: 13,
         md: 15,
+        body: 16,   // standard body & control text — the most common UI size
         lg: 18,
+        mlg: 20,    // large labels / station & section titles
         xl: 22,
         xxl: 28,
         hero: 42,

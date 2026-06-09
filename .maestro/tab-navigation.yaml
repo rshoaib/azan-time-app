@@ -19,7 +19,7 @@ appId: com.azantime.app
 
 # Tilawat tab
 - tapOn: "Tilawat"
-- assertVisible: "Listen to beautiful Quran recitations 24/7"
+- assertVisible: "Quran recitations, anytime"
 
 # Qibla tab
 - tapOn: "Qibla"

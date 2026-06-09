@@ -240,7 +240,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.background} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -522,7 +522,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: 16,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: c.onAccent,
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
   },
@@ -591,7 +591,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   heroCircle: {
     position: 'absolute',
-    borderRadius: 999,
+    borderRadius: Theme.borderRadius.full,
     borderWidth: 1,
     borderColor: c.gold + '08',
   },
@@ -624,7 +624,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: 4,
   },
   heroEmoji: {
-    fontSize: 28,
+    fontSize: Theme.fontSize.xxl,
   },
   heroName: {
     fontSize: Theme.fontSize.xl,
@@ -634,7 +634,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   heroTime: {
     fontSize: Theme.fontSize.hero,
     fontWeight: Theme.fontWeight.heavy,
-    color: '#FFFFFF',
+    color: c.onAccent,
     marginBottom: 12,
     letterSpacing: 1,
   },
@@ -709,7 +709,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   prayerEmoji: {
-    fontSize: 20,
+    fontSize: Theme.fontSize.mlg,
   },
   prayerName: {
     fontSize: Theme.fontSize.lg,
@@ -753,7 +753,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   prayerTimeNext: {
     color: c.teal,
     fontWeight: Theme.fontWeight.bold,
-    fontSize: 20,
+    fontSize: Theme.fontSize.mlg,
   },
   prayerTimePast: {
     color: c.textMuted,
@@ -776,13 +776,13 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   ramadanTimes: { flexDirection: 'row', gap: 12 },
   ramadanTimeBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: Theme.borderRadius.lg, padding: 12, alignItems: 'center' },
   ramadanTimeLabel: { fontSize: Theme.fontSize.xs, color: c.ramadanText, marginBottom: 4 },
-  ramadanTimeValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
+  ramadanTimeValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
 
   // Daily Ayah
   ayahWrapper: { paddingHorizontal: Theme.spacing.lg, marginTop: Theme.spacing.lg },
   ayahCard: { borderRadius: Theme.borderRadius.xl, padding: 24, borderWidth: 1, borderColor: c.ayahBorder },
   ayahSectionLabel: { fontSize: Theme.fontSize.xs, color: c.goldText, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 16 },
-  ayahArabic: { fontSize: 22, color: c.ayahArabicText, textAlign: 'right', lineHeight: 44, fontWeight: '600', marginBottom: 12 },
+  ayahArabic: { fontSize: Theme.fontSize.xl, color: c.ayahArabicText, textAlign: 'right', lineHeight: 44, fontWeight: '600', marginBottom: 12 },
   ayahTranslation: { fontSize: Theme.fontSize.md, color: c.ayahBodyText, lineHeight: 24, fontStyle: 'italic', marginBottom: 12 },
   ayahFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   ayahReference: { fontSize: Theme.fontSize.sm, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
@@ -794,12 +794,12 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   comparisonTitle: { fontSize: Theme.fontSize.xs, color: c.textMuted, textTransform: 'uppercase', letterSpacing: 2, fontWeight: Theme.fontWeight.semibold, marginBottom: 12 },
   comparisonChart: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: c.card, borderRadius: Theme.borderRadius.lg, padding: 16, borderWidth: 1, borderColor: c.cardBorder },
   comparisonDay: { alignItems: 'center', flex: 1 },
-  comparisonLabel: { fontSize: 11, color: c.textMuted, marginBottom: 6, fontWeight: Theme.fontWeight.semibold },
+  comparisonLabel: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginBottom: 6, fontWeight: Theme.fontWeight.semibold },
   comparisonBars: { flexDirection: 'row', gap: 3, alignItems: 'flex-end', marginBottom: 6 },
   comparisonBar: { width: 8, borderRadius: 4 },
   comparisonBarFajr: { backgroundColor: c.fajr },
   comparisonBarMaghrib: { backgroundColor: c.maghrib },
-  comparisonTime: { fontSize: 11, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
+  comparisonTime: { fontSize: Theme.fontSize.xs, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
   comparisonLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
