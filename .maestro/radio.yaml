@@ -11,7 +11,7 @@ appId: com.azantime.app
     visible: "Tilawat"
     timeout: 90000
 - tapOn: "Tilawat"
-- assertVisible: "Listen to beautiful Quran recitations 24/7"
+- assertVisible: "Quran recitations, anytime"
 - tapOn: "Main Quran Radio"
 # The first station tap lazily imports expo-av; on a dev build Metro compiles that
 # chunk on demand, and setCurrentStation only runs after that await — so wait
