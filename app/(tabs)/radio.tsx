@@ -31,6 +31,11 @@ export default function RadioScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [audioAvailable, setAudioAvailable] = useState(true);
   const soundRef = useRef<any>(null);
+  // Monotonic request token. Each playStation() call claims the next value;
+  // any older load still in flight whose token is no longer current discards
+  // itself instead of playing — this is what stops fast switching from leaving
+  // two recitations playing at once.
+  const playTokenRef = useRef(0);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -64,6 +69,7 @@ export default function RadioScreen() {
   // Stop playback when navigating away from this tab
   useEffect(() => {
     const unsubscribe = navigation.addListener('blur', () => {
+      playTokenRef.current++; // cancel any in-flight load so it won't start
       if (soundRef.current) {
         soundRef.current.stopAsync().catch(() => {});
         soundRef.current.unloadAsync().catch(() => {});
@@ -76,6 +82,11 @@ export default function RadioScreen() {
   }, [navigation]);
 
   const playStation = async (station: RadioStation) => {
+    // Claim this request up-front. A newer tap (or stop/blur) bumps the token,
+    // so any earlier load still in flight will see a stale token below and bail
+    // instead of starting a second, overlapping recitation.
+    const token = ++playTokenRef.current;
+
     const Audio = await getAudioModule();
     if (!Audio) {
       setAudioAvailable(false);
@@ -91,6 +102,7 @@ export default function RadioScreen() {
         await previousSound.unloadAsync();
       } catch {}
     }
+    if (token !== playTokenRef.current) return; // superseded while stopping old
 
     setIsPlaying(false);
     setIsLoading(true);
@@ -98,11 +110,21 @@ export default function RadioScreen() {
 
     try {
       await configureAudio();
+      if (token !== playTokenRef.current) return; // superseded while configuring
 
       const { sound } = await Audio.Sound.createAsync(
         { uri: station.url },
         { shouldPlay: true, volume: 1.0, isLooping: false },
       );
+
+      // createAsync starts playback immediately (shouldPlay). If a newer tap
+      // superseded us while this was loading, this sound is an orphan — stop
+      // and unload it now so it never overlaps the active recitation.
+      if (token !== playTokenRef.current) {
+        try { await sound.stopAsync(); } catch {}
+        try { await sound.unloadAsync(); } catch {}
+        return;
+      }
 
       soundRef.current = sound;
       setIsPlaying(true);
@@ -120,12 +142,17 @@ export default function RadioScreen() {
       });
     } catch (error) {
       console.warn('Failed to play radio:', error);
-      setIsPlaying(false);
-      setIsLoading(false);
+      // Only clear the loading UI if we're still the active request, so a
+      // discarded load can't wipe a newer tap's spinner/playing state.
+      if (token === playTokenRef.current) {
+        setIsPlaying(false);
+        setIsLoading(false);
+      }
     }
   };
 
   const stopPlayback = async () => {
+    playTokenRef.current++; // cancel any in-flight load so it won't start
     if (soundRef.current) {
       try {
         await soundRef.current.stopAsync();
