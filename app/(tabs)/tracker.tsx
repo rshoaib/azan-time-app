@@ -114,17 +114,17 @@ export default function TrackerScreen() {
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
-          <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.statCard}>
+          <LinearGradient colors={c.gradientNextPrayer} style={styles.statCard}>
             <Text style={styles.statEmoji}>🔥</Text>
             <Text style={styles.statValue}>{streak}</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
           </LinearGradient>
-          <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.statCard}>
+          <LinearGradient colors={c.gradientNextPrayer} style={styles.statCard}>
             <Text style={styles.statEmoji}>✅</Text>
             <Text style={styles.statValue}>{todayPrayed}/{todayTotal}</Text>
             <Text style={styles.statLabel}>Today</Text>
           </LinearGradient>
-          <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.statCard}>
+          <LinearGradient colors={c.gradientNextPrayer} style={styles.statCard}>
             <Text style={styles.statEmoji}>📅</Text>
             <Text style={styles.statValue}>{today.toLocaleDateString('en', { weekday: 'short' })}</Text>
             <Text style={styles.statLabel}>{today.toLocaleDateString('en', { month: 'short', day: 'numeric' })}</Text>
@@ -150,6 +150,9 @@ export default function TrackerScreen() {
                   pressed && styles.prayerRowPressed,
                 ]}
                 onPress={() => cyclePrayerStatus(prayer)}
+                accessibilityRole="button"
+                accessibilityLabel={`${config.name}${status ? `, ${statusLabel[status]}` : ', not logged'}`}
+                accessibilityHint="Cycles through prayed, missed, qada, and reset"
               >
                 <View style={styles.prayerRowLeft}>
                   <Text style={styles.prayerRowEmoji}>{config.emoji}</Text>
@@ -320,17 +323,17 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
 
   // Stats
-  statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginTop: 8, marginBottom: 20 },
+  statsRow: { flexDirection: 'row', paddingHorizontal: Theme.spacing.lg, gap: 10, marginTop: 8, marginBottom: 20 },
   statCard: {
     flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: Theme.borderRadius.lg,
     borderWidth: 1, borderColor: c.cardBorder,
   },
   statEmoji: { fontSize: 22, marginBottom: 4 },
   statValue: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
-  statLabel: { fontSize: Theme.fontSize.xs, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  statLabel: { fontSize: Theme.fontSize.xs, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
 
   // Sections
-  section: { paddingHorizontal: 20, marginBottom: 24 },
+  section: { paddingHorizontal: Theme.spacing.lg, marginBottom: 24 },
   sectionTitle: {
     fontSize: Theme.fontSize.xs, fontWeight: Theme.fontWeight.bold,
     color: c.textMuted, letterSpacing: 2, marginBottom: 8, paddingLeft: 4,
@@ -380,11 +383,11 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Motivation
   motivationCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: Theme.spacing.lg,
     backgroundColor: c.gold + '10', borderRadius: Theme.borderRadius.lg,
     padding: 16, borderWidth: 1, borderColor: c.gold + '20',
   },
-  motivationText: { fontSize: Theme.fontSize.sm, color: c.goldDark, flex: 1, fontWeight: Theme.fontWeight.medium },
+  motivationText: { fontSize: Theme.fontSize.sm, color: c.goldText, flex: 1, fontWeight: Theme.fontWeight.medium },
   streakShareBtn: {
     width: 32, height: 32, borderRadius: 16,
     backgroundColor: c.gold + '18',
@@ -393,7 +396,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Don't-break-the-chain visualization
   chainSection: {
-    marginHorizontal: 20, marginTop: 16, marginBottom: 8,
+    marginHorizontal: Theme.spacing.lg, marginTop: 16, marginBottom: 8,
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
     padding: 16, borderWidth: 1, borderColor: c.cardBorder,
   },

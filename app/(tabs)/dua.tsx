@@ -85,6 +85,9 @@ export default function DuaScreen() {
               testID={`dua-tab-${tab.key}`}
               style={[styles.tab, activeTab === tab.key && styles.tabActive]}
               onPress={() => setActiveTab(tab.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: activeTab === tab.key }}
+              accessibilityLabel={`${tab.label} duas`}
             >
               <Text style={styles.tabEmoji}>{tab.emoji}</Text>
               <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
@@ -115,10 +118,17 @@ export default function DuaScreen() {
             </ScrollView>
 
             {/* Counter circle */}
-            <Pressable testID="dua-tasbih-counter" onPress={handleTasbihTap} style={styles.tasbihTapArea}>
+            <Pressable
+              testID="dua-tasbih-counter"
+              onPress={handleTasbihTap}
+              style={styles.tasbihTapArea}
+              accessibilityRole="button"
+              accessibilityLabel={`Tasbih counter, ${tasbihCount} of ${currentTasbih.target}`}
+              accessibilityHint="Double tap to count"
+            >
               <View style={styles.tasbihOuter}>
                 <LinearGradient
-                  colors={['#0D9488', '#0F766E']}
+                  colors={c.gradientNextPrayer}
                   style={styles.tasbihCircle}
                 >
                   <Text style={styles.tasbihArabic}>{currentTasbih.label}</Text>
@@ -135,7 +145,7 @@ export default function DuaScreen() {
             <Text style={styles.tasbihTranslation}>{currentTasbih.translation}</Text>
 
             {/* Reset */}
-            <Pressable onPress={resetTasbih} style={styles.resetButton}>
+            <Pressable onPress={resetTasbih} style={styles.resetButton} accessibilityRole="button" accessibilityLabel="Reset counter">
               <Text style={styles.resetText}>🔄 Reset Counter</Text>
             </Pressable>
           </View>
@@ -246,7 +256,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Tabs
   tabBar: {
-    flexDirection: 'row', marginHorizontal: 20, marginTop: 12, marginBottom: 20,
+    flexDirection: 'row', marginHorizontal: Theme.spacing.lg, marginTop: 12, marginBottom: 20,
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
     padding: 4, borderWidth: 1, borderColor: c.cardBorder,
   },
@@ -258,10 +268,10 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   tabEmoji: { fontSize: 16, marginBottom: 2 },
   tabLabel: { fontSize: 11, color: c.textMuted, fontWeight: Theme.fontWeight.medium },
-  tabLabelActive: { color: c.gold, fontWeight: Theme.fontWeight.bold },
+  tabLabelActive: { color: c.goldText, fontWeight: Theme.fontWeight.bold },
 
   // Dua cards
-  duaList: { paddingHorizontal: 20 },
+  duaList: { paddingHorizontal: Theme.spacing.lg },
   duaCard: {
     backgroundColor: c.card, borderRadius: Theme.borderRadius.lg,
     padding: 20, marginBottom: 12, borderWidth: 1, borderColor: c.cardBorder,
@@ -272,7 +282,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: Theme.borderRadius.full,
     marginBottom: 12, borderWidth: 1, borderColor: c.gold + '20',
   },
-  occasionText: { fontSize: 11, color: c.gold, fontWeight: Theme.fontWeight.semibold },
+  occasionText: { fontSize: 11, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
   duaArabic: {
     fontSize: 22, color: c.textPrimary, textAlign: 'right',
     lineHeight: 38, fontWeight: Theme.fontWeight.medium, marginBottom: 8,
@@ -310,7 +320,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   audioLabelActive: { color: c.danger },
 
   // Tasbih
-  tasbihContainer: { alignItems: 'center', paddingHorizontal: 20 },
+  tasbihContainer: { alignItems: 'center', paddingHorizontal: Theme.spacing.lg },
   tasbihTypeScroll: { marginBottom: 24 },
   tasbihTypeRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
   tasbihTypeChip: {
@@ -321,7 +331,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.gold + '15', borderColor: c.gold + '40',
   },
   tasbihTypeText: { fontSize: 12, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
-  tasbihTypeTextActive: { color: c.gold, fontWeight: Theme.fontWeight.bold },
+  tasbihTypeTextActive: { color: c.goldText, fontWeight: Theme.fontWeight.bold },
   tasbihTapArea: { marginBottom: 20 },
   tasbihOuter: {
     width: 220, height: 220, borderRadius: 110,
@@ -333,7 +343,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: c.cardBorder,
   },
-  tasbihArabic: { fontSize: 22, color: c.gold, marginBottom: 8 },
+  tasbihArabic: { fontSize: 22, color: c.goldLight, marginBottom: 8 },
   tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
   tasbihTarget: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: 4 },
   progressBarBg: {

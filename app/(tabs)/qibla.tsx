@@ -124,7 +124,7 @@ export default function QiblaScreen() {
           <Text style={styles.subtitle}>Direction to the Holy Kaaba</Text>
           {locationName ? (
             <View style={styles.locationBadge}>
-              <FontAwesome name="map-marker" size={11} color={c.gold} />
+              <FontAwesome name="map-marker" size={11} color={c.goldText} />
               <Text style={styles.locationText}>{locationName}</Text>
             </View>
           ) : null}
@@ -181,14 +181,14 @@ export default function QiblaScreen() {
 
               {/* Info pills */}
               <View style={styles.infoContainer}>
-                <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
+                <LinearGradient colors={c.gradientNextPrayer} style={styles.infoPill}>
                   <Text style={styles.infoLabel}>HEADING</Text>
                   <Text style={styles.infoValue}>{Math.round(heading)}°</Text>
                 </LinearGradient>
                 {qiblaAngle !== null && (
-                  <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
+                  <LinearGradient colors={c.gradientNextPrayer} style={styles.infoPill}>
                     <Text style={styles.infoLabel}>QIBLA</Text>
-                    <Text style={[styles.infoValue, { color: c.gold }]}>{Math.round(qiblaAngle)}°</Text>
+                    <Text style={[styles.infoValue, { color: c.goldLight }]}>{Math.round(qiblaAngle)}°</Text>
                   </LinearGradient>
                 )}
               </View>
@@ -280,7 +280,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: c.gold + '12', paddingHorizontal: 12, paddingVertical: 4,
     borderRadius: Theme.borderRadius.full, borderWidth: 1, borderColor: c.gold + '20',
   },
-  locationText: { fontSize: Theme.fontSize.xs, color: c.gold, fontWeight: Theme.fontWeight.semibold },
+  locationText: { fontSize: Theme.fontSize.xs, color: c.goldText, fontWeight: Theme.fontWeight.semibold },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingTop: 60 },
   errorText: { color: c.danger, fontSize: Theme.fontSize.md, textAlign: 'center', paddingHorizontal: 32 },
 
@@ -346,14 +346,14 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, minWidth: 90,
   },
   infoLabel: {
-    fontSize: 10, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase',
+    fontSize: 10, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase',
     letterSpacing: 1.5, fontWeight: Theme.fontWeight.semibold, marginBottom: 2,
   },
   infoValue: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.heavy, color: '#FFFFFF' },
 
   // Mosques Section
   mosquesSection: {
-    marginTop: 24, marginHorizontal: 20, backgroundColor: c.card,
+    marginTop: 24, marginHorizontal: Theme.spacing.lg, backgroundColor: c.card,
     borderRadius: Theme.borderRadius.lg, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
   },
   mosquesSectionHeader: {

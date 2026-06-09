@@ -54,7 +54,7 @@ export const Theme = {
         // Gradients
         gradientPrimary: ['#F5F6FA', '#E8EAF2'],
         gradientGold: ['#F5BD42', '#D4930D'],
-        gradientNextPrayer: ['#0D9488', '#0F766E'],
+        gradientNextPrayer: ['#0D9488', '#0F766E'] as [string, string],
 
         // Home-screen card surfaces (consolidated from inline literals)
         heroGradient: ['#1A2C6B', '#0F1840'] as const,

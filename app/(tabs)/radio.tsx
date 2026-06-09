@@ -206,7 +206,7 @@ export default function RadioScreen() {
               ]}
             >
               <LinearGradient
-                colors={isPlaying ? ['#0D9488', '#0F766E'] : ['#5A6180', '#3D425A']}
+                colors={isPlaying ? c.gradientNextPrayer : (['#5A6180', '#3D425A'] as const)}
                 style={styles.nowPlayingGradient}
               >
                 {/* Sound wave visualizer */}
@@ -276,6 +276,9 @@ export default function RadioScreen() {
               key={cat.key}
               style={[styles.categoryTab, activeCategory === cat.key && styles.categoryTabActive]}
               onPress={() => setActiveCategory(cat.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: activeCategory === cat.key }}
+              accessibilityLabel={`${cat.label} stations`}
             >
               <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
               <Text
@@ -313,6 +316,10 @@ export default function RadioScreen() {
                   pressed && styles.stationCardPressed,
                 ]}
                 onPress={() => togglePlayback(station)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`${station.name}, ${station.reciter}`}
+                accessibilityHint={isStationPlaying ? 'Stops playback' : 'Plays this recitation'}
               >
                 {/* Station Icon */}
                 <View
@@ -399,7 +406,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   // Now Playing
-  nowPlayingSection: { paddingHorizontal: 20, marginBottom: 8 },
+  nowPlayingSection: { paddingHorizontal: Theme.spacing.lg, marginBottom: 8 },
   nowPlayingCard: {
     borderRadius: Theme.borderRadius.xl,
     overflow: 'hidden',
@@ -439,7 +446,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   nowPlayingReciter: {
     fontSize: Theme.fontSize.sm,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.8)',
   },
   mainPlayButton: { marginLeft: 8 },
   mainPlayCircle: {
@@ -472,7 +479,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   // Category tabs
   categoryBar: {
     flexDirection: 'row',
-    marginHorizontal: 20,
+    marginHorizontal: Theme.spacing.lg,
     marginTop: 16,
     marginBottom: 12,
     backgroundColor: c.card,
@@ -490,7 +497,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   categoryTabActive: {
     backgroundColor: c.cardHighlight,
     borderWidth: 1,
-    borderColor: c.teal + '30',
+    borderColor: c.gold + '30',
   },
   categoryEmoji: { fontSize: 16, marginBottom: 2 },
   categoryLabel: {
@@ -499,7 +506,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: Theme.fontWeight.medium,
   },
   categoryLabelActive: {
-    color: c.teal,
+    color: c.goldText,
     fontWeight: Theme.fontWeight.bold,
   },
 
@@ -517,7 +524,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   // Station list
-  stationList: { paddingHorizontal: 20 },
+  stationList: { paddingHorizontal: Theme.spacing.lg },
   stationCard: {
     flexDirection: 'row',
     alignItems: 'center',
