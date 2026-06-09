@@ -6,6 +6,7 @@ import { getQiblaDirection } from '@/services/prayerService';
 import { recordQiblaUse } from '@/services/reviewPromptService';
 import { getSavedLocation, setSavedLocation } from '@/services/storageService';
 import { E2E } from '@/services/e2eConfig';
+import { useT } from '@/i18n/I18nContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +27,7 @@ const { width } = Dimensions.get('window');
 const COMPASS_SIZE = Math.min(width * 0.65, 280);
 
 export default function QiblaScreen() {
+  const t = useT();
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
   const [heading, setHeading] = useState(0);
@@ -75,7 +77,7 @@ export default function QiblaScreen() {
       const fresh = await maybeRefreshLocation(loc as LocationResult);
       if (fresh) await applyLocation(fresh);
     } catch (e: any) {
-      setError(e.message || "Couldn't find the Qibla. Make sure location is on, then move your phone in a figure-8 to calibrate.");
+      setError(e.message || t('qibla_error'));
       setLoadingMosques(false);
     }
   };
@@ -120,8 +122,8 @@ export default function QiblaScreen() {
 
         {/* Header */}
         <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
-          <Text style={styles.title}>🕋 Qibla & Mosques</Text>
-          <Text style={styles.subtitle}>Direction to the Holy Kaaba</Text>
+          <Text style={styles.title}>🕋 {t('qibla_screen_title')}</Text>
+          <Text style={styles.subtitle}>{t('qibla_subtitle')}</Text>
           {locationName ? (
             <View style={styles.locationBadge}>
               <FontAwesome name="map-marker" size={11} color={c.gold} />
@@ -175,19 +177,19 @@ export default function QiblaScreen() {
               {isAligned && (
                 <View style={styles.alignedBadge}>
                   <Text style={{ fontSize: 14 }}>✅</Text>
-                  <Text style={styles.alignedText}>Facing Qibla</Text>
+                  <Text style={styles.alignedText}>{t('qibla_facing')}</Text>
                 </View>
               )}
 
               {/* Info pills */}
               <View style={styles.infoContainer}>
                 <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
-                  <Text style={styles.infoLabel}>HEADING</Text>
+                  <Text style={styles.infoLabel}>{t('qibla_heading')}</Text>
                   <Text style={styles.infoValue}>{Math.round(heading)}°</Text>
                 </LinearGradient>
                 {qiblaAngle !== null && (
                   <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.infoPill}>
-                    <Text style={styles.infoLabel}>QIBLA</Text>
+                    <Text style={styles.infoLabel}>{t('qibla_label')}</Text>
                     <Text style={[styles.infoValue, { color: c.gold }]}>{Math.round(qiblaAngle)}°</Text>
                   </LinearGradient>
                 )}
@@ -203,9 +205,9 @@ export default function QiblaScreen() {
                 <View style={styles.mosquesSectionLeft}>
                   <Text style={{ fontSize: 20 }}>🕌</Text>
                   <View>
-                    <Text style={styles.mosquesSectionTitle}>Mosques Near Me</Text>
+                    <Text style={styles.mosquesSectionTitle}>{t('qibla_mosques_near_me')}</Text>
                     <Text style={styles.mosquesSectionCount}>
-                      {loadingMosques ? 'Searching...' : `${mosques.length} found within 5km`}
+                      {loadingMosques ? t('qibla_searching') : t('qibla_mosques_count', { count: mosques.length })}
                     </Text>
                   </View>
                 </View>
@@ -221,13 +223,13 @@ export default function QiblaScreen() {
                   {loadingMosques ? (
                     <View style={styles.mosquesLoading}>
                       <ActivityIndicator size="small" color={c.gold} />
-                      <Text style={styles.mosquesLoadingText}>Finding nearby mosques...</Text>
+                      <Text style={styles.mosquesLoadingText}>{t('qibla_finding_mosques')}</Text>
                     </View>
                   ) : mosques.length === 0 ? (
                     <View style={styles.mosquesEmpty}>
                       <Text style={{ fontSize: 32 }}>🏜️</Text>
-                      <Text style={styles.mosquesEmptyText}>No mosques within 5 km</Text>
-                      <Text style={styles.mosquesEmptyHint}>Try again later or check your connection</Text>
+                      <Text style={styles.mosquesEmptyText}>{t('qibla_no_mosques')}</Text>
+                      <Text style={styles.mosquesEmptyHint}>{t('qibla_no_mosques_hint')}</Text>
                     </View>
                   ) : (
                     mosques.slice(0, 15).map((mosque, idx) => (

@@ -2,6 +2,7 @@ import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getDailyAyah } from '@/data/dailyAyah';
+import { useT } from '@/i18n/I18nContext';
 import { getCurrentLocation, LocationResult, maybeRefreshLocation } from '@/services/locationService';
 import {
     formatTime,
@@ -42,6 +43,7 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
+  const t = useT();
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
@@ -103,7 +105,7 @@ export default function HomeScreen() {
       const fresh = await maybeRefreshLocation(loc as LocationResult, { force: opts.force });
       if (fresh) await applyLocation(fresh);
     } catch (e: any) {
-      setError(e.message || "Couldn't load prayer times. Check your connection and try again.");
+      setError(e.message || t('home_error_load'));
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -161,7 +163,7 @@ export default function HomeScreen() {
           <Text style={{ fontSize: 40 }}>🕌</Text>
         </View>
         <ActivityIndicator size="large" color={c.gold} />
-        <Text style={styles.loadingText}>Finding your prayer times...</Text>
+        <Text style={styles.loadingText}>{t('loading_prayer_times')}</Text>
       </LinearGradient>
     );
   }
@@ -184,7 +186,7 @@ export default function HomeScreen() {
           }}
         >
           <FontAwesome name="refresh" size={16} color="#FFFFFF" />
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{t('retry')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -193,7 +195,7 @@ export default function HomeScreen() {
           style={{ marginTop: 14 }}
           hitSlop={8}
         >
-          <Text style={{ color: c.teal, fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold }}>Open Settings</Text>
+          <Text style={{ color: c.teal, fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold }}>{t('home_open_settings')}</Text>
         </Pressable>
       </LinearGradient>
     );
@@ -270,7 +272,7 @@ export default function HomeScreen() {
             <FontAwesome name="cog" size={22} color={c.textSecondary} />
           </Pressable>
           <Text style={styles.bismillah}>﷽</Text>
-          <Text style={styles.appTitle}>Azan Time</Text>
+          <Text style={styles.appTitle}>{t('app_name')}</Text>
           {location && (
             <View style={styles.locationBadge}>
               <FontAwesome name="map-marker" size={12} color={c.goldText} />
@@ -293,20 +295,20 @@ export default function HomeScreen() {
               <View style={styles.ramadanHeader}>
                 <Text style={{ fontSize: 24 }}>🌙</Text>
                 <View>
-                  <Text style={styles.ramadanTitle}>Ramadan Mubarak</Text>
-                  <Text style={styles.ramadanDay}>Day {ramadan.dayOfRamadan} of 30 · {ramadan.daysRemaining} days left</Text>
+                  <Text style={styles.ramadanTitle}>{t('ramadan_mubarak')}</Text>
+                  <Text style={styles.ramadanDay}>{t('ramadan_day_of', { day: ramadan.dayOfRamadan, left: ramadan.daysRemaining })}</Text>
                 </View>
               </View>
               <View style={styles.ramadanTimes}>
                 {ramadan.suhoorTime && (
                   <View style={styles.ramadanTimeBox}>
-                    <Text style={styles.ramadanTimeLabel}>🍽️ Suhoor ends</Text>
+                    <Text style={styles.ramadanTimeLabel}>🍽️ {t('suhoor_ends')}</Text>
                     <Text style={styles.ramadanTimeValue}>{formatTime(ramadan.suhoorTime)}</Text>
                   </View>
                 )}
                 {ramadan.iftarTime && (
                   <View style={styles.ramadanTimeBox}>
-                    <Text style={styles.ramadanTimeLabel}>🌅 Iftar at</Text>
+                    <Text style={styles.ramadanTimeLabel}>🌅 {t('iftar_at')}</Text>
                     <Text style={styles.ramadanTimeValue}>{formatTime(ramadan.iftarTime)}</Text>
                   </View>
                 )}
@@ -328,7 +330,7 @@ export default function HomeScreen() {
               <View style={[styles.heroCircle, styles.heroCircle1]} />
               <View style={[styles.heroCircle, styles.heroCircle2]} />
 
-              <Text style={styles.heroLabel}>NEXT PRAYER</Text>
+              <Text style={styles.heroLabel}>{t('next_prayer')}</Text>
               <View style={styles.heroRow}>
                 <Text style={styles.heroEmoji}>{nextPrayerConfig.emoji}</Text>
                 <Text style={styles.heroName}>{nextPrayerConfig.name}</Text>
@@ -346,7 +348,7 @@ export default function HomeScreen() {
 
         {/* Prayer Times List */}
         <View style={styles.prayerList}>
-          <Text style={styles.prayerListTitle}>Today's Prayers</Text>
+          <Text style={styles.prayerListTitle}>{t('todays_prayers')}</Text>
           {prayerTimes?.prayers.map((prayer, index) => (
             <PrayerCard
               key={prayer.name}
@@ -364,7 +366,7 @@ export default function HomeScreen() {
             colors={c.ayahGradient}
             style={styles.ayahCard}
           >
-            <Text style={styles.ayahSectionLabel}>📖 VERSE OF THE DAY</Text>
+            <Text style={styles.ayahSectionLabel}>📖 {t('verse_of_the_day')}</Text>
             <Text style={styles.ayahArabic}>{ayah.arabic}</Text>
             <Text style={styles.ayahTranslation}>"{ayah.translation}"</Text>
             <View style={styles.ayahFooter}>
@@ -381,7 +383,7 @@ export default function HomeScreen() {
                 })}
               >
                 <FontAwesome name="share-alt" size={14} color={c.teal} />
-                <Text style={styles.shareText}>Share</Text>
+                <Text style={styles.shareText}>{t('share')}</Text>
               </Pressable>
             </View>
           </LinearGradient>
@@ -389,7 +391,7 @@ export default function HomeScreen() {
 
         {/* Prayer Time Comparison */}
         <View style={styles.comparisonWrapper}>
-          <Text style={styles.comparisonTitle}>📊 Fajr & Maghrib This Week</Text>
+          <Text style={styles.comparisonTitle}>{t('home_comparison_title')}</Text>
           <View style={styles.comparisonChart}>
             {weekComparison.map((day, i) => (
               <View key={i} style={styles.comparisonDay}>
@@ -406,11 +408,11 @@ export default function HomeScreen() {
           <View style={styles.comparisonLegend}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: c.fajr }]} />
-              <Text style={styles.legendText}>Fajr</Text>
+              <Text style={styles.legendText}>{t('prayer_fajr')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: c.maghrib }]} />
-              <Text style={styles.legendText}>Maghrib</Text>
+              <Text style={styles.legendText}>{t('prayer_maghrib')}</Text>
             </View>
           </View>
         </View>
@@ -433,6 +435,7 @@ function PrayerCard({
   index: number;
 }) {
   const config = PRAYER_CONFIG[prayer.name];
+  const t = useT();
   const styles = useThemeStyles(makeStyles);
 
   if (isNext) {
@@ -449,7 +452,7 @@ function PrayerCard({
             <Text style={[styles.prayerName, styles.prayerNameNext]}>{config.name}</Text>
             <View style={styles.currentBadge}>
               <View style={styles.currentDot} />
-              <Text style={styles.currentText}>Up Next</Text>
+              <Text style={styles.currentText}>{t('up_next')}</Text>
             </View>
           </View>
         </View>
@@ -468,7 +471,7 @@ function PrayerCard({
         </View>
         <View>
           <Text style={[styles.prayerName, isPast && styles.prayerNamePast]}>{config.name}</Text>
-          {isPast && <Text style={styles.pastLabel}>Passed</Text>}
+          {isPast && <Text style={styles.pastLabel}>{t('passed')}</Text>}
         </View>
       </View>
       <Text style={[styles.prayerTime, isPast && styles.prayerTimePast]}>

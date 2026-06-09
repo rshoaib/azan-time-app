@@ -42,6 +42,8 @@ import { getScheduledNotificationCount, fireTestNotification } from '@/services/
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
+import { useI18n } from '@/i18n/I18nContext';
+import type { Locale } from '@/i18n';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
 
 const ADVANCE_OPTIONS = [
@@ -52,7 +54,17 @@ const ADVANCE_OPTIONS = [
   { value: 30, label: '30 minutes before' },
 ];
 
+// Languages shown in their own native script — never translated. A user hunting
+// for their language recognizes the native name, not its English translation.
+const LANGUAGES: { code: Locale; label: string }[] = [
+  { code: 'en', label: 'English' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'ur', label: 'اردو' },
+  { code: 'id', label: 'Bahasa Indonesia' },
+];
+
 export default function SettingsScreen() {
+  const { t, locale, setLocale } = useI18n();
   const [method, setMethod] = useState('MuslimWorldLeague');
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [enabledPrayers, setEnabledPrayersState] = useState<Record<PrayerName, boolean>>({
@@ -62,6 +74,7 @@ export default function SettingsScreen() {
   const [showMethodModal, setShowMethodModal] = useState(false);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showReciterModal, setShowReciterModal] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [azanSoundOn, setAzanSoundOn] = useState(true);
   const [azanShortOn, setAzanShortOn] = useState(false);
   const [reciter, setReciter] = useState('default');
@@ -118,6 +131,14 @@ export default function SettingsScreen() {
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
     setUserProperty('azan_reciter', id);
   };
+  // Switch UI language. setLocale persists the choice and re-renders the whole
+  // tree via I18nProvider. NOTE: for ar/ur this translates text but does not yet
+  // mirror the layout to RTL — that needs I18nManager.forceRTL + an app restart
+  // (tracked as a follow-up).
+  const handleLanguageChange = (code: Locale) => {
+    setLocale(code); setShowLanguageModal(false);
+    setUserProperty('language', code);
+  };
 
   // Explicit, user-driven location refresh. Unlike the home screen's throttled
   // background revalidation, this always re-detects via GPS and saves the result
@@ -132,9 +153,9 @@ export default function SettingsScreen() {
       await setSavedLocation(fresh);
       const label = fresh.country ? `${fresh.city}, ${fresh.country}` : fresh.city;
       setLocationInfo(label);
-      setLocationMsg({ text: `Updated to ${label}`, ok: true });
+      setLocationMsg({ text: t('settings_location_updated', { place: label }), ok: true });
     } catch (e: any) {
-      setLocationMsg({ text: e?.message || "Couldn't get your location. Check that location is on.", ok: false });
+      setLocationMsg({ text: e?.message || t('settings_location_error'), ok: false });
     } finally {
       setUpdatingLocation(false);
     }
@@ -145,7 +166,8 @@ export default function SettingsScreen() {
 
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
   const currentAdvanceLabel = ADVANCE_OPTIONS.find((o) => o.value === advance)?.label || `${advance} min before`;
-  const currentReciterLabel = RECITERS.find((r) => r.id === reciter)?.name || 'Default';
+  const currentReciterLabel = RECITERS.find((r) => r.id === reciter)?.name || t('settings_reciter_default');
+  const currentLanguageLabel = LANGUAGES.find((l) => l.code === locale)?.label || 'English';
 
   return (
     <View style={styles.container}>
@@ -154,20 +176,20 @@ export default function SettingsScreen() {
 
         {/* Header */}
         <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
-          <Text style={styles.title}>⚙️ Settings</Text>
-          <Text style={styles.subtitle}>Customize your Azan experience</Text>
+          <Text style={styles.title}>⚙️ {t('settings_title')}</Text>
+          <Text style={styles.subtitle}>{t('settings_subtitle')}</Text>
         </LinearGradient>
 
         {/* Calculation Method */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🧮 PRAYER CALCULATION</Text>
+          <Text style={styles.sectionTitle}>🧮 {t('settings_calculation')}</Text>
           <Pressable style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]} onPress={() => setShowMethodModal(true)}>
             <View style={styles.settingLeft}>
               <View style={[styles.settingIcon, { backgroundColor: c.fajr + '20' }]}>
                 <Text style={{ fontSize: 16 }}>📐</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>Calculation Method</Text>
+                <Text style={styles.settingLabel}>{t('settings_calculation_method')}</Text>
                 <Text style={styles.settingValue}>{currentMethodLabel}</Text>
               </View>
             </View>
@@ -177,36 +199,56 @@ export default function SettingsScreen() {
 
         {/* Appearance */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌗 APPEARANCE</Text>
+          <Text style={styles.sectionTitle}>🌗 {t('settings_appearance')}</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
               <View style={[styles.settingIcon, { backgroundColor: c.isha + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🌗</Text>
               </View>
-              <Text style={styles.settingLabel}>Theme</Text>
+              <Text style={styles.settingLabel}>{t('settings_theme')}</Text>
             </View>
             <View style={styles.segment}>
-              {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => (
-                <Pressable
-                  key={m}
-                  onPress={() => setThemeModePref(m)}
-                  style={[styles.segmentBtn, themeMode === m && styles.segmentBtnActive]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: themeMode === m }}
-                  accessibilityLabel={`${m === 'system' ? 'Auto' : m} theme`}
-                >
-                  <Text style={[styles.segmentText, themeMode === m && styles.segmentTextActive]}>
-                    {m === 'light' ? 'Light' : m === 'dark' ? 'Dark' : 'Auto'}
-                  </Text>
-                </Pressable>
-              ))}
+              {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => {
+                const label = m === 'light' ? t('settings_theme_light') : m === 'dark' ? t('settings_theme_dark') : t('settings_theme_auto');
+                return (
+                  <Pressable
+                    key={m}
+                    onPress={() => setThemeModePref(m)}
+                    style={[styles.segmentBtn, themeMode === m && styles.segmentBtnActive]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: themeMode === m }}
+                    accessibilityLabel={t('settings_theme_a11y', { theme: label })}
+                  >
+                    <Text style={[styles.segmentText, themeMode === m && styles.segmentTextActive]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
+
+          {/* Language */}
+          <Pressable
+            style={({ pressed }) => [styles.settingCard, { marginTop: 8 }, pressed && styles.settingCardPressed]}
+            onPress={() => setShowLanguageModal(true)}
+          >
+            <View style={styles.settingLeft}>
+              <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
+                <Text style={{ fontSize: 16 }}>🌐</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingLabel}>{t('settings_language')}</Text>
+                <Text style={styles.settingValue}>{currentLanguageLabel}</Text>
+              </View>
+            </View>
+            <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
+          </Pressable>
         </View>
 
         {/* Notifications */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔔 NOTIFICATIONS</Text>
+          <Text style={styles.sectionTitle}>🔔 {t('settings_notifications')}</Text>
           {E2E && (
             <>
               <Text testID="e2e-scheduled-count" style={styles.settingValue}>
@@ -229,7 +271,7 @@ export default function SettingsScreen() {
               <View style={[styles.settingIcon, { backgroundColor: c.emerald + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🔔</Text>
               </View>
-              <Text style={styles.settingLabel}>Enable Notifications</Text>
+              <Text style={styles.settingLabel}>{t('settings_enable_notifications')}</Text>
             </View>
             <Switch
               value={notificationsOn}
@@ -247,14 +289,14 @@ export default function SettingsScreen() {
                     <Text style={{ fontSize: 16 }}>⏰</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.settingLabel}>Notify Before</Text>
+                    <Text style={styles.settingLabel}>{t('settings_notify_before')}</Text>
                     <Text style={styles.settingValue}>{currentAdvanceLabel}</Text>
                   </View>
                 </View>
                 <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
               </Pressable>
 
-              <Text style={styles.subSectionTitle}>Notify for each prayer:</Text>
+              <Text style={styles.subSectionTitle}>{t('settings_per_prayer')}</Text>
               {(Object.keys(PRAYER_CONFIG) as PrayerName[]).map((key) => (
                 <View key={key} style={styles.prayerToggleCard}>
                   <View style={styles.settingLeft}>
@@ -275,16 +317,16 @@ export default function SettingsScreen() {
 
         {/* Azan Sound */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔊 AZAN SOUND</Text>
+          <Text style={styles.sectionTitle}>🔊 {t('settings_azan_sound')}</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
               <View style={[styles.settingIcon, { backgroundColor: c.isha + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🎵</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>Play Azan Audio</Text>
+                <Text style={styles.settingLabel}>{t('settings_play_azan')}</Text>
                 <Text style={styles.settingValue}>
-                  {azanSoundOn ? 'Plays when prayer time arrives' : 'Notification only'}
+                  {azanSoundOn ? t('settings_play_azan_on') : t('settings_play_azan_off')}
                 </Text>
               </View>
             </View>
@@ -303,9 +345,9 @@ export default function SettingsScreen() {
                   <Text style={{ fontSize: 16 }}>⏱️</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.settingLabel}>Short Azan</Text>
+                  <Text style={styles.settingLabel}>{t('settings_short_azan')}</Text>
                   <Text style={styles.settingValue}>
-                    {azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
+                    {azanShortOn ? t('settings_short_azan_on') : t('settings_short_azan_off')}
                   </Text>
                 </View>
               </View>
@@ -328,7 +370,7 @@ export default function SettingsScreen() {
                   <Text style={{ fontSize: 16 }}>🕌</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.settingLabel}>Azan Reciter</Text>
+                  <Text style={styles.settingLabel}>{t('settings_azan_reciter')}</Text>
                   <Text style={styles.settingValue}>{currentReciterLabel}</Text>
                 </View>
               </View>
@@ -339,7 +381,7 @@ export default function SettingsScreen() {
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📍 LOCATION</Text>
+          <Text style={styles.sectionTitle}>📍 {t('settings_location')}</Text>
           <Pressable
             testID="settings-update-location"
             style={({ pressed }) => [styles.settingCard, pressed && styles.settingCardPressed]}
@@ -352,7 +394,7 @@ export default function SettingsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.settingLabel}>
-                  {updatingLocation ? 'Updating location…' : 'Update Location'}
+                  {updatingLocation ? t('settings_updating_location') : t('settings_update_location')}
                 </Text>
                 <Text
                   style={[
@@ -360,7 +402,7 @@ export default function SettingsScreen() {
                     locationMsg ? { color: locationMsg.ok ? c.emerald : c.danger } : null,
                   ]}
                 >
-                  {locationMsg ? locationMsg.text : locationInfo || 'Tap to detect your location'}
+                  {locationMsg ? locationMsg.text : locationInfo || t('settings_location_hint')}
                 </Text>
               </View>
             </View>
@@ -374,16 +416,16 @@ export default function SettingsScreen() {
 
         {/* About */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ℹ️ ABOUT</Text>
+          <Text style={styles.sectionTitle}>ℹ️ {t('settings_about')}</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
               <View style={[styles.settingIcon, { backgroundColor: c.gold + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🕌</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>Azan Time</Text>
+                <Text style={styles.settingLabel}>{t('app_name')}</Text>
                 <Text style={styles.settingValue}>
-                  Version {Constants.expoConfig?.version ?? '1.0.0'}
+                  {t('settings_version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
                 </Text>
               </View>
             </View>
@@ -394,7 +436,7 @@ export default function SettingsScreen() {
                 <Text style={{ fontSize: 16 }}>📖</Text>
               </View>
               <Text style={[styles.settingValue, { flex: 1 }]}>
-                Prayer times calculated using the Adhan library with high-precision astronomical algorithms.
+                {t('settings_about_blurb')}
               </Text>
             </View>
           </View>
@@ -406,7 +448,7 @@ export default function SettingsScreen() {
               <View style={[styles.settingIcon, { backgroundColor: c.teal + '20' }]}>
                 <Text style={{ fontSize: 16 }}>🔒</Text>
               </View>
-              <Text style={styles.settingLabel}>Privacy Policy</Text>
+              <Text style={styles.settingLabel}>{t('settings_privacy')}</Text>
             </View>
             <FontAwesome name="chevron-right" size={14} color={c.textMuted} />
           </Pressable>
@@ -418,7 +460,7 @@ export default function SettingsScreen() {
         <View style={styles.modalOverlay}>
           <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Calculation Method</Text>
+              <Text style={styles.modalTitle}>{t('settings_calculation_method')}</Text>
               <Pressable onPress={() => setShowMethodModal(false)} style={styles.modalClose}>
                 <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
@@ -447,7 +489,7 @@ export default function SettingsScreen() {
         <View style={styles.modalOverlay}>
           <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Notification Time</Text>
+              <Text style={styles.modalTitle}>{t('settings_notification_time')}</Text>
               <Pressable onPress={() => setShowAdvanceModal(false)} style={styles.modalClose}>
                 <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
@@ -473,7 +515,7 @@ export default function SettingsScreen() {
         <View style={styles.modalOverlay}>
           <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Azan Reciter</Text>
+              <Text style={styles.modalTitle}>{t('settings_azan_reciter')}</Text>
               <Pressable onPress={() => setShowReciterModal(false)} style={styles.modalClose}>
                 <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
@@ -495,6 +537,35 @@ export default function SettingsScreen() {
                     </Text>
                   </View>
                   {item.id === reciter && <FontAwesome name="check" size={16} color={c.gold} />}
+                </Pressable>
+              )}
+            />
+          </LinearGradient>
+        </View>
+      </Modal>
+
+      {/* Language Modal */}
+      <Modal visible={showLanguageModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('settings_language')}</Text>
+              <Pressable onPress={() => setShowLanguageModal(false)} style={styles.modalClose}>
+                <FontAwesome name="times" size={20} color={c.textSecondary} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={LANGUAGES}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[styles.modalItem, item.code === locale && styles.modalItemActive]}
+                  onPress={() => handleLanguageChange(item.code)}
+                >
+                  <Text style={[styles.modalItemText, item.code === locale && styles.modalItemTextActive]}>
+                    {item.label}
+                  </Text>
+                  {item.code === locale && <FontAwesome name="check" size={16} color={c.gold} />}
                 </Pressable>
               )}
             />

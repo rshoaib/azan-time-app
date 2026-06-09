@@ -11,6 +11,7 @@ const KEYS = {
     AZAN_RECITER: 'azan_reciter',
     AZAN_SHORT: 'azan_short',
     THEME_MODE: 'theme_mode',
+    LANGUAGE: 'language',
 };
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -49,6 +50,15 @@ export async function getThemeMode(): Promise<ThemeMode> {
 
 export async function setThemeMode(mode: ThemeMode): Promise<void> {
     await AsyncStorage.setItem(KEYS.THEME_MODE, mode);
+}
+
+// Language preference — a locale code ('en' | 'ar' | 'id' | 'ur'); null = follow device.
+export async function getLanguage(): Promise<string | null> {
+    return AsyncStorage.getItem(KEYS.LANGUAGE);
+}
+
+export async function setLanguage(code: string): Promise<void> {
+    await AsyncStorage.setItem(KEYS.LANGUAGE, code);
 }
 
 // Notification master toggle

@@ -2,6 +2,7 @@ import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
+import { useT } from '@/i18n/I18nContext';
 import { onStreakMilestone } from '@/services/reviewPromptService';
 import {
     DayLog,
@@ -34,15 +35,16 @@ const statusEmoji: Record<string, string> = {
   qada: '🔄',
 };
 
-const statusLabel: Record<string, string> = {
-  prayed: 'Prayed',
-  missed: 'Missed',
-  qada: 'Qada',
+const statusLabelKey: Record<string, 'tracker_status_prayed' | 'tracker_status_missed' | 'tracker_status_qada'> = {
+  prayed: 'tracker_status_prayed',
+  missed: 'tracker_status_missed',
+  qada: 'tracker_status_qada',
 };
 
 export default function TrackerScreen() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const t = useT();
   const [today, setToday] = useState(new Date());
   const [dayLog, setDayLog] = useState<DayLog>({ fajr: null, dhuhr: null, asr: null, maghrib: null, isha: null });
   const [weekLog, setWeekLog] = useState<{ date: Date; log: DayLog }[]>([]);
@@ -108,8 +110,8 @@ export default function TrackerScreen() {
 
         {/* Header */}
         <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
-          <Text style={styles.title}>📊 Prayer Tracker</Text>
-          <Text style={styles.subtitle}>Track your daily prayers</Text>
+          <Text style={styles.title}>{t('tracker_title_emoji')}</Text>
+          <Text style={styles.subtitle}>{t('tracker_subtitle')}</Text>
         </LinearGradient>
 
         {/* Stats Row */}
@@ -117,12 +119,12 @@ export default function TrackerScreen() {
           <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.statCard}>
             <Text style={styles.statEmoji}>🔥</Text>
             <Text style={styles.statValue}>{streak}</Text>
-            <Text style={styles.statLabel}>Day Streak</Text>
+            <Text style={styles.statLabel}>{t('tracker_day_streak')}</Text>
           </LinearGradient>
           <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.statCard}>
             <Text style={styles.statEmoji}>✅</Text>
             <Text style={styles.statValue}>{todayPrayed}/{todayTotal}</Text>
-            <Text style={styles.statLabel}>Today</Text>
+            <Text style={styles.statLabel}>{t('tracker_today')}</Text>
           </LinearGradient>
           <LinearGradient colors={['#0D9488', '#0F766E']} style={styles.statCard}>
             <Text style={styles.statEmoji}>📅</Text>
@@ -133,8 +135,8 @@ export default function TrackerScreen() {
 
         {/* Today's Prayers */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TODAY'S PRAYERS</Text>
-          <Text style={styles.sectionHint}>Tap to cycle: ✅ Prayed → ❌ Missed → 🔄 Qada → ⬜ Reset</Text>
+          <Text style={styles.sectionTitle}>{t('tracker_todays_prayers')}</Text>
+          <Text style={styles.sectionHint}>{t('tracker_tap_hint_emoji')}</Text>
 
           {TRACKER_PRAYERS.map((prayer) => {
             const config = PRAYER_CONFIG[prayer];
@@ -164,11 +166,11 @@ export default function TrackerScreen() {
                         status === 'prayed' && { color: c.emerald },
                         status === 'missed' && { color: c.danger },
                         status === 'qada' && { color: c.warning },
-                      ]}>{statusLabel[status]}</Text>
+                      ]}>{t(statusLabelKey[status])}</Text>
                     </View>
                   ) : (
                     <View style={styles.tapHint}>
-                      <Text style={styles.tapHintText}>Log</Text>
+                      <Text style={styles.tapHintText}>{t('tracker_log')}</Text>
                     </View>
                   )}
                 </View>
@@ -179,7 +181,7 @@ export default function TrackerScreen() {
 
         {/* Week Heatmap */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>THIS WEEK</Text>
+          <Text style={styles.sectionTitle}>{t('tracker_this_week')}</Text>
           <View style={styles.heatmapContainer}>
             {/* Column headers */}
             <View style={styles.heatmapRow}>
@@ -223,11 +225,11 @@ export default function TrackerScreen() {
               {streak >= 100 ? '💎' : streak >= 30 ? '🌟' : streak >= 7 ? '🔥' : '🤲'}
             </Text>
             <Text style={styles.motivationText}>
-              {streak >= 100 ? "100+ days! May Allah bless your consistency 💎" :
-               streak >= 30  ? "30+ days — alhamdulillah! Keep going 🌟" :
-               streak >= 7   ? "7-day streak! Don't break the chain 🔥" :
-               streak >= 3   ? "Great progress! Stay consistent 💪" :
-                               "You've started — keep it up 🤲"}
+              {streak >= 100 ? t('tracker_motivation_100') :
+               streak >= 30  ? t('tracker_motivation_30') :
+               streak >= 7   ? t('tracker_motivation_7') :
+               streak >= 3   ? t('tracker_motivation_3') :
+                               t('tracker_motivation_started')}
             </Text>
             <Pressable style={styles.streakShareBtn} onPress={shareStreak} hitSlop={8}>
               <FontAwesome name="share-alt" size={14} color={c.goldDark} />
@@ -239,10 +241,10 @@ export default function TrackerScreen() {
         {streak >= 3 && (
           <View style={styles.chainSection}>
             <View style={styles.chainHeader}>
-              <Text style={styles.chainTitle}>🔥 Don't break the chain</Text>
+              <Text style={styles.chainTitle}>{t('tracker_dont_break_chain_emoji')}</Text>
               <Pressable onPress={shareStreak} hitSlop={10} style={styles.chainShareLink}>
                 <FontAwesome name="share-alt" size={12} color={c.teal} />
-                <Text style={styles.chainShareText}>Share streak</Text>
+                <Text style={styles.chainShareText}>{t('tracker_share_streak')}</Text>
               </Pressable>
             </View>
             <View style={styles.chainRow}>
@@ -264,14 +266,16 @@ export default function TrackerScreen() {
               })}
             </View>
             <Text style={styles.chainFooter}>
-              {streak >= 14 ? `${streak} days and counting` : `Day ${streak} of your streak`}
+              {streak >= 14
+                ? t('tracker_chain_counting', { count: streak })
+                : t('tracker_chain_day_of', { count: streak })}
             </Text>
           </View>
         )}
 
         {/* Achievements */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏆 ACHIEVEMENTS</Text>
+          <Text style={styles.sectionTitle}>{t('tracker_achievements_emoji')}</Text>
           <View style={styles.achievementsGrid}>
             {getUnlockedAchievements(streak).map((a) => {
               const colors = TIER_COLORS[a.tier];
@@ -286,7 +290,7 @@ export default function TrackerScreen() {
             {getUnlockedAchievements(streak).length === 0 && (
               <View style={styles.noAchievements}>
                 <Text style={{ fontSize: 32 }}>🔒</Text>
-                <Text style={styles.noAchievementsText}>Pray consistently to unlock badges!</Text>
+                <Text style={styles.noAchievementsText}>{t('tracker_unlock_badges')}</Text>
               </View>
             )}
           </View>
@@ -296,7 +300,7 @@ export default function TrackerScreen() {
             const progress = Math.min(streak / next.requirement, 1);
             return (
               <View style={styles.nextAchievement}>
-                <Text style={styles.nextAchievementLabel}>Next: {next.emoji} {next.title} ({streak}/{next.requirement} days)</Text>
+                <Text style={styles.nextAchievementLabel}>{t('tracker_next_achievement', { emoji: next.emoji, title: next.title, current: streak, requirement: next.requirement })}</Text>
                 <View style={styles.progressBarBg}>
                   <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
                 </View>

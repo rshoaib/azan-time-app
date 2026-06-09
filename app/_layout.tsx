@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { Stack, usePathname } from 'expo-router';
 import { ThemeProvider as AppThemeProvider, useTheme } from '@/constants/ThemeContext';
+import { I18nProvider } from '@/i18n/I18nContext';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -132,9 +133,11 @@ export default function RootLayout() {
   }
 
   return (
-    <AppThemeProvider>
-      <RootNavigation />
-    </AppThemeProvider>
+    <I18nProvider>
+      <AppThemeProvider>
+        <RootNavigation />
+      </AppThemeProvider>
+    </I18nProvider>
   );
 }
 

@@ -21,8 +21,10 @@ import {
 import { getAudioModule } from '@/services/audioModuleLoader';
 import { configureAudio } from '@/services/audioService';
 import { useNavigation } from 'expo-router';
+import { useT } from '@/i18n/I18nContext';
 
 export default function RadioScreen() {
+  const t = useT();
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
   const [activeCategory, setActiveCategory] = useState<RadioCategory>('featured');
@@ -161,8 +163,8 @@ export default function RadioScreen() {
       >
         {/* Header */}
         <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
-          <Text style={styles.title}>📖 Quran Tilawat</Text>
-          <Text style={styles.subtitle}>Quran recitations, anytime</Text>
+          <Text style={styles.title}>📖 {t('tilawat_title')}</Text>
+          <Text style={styles.subtitle}>{t('tilawat_subtitle')}</Text>
         </LinearGradient>
 
         {/* Now Playing Card */}
@@ -200,7 +202,11 @@ export default function RadioScreen() {
 
                 <View style={styles.nowPlayingInfo}>
                   <Text style={styles.nowPlayingLabel}>
-                    {isLoading ? '⏳ Connecting...' : isPlaying ? '🔴 NOW PLAYING' : '⏸ PAUSED'}
+                    {isLoading
+                      ? `⏳ ${t('tilawat_connecting')}`
+                      : isPlaying
+                        ? `🔴 ${t('tilawat_now_playing')}`
+                        : `⏸ ${t('tilawat_paused')}`}
                   </Text>
                   <Text style={styles.nowPlayingName} numberOfLines={1}>
                     {currentStation.name}
@@ -235,7 +241,7 @@ export default function RadioScreen() {
             {!audioAvailable && (
               <View style={styles.audioNotice}>
                 <Text style={styles.audioNoticeText}>
-                  ⚠️ Audio isn't available in this preview. Install the app to listen.
+                  ⚠️ {t('tilawat_audio_unavailable')}
                 </Text>
               </View>
             )}
@@ -257,7 +263,7 @@ export default function RadioScreen() {
                   activeCategory === cat.key && styles.categoryLabelActive,
                 ]}
               >
-                {cat.label}
+                {t(`tilawat_cat_${cat.key}` as const)}
               </Text>
             </Pressable>
           ))}
@@ -266,7 +272,9 @@ export default function RadioScreen() {
         {/* Station count */}
         <View style={styles.countRow}>
           <Text style={styles.countText}>
-            {filteredStations.length} station{filteredStations.length !== 1 ? 's' : ''}
+            {filteredStations.length === 1
+              ? t('tilawat_station_count_one', { count: filteredStations.length })
+              : t('tilawat_station_count_other', { count: filteredStations.length })}
           </Text>
         </View>
 
@@ -330,7 +338,7 @@ export default function RadioScreen() {
                   {isStationPlaying ? (
                     <View style={styles.liveIndicator}>
                       <Animated.View style={[styles.liveDot, { opacity: pulseAnim }]} />
-                      <Text style={styles.liveText}>LIVE</Text>
+                      <Text style={styles.liveText}>{t('tilawat_live')}</Text>
                     </View>
                   ) : (
                     <FontAwesome name="play-circle" size={28} color={c.teal + '80'} />
@@ -344,7 +352,7 @@ export default function RadioScreen() {
         {/* Footer credit */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Powered by mp3quran.net • Free Quran Recitations
+            {t('tilawat_footer', { source: 'mp3quran.net' })}
           </Text>
         </View>
       </ScrollView>

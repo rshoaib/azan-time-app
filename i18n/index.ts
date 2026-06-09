@@ -26,7 +26,9 @@ import { ur } from './locales/ur';
 export type Locale = 'en' | 'ar' | 'id' | 'ur';
 export type TranslationKey = keyof typeof en;
 
-const translations: Record<Locale, Record<TranslationKey, string>> = { en, ar, id, ur };
+// en is the complete source of truth; other locales may be partial and fall
+// back to English per key (see translate()).
+const translations: Record<Locale, Partial<Record<TranslationKey, string>>> = { en, ar, id, ur };
 
 const SUPPORTED_LOCALES: Locale[] = ['en', 'ar', 'id', 'ur'];
 
@@ -69,6 +71,26 @@ export function isRTL(): boolean {
  * Translate a key. Falls back to English if the current locale is missing
  * the key — never crashes, always returns a string.
  */
-export function t(key: TranslationKey): string {
-    return translations[currentLocale]?.[key] ?? translations.en[key] ?? String(key);
+export function translate(
+    locale: Locale,
+    key: TranslationKey,
+    params?: Record<string, string | number>,
+): string {
+    let str = translations[locale]?.[key] ?? translations.en[key] ?? String(key);
+    if (params) {
+        for (const k of Object.keys(params)) {
+            str = str.split(`{${k}}`).join(String(params[k]));
+        }
+    }
+    return str;
+}
+
+/**
+ * Translate a key for the current (module-level) locale, with optional
+ * {placeholder} interpolation. Falls back to English; never crashes. React
+ * components should prefer useT() (so the UI re-renders on language change) —
+ * this module-level form is for non-React callers (e.g. service error strings).
+ */
+export function t(key: TranslationKey, params?: Record<string, string | number>): string {
+    return translate(currentLocale, key, params);
 }

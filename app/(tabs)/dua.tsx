@@ -1,5 +1,6 @@
 import { Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
+import { useT } from '@/i18n/I18nContext';
 import { DAILY_DUAS, DuaItem, EVENING_ADHKAR, MORNING_ADHKAR, TASBIH_TYPES } from '@/data/duas';
 import { isDuaPlaying, playDuaAudio, stopDuaAudio } from '@/services/duaAudioService';
 import { getTasbihCount, setTasbihCount } from '@/services/storageService';
@@ -22,6 +23,7 @@ type DuaTab = 'morning' | 'evening' | 'daily' | 'tasbih';
 export default function DuaScreen() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const t = useT();
   const [activeTab, setActiveTab] = useState<DuaTab>('morning');
   const [tasbihCount, setTasbihCountState] = useState(0);
   const [tasbihType, setTasbihType] = useState(0);
@@ -52,10 +54,10 @@ export default function DuaScreen() {
   };
 
   const tabs: { key: DuaTab; label: string; emoji: string }[] = [
-    { key: 'morning', label: 'Morning', emoji: '🌅' },
-    { key: 'evening', label: 'Evening', emoji: '🌙' },
-    { key: 'daily', label: 'Daily', emoji: '📖' },
-    { key: 'tasbih', label: 'Tasbih', emoji: '📿' },
+    { key: 'morning', label: t('dua_tab_morning'), emoji: '🌅' },
+    { key: 'evening', label: t('dua_tab_evening'), emoji: '🌙' },
+    { key: 'daily', label: t('dua_tab_daily'), emoji: '📖' },
+    { key: 'tasbih', label: t('dua_tab_tasbih'), emoji: '📿' },
   ];
 
   const currentDuas =
@@ -73,8 +75,8 @@ export default function DuaScreen() {
 
         {/* Header */}
         <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
-          <Text style={styles.title}>📿 Dua & Dhikr</Text>
-          <Text style={styles.subtitle}>Daily remembrance of Allah</Text>
+          <Text style={styles.title}>📿 {t('dua_title')}</Text>
+          <Text style={styles.subtitle}>{t('dua_subtitle')}</Text>
         </LinearGradient>
 
         {/* Tab Bar */}
@@ -123,7 +125,7 @@ export default function DuaScreen() {
                 >
                   <Text style={styles.tasbihArabic}>{currentTasbih.label}</Text>
                   <Text testID="dua-tasbih-count" style={styles.tasbihCountText}>{tasbihCount}</Text>
-                  <Text style={styles.tasbihTarget}>of {currentTasbih.target}</Text>
+                  <Text style={styles.tasbihTarget}>{t('dua_tasbih_of', { count: currentTasbih.target })}</Text>
                 </LinearGradient>
               </View>
             </Pressable>
@@ -136,7 +138,7 @@ export default function DuaScreen() {
 
             {/* Reset */}
             <Pressable onPress={resetTasbih} style={styles.resetButton}>
-              <Text style={styles.resetText}>🔄 Reset Counter</Text>
+              <Text style={styles.resetText}>🔄 {t('dua_reset_counter')}</Text>
             </Pressable>
           </View>
         ) : (
@@ -154,6 +156,7 @@ export default function DuaScreen() {
 
 function DuaCard({ dua }: { dua: DuaItem }) {
   const styles = useThemeStyles(makeStyles);
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -221,7 +224,7 @@ function DuaCard({ dua }: { dua: DuaItem }) {
               {isPlaying ? '⏹️' : '🔊'}
             </Animated.Text>
             <Text style={[styles.audioLabel, isPlaying && styles.audioLabelActive]}>
-              {isPlaying ? 'Stop' : 'Listen'}
+              {isPlaying ? t('dua_stop') : t('dua_listen')}
             </Text>
           </Pressable>
           {dua.repeat > 1 && (
@@ -230,7 +233,7 @@ function DuaCard({ dua }: { dua: DuaItem }) {
             </View>
           )}
         </View>
-        <Text style={styles.tapToExpand}>{expanded ? '▲ Hide translation' : '▼ Show translation'}</Text>
+        <Text style={styles.tapToExpand}>{expanded ? `▲ ${t('dua_hide_translation')}` : `▼ ${t('dua_show_translation')}`}</Text>
       </View>
     </Pressable>
   );

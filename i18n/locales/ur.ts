@@ -6,7 +6,7 @@
 
 import type { en } from './en';
 
-export const ur: typeof en = {
+export const ur: Partial<typeof en> = {
     app_name: 'اذان ٹائم',
     loading_prayer_times: 'نماز کے اوقات تلاش کیے جا رہے ہیں...',
     retry: 'دوبارہ کوشش کریں',
@@ -63,4 +63,94 @@ export const ur: typeof en = {
 
     share_footer: 'اذان ٹائم کے ذریعے شیئر کیا گیا',
     share_get_app: 'ایپ حاصل کریں',
+
+    // Home (i18n migration)
+    home_error_load: 'نماز کے اوقات لوڈ نہیں ہو سکے۔ اپنا انٹرنیٹ چیک کریں اور دوبارہ کوشش کریں۔',
+    home_open_settings: 'سیٹنگز کھولیں',
+    home_comparison_title: '📊 اس ہفتے فجر و مغرب',
+
+    // Tracker (i18n migration)
+    tracker_title_emoji: '📊 نماز ٹریکر',
+    tracker_tap_hint_emoji: 'ٹیپ کریں: ✅ پڑھی ← ❌ چھوٹی ← 🔄 قضا ← ⬜ ری سیٹ',
+    tracker_status_prayed: 'پڑھی',
+    tracker_status_missed: 'چھوٹی',
+    tracker_status_qada: 'قضا',
+    tracker_log: 'لاگ',
+    tracker_motivation_100: '100+ دن! اللہ آپ کی پابندی میں برکت دے 💎',
+    tracker_motivation_30: '30+ دن — الحمد للہ! جاری رکھیں 🌟',
+    tracker_motivation_7: '7 دن کا سلسلہ! اسے نہ توڑیں 🔥',
+    tracker_motivation_3: 'بہترین پیش رفت! ثابت قدم رہیں 💪',
+    tracker_motivation_started: 'آپ نے آغاز کر دیا — جاری رکھیں 🤲',
+    tracker_dont_break_chain_emoji: '🔥 سلسلہ نہ توڑیں',
+    tracker_chain_counting: '{count} دن اور جاری',
+    tracker_chain_day_of: 'آپ کے سلسلے کا دن {count}',
+    tracker_achievements_emoji: '🏆 اعزازات',
+    tracker_unlock_badges: 'بیجز کھولنے کے لیے پابندی سے نماز پڑھیں!',
+    tracker_next_achievement: 'اگلا: {emoji} {title} ({current}/{requirement} دن)',
+
+    // Dua
+    dua_title: 'دعا و اذکار',
+    dua_subtitle: 'اللہ کا روزانہ ذکر',
+    dua_tab_morning: 'صبح',
+    dua_tab_evening: 'شام',
+    dua_tab_daily: 'روزمرہ',
+    dua_tab_tasbih: 'تسبیح',
+    dua_listen: 'سنیں',
+    dua_stop: 'روکیں',
+    dua_hide_translation: 'ترجمہ چھپائیں',
+    dua_show_translation: 'ترجمہ دکھائیں',
+    dua_tasbih_of: 'از {count}',
+    dua_reset_counter: 'کاؤنٹر ری سیٹ کریں',
+
+    // Qibla (extended)
+    qibla_screen_title: 'قبلہ و مساجد',
+    qibla_subtitle: 'کعبہ کی سمت',
+    qibla_heading: 'رُخ',
+    qibla_label: 'قبلہ',
+    qibla_facing: 'قبلہ رُخ',
+    qibla_mosques_near_me: 'قریبی مساجد',
+    qibla_searching: 'تلاش جاری...',
+    qibla_mosques_count: '5 کلومیٹر میں {count} ملیں',
+    qibla_finding_mosques: 'قریبی مساجد تلاش کی جا رہی ہیں...',
+    qibla_no_mosques: '5 کلومیٹر میں کوئی مسجد نہیں',
+    qibla_no_mosques_hint: 'بعد میں کوشش کریں یا انٹرنیٹ چیک کریں',
+    qibla_error: 'قبلہ معلوم نہیں ہو سکا۔ لوکیشن آن کریں، پھر کیلیبریٹ کرنے کے لیے فون کو 8 کی شکل میں گھمائیں۔',
+
+    // Tilawat (radio)
+    tilawat_title: 'قرآن تلاوت',
+    tilawat_subtitle: 'قرآن کی تلاوت، کسی بھی وقت',
+    tilawat_cat_featured: 'نمایاں',
+    tilawat_cat_reciters: 'قاری حضرات',
+    tilawat_cat_special: 'خصوصی',
+    tilawat_cat_translations: 'تراجم',
+    tilawat_connecting: 'منسلک ہو رہا ہے...',
+    tilawat_now_playing: 'اب چل رہا ہے',
+    tilawat_paused: 'موقوف',
+    tilawat_live: 'لائیو',
+    tilawat_station_count_one: '{count} اسٹیشن',
+    tilawat_station_count_other: '{count} اسٹیشنز',
+    tilawat_audio_unavailable: 'اس پیش نظارہ میں آڈیو دستیاب نہیں۔ سننے کے لیے ایپ انسٹال کریں۔',
+    tilawat_footer: 'بشکریہ {source} • مفت قرآن تلاوت',
+
+    // Settings (i18n migration)
+    settings_appearance: 'ظاہری شکل',
+    settings_theme: 'تھیم',
+    settings_theme_light: 'لائٹ',
+    settings_theme_dark: 'ڈارک',
+    settings_theme_auto: 'خودکار',
+    settings_theme_a11y: '{theme} تھیم',
+    settings_play_azan_on: 'نماز کا وقت آنے پر چلتی ہے',
+    settings_play_azan_off: 'صرف نوٹیفکیشن',
+    settings_short_azan: 'مختصر اذان',
+    settings_short_azan_on: 'مختصر اذان چلتی ہے',
+    settings_short_azan_off: 'مکمل اذان چلتی ہے',
+    settings_reciter_default: 'ڈیفالٹ',
+    settings_update_location: 'مقام اپ ڈیٹ کریں',
+    settings_updating_location: 'مقام اپ ڈیٹ ہو رہا ہے…',
+    settings_location_hint: 'اپنا مقام معلوم کرنے کے لیے ٹیپ کریں',
+    settings_location_updated: '{place} پر اپ ڈیٹ ہو گیا',
+    settings_location_error: 'آپ کا مقام معلوم نہیں ہو سکا۔ یقینی بنائیں کہ لوکیشن آن ہے۔',
+    settings_notification_time: 'نوٹیفکیشن کا وقت',
+    settings_version: 'ورژن {version}',
+    settings_about_blurb: 'نماز کے اوقات Adhan لائبریری اور اعلیٰ درستگی کے فلکیاتی الگورتھم سے شمار کیے جاتے ہیں۔',
 };

@@ -7,7 +7,7 @@
 
 import type { en } from './en';
 
-export const id: typeof en = {
+export const id: Partial<typeof en> = {
     app_name: 'Azan Time',
     loading_prayer_times: 'Mencari waktu sholat...',
     retry: 'Coba Lagi',
@@ -64,4 +64,94 @@ export const id: typeof en = {
 
     share_footer: 'Dibagikan melalui Azan Time',
     share_get_app: 'Dapatkan aplikasi',
+
+    // Home (i18n migration)
+    home_error_load: 'Tidak dapat memuat waktu sholat. Periksa koneksi Anda dan coba lagi.',
+    home_open_settings: 'Buka Pengaturan',
+    home_comparison_title: '📊 Subuh & Magrib Minggu Ini',
+
+    // Tracker (i18n migration)
+    tracker_title_emoji: '📊 Pelacak Sholat',
+    tracker_tap_hint_emoji: 'Tap untuk: ✅ Sholat → ❌ Terlewat → 🔄 Qada → ⬜ Reset',
+    tracker_status_prayed: 'Sholat',
+    tracker_status_missed: 'Terlewat',
+    tracker_status_qada: 'Qada',
+    tracker_log: 'Catat',
+    tracker_motivation_100: '100+ hari! Semoga Allah memberkahi keistiqamahan Anda 💎',
+    tracker_motivation_30: '30+ hari — alhamdulillah! Lanjutkan 🌟',
+    tracker_motivation_7: 'Streak 7 hari! Jangan diputus 🔥',
+    tracker_motivation_3: 'Kemajuan bagus! Tetap istiqamah 💪',
+    tracker_motivation_started: 'Anda sudah memulai — teruskan 🤲',
+    tracker_dont_break_chain_emoji: '🔥 Jangan putuskan rantainya',
+    tracker_chain_counting: '{count} hari dan terus bertambah',
+    tracker_chain_day_of: 'Hari ke-{count} streak Anda',
+    tracker_achievements_emoji: '🏆 PENCAPAIAN',
+    tracker_unlock_badges: 'Sholatlah dengan istiqamah untuk membuka lencana!',
+    tracker_next_achievement: 'Berikutnya: {emoji} {title} ({current}/{requirement} hari)',
+
+    // Dua
+    dua_title: 'Doa & Zikir',
+    dua_subtitle: 'Zikir harian kepada Allah',
+    dua_tab_morning: 'Pagi',
+    dua_tab_evening: 'Petang',
+    dua_tab_daily: 'Harian',
+    dua_tab_tasbih: 'Tasbih',
+    dua_listen: 'Dengar',
+    dua_stop: 'Berhenti',
+    dua_hide_translation: 'Sembunyikan terjemahan',
+    dua_show_translation: 'Tampilkan terjemahan',
+    dua_tasbih_of: 'dari {count}',
+    dua_reset_counter: 'Atur Ulang Penghitung',
+
+    // Qibla (extended)
+    qibla_screen_title: 'Kiblat & Masjid',
+    qibla_subtitle: 'Arah ke Kabah',
+    qibla_heading: 'ARAH HADAP',
+    qibla_label: 'KIBLAT',
+    qibla_facing: 'Menghadap Kiblat',
+    qibla_mosques_near_me: 'Masjid Terdekat',
+    qibla_searching: 'Mencari...',
+    qibla_mosques_count: '{count} dalam radius 5 km',
+    qibla_finding_mosques: 'Mencari masjid terdekat...',
+    qibla_no_mosques: 'Tidak ada masjid dalam 5 km',
+    qibla_no_mosques_hint: 'Coba lagi nanti atau periksa koneksi Anda',
+    qibla_error: 'Tidak dapat menemukan arah Kiblat. Pastikan lokasi aktif, lalu gerakkan ponsel membentuk angka 8 untuk kalibrasi.',
+
+    // Tilawat (radio)
+    tilawat_title: 'Tilawah Quran',
+    tilawat_subtitle: 'Bacaan Quran, kapan saja',
+    tilawat_cat_featured: 'Unggulan',
+    tilawat_cat_reciters: 'Qari',
+    tilawat_cat_special: 'Spesial',
+    tilawat_cat_translations: 'Terjemahan',
+    tilawat_connecting: 'Menyambungkan...',
+    tilawat_now_playing: 'SEDANG DIPUTAR',
+    tilawat_paused: 'DIJEDA',
+    tilawat_live: 'LANGSUNG',
+    tilawat_station_count_one: '{count} stasiun',
+    tilawat_station_count_other: '{count} stasiun',
+    tilawat_audio_unavailable: 'Audio tidak tersedia di pratinjau ini. Instal aplikasi untuk mendengarkan.',
+    tilawat_footer: 'Didukung oleh {source} • Bacaan Quran Gratis',
+
+    // Settings (i18n migration)
+    settings_appearance: 'TAMPILAN',
+    settings_theme: 'Tema',
+    settings_theme_light: 'Terang',
+    settings_theme_dark: 'Gelap',
+    settings_theme_auto: 'Otomatis',
+    settings_theme_a11y: 'Tema {theme}',
+    settings_play_azan_on: 'Diputar saat waktu sholat tiba',
+    settings_play_azan_off: 'Hanya notifikasi',
+    settings_short_azan: 'Azan Singkat',
+    settings_short_azan_on: 'Memutar azan singkat',
+    settings_short_azan_off: 'Memutar azan lengkap',
+    settings_reciter_default: 'Bawaan',
+    settings_update_location: 'Perbarui Lokasi',
+    settings_updating_location: 'Memperbarui lokasi…',
+    settings_location_hint: 'Tap untuk mendeteksi lokasi Anda',
+    settings_location_updated: 'Diperbarui ke {place}',
+    settings_location_error: 'Tidak dapat memperoleh lokasi Anda. Pastikan lokasi aktif.',
+    settings_notification_time: 'Waktu Notifikasi',
+    settings_version: 'Versi {version}',
+    settings_about_blurb: 'Waktu sholat dihitung menggunakan pustaka Adhan dengan algoritme astronomi berpresisi tinggi.',
 };
