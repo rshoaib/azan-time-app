@@ -66,6 +66,7 @@
           "color": "#D4AF37",
           "sounds": [
             "./assets/audio/azan.mp3",
+            "./assets/audio/azan-fajr.mp3",
             "./assets/audio/azanshort.mp3"
           ]
         }

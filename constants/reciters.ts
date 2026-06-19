@@ -98,5 +98,5 @@ export function getReciter(id: string): Reciter {
  */
 import type { PrayerName } from '../services/prayerService';
 export const PRAYER_SPECIFIC_AUDIO: Partial<Record<PrayerName, any>> = {
-    // fajr: require('../assets/audio/azan-fajr.mp3'),
+    fajr: require('../assets/audio/azan-fajr.mp3'),
 };
