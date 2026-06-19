@@ -37,7 +37,7 @@ import {
   setAzanShortEnabled,
   ThemeMode,
 } from '@/services/storageService';
-import { stopAzan, isAzanPlaying } from '@/services/audioService';
+import { stopAzan, isAzanPlaying, playAzan } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
@@ -52,6 +52,14 @@ const ADVANCE_OPTIONS = [
   { value: 15, label: '15 minutes before' },
   { value: 30, label: '30 minutes before' },
 ];
+
+// The Azan Sound section is one mutually-exclusive choice, not two toggles.
+const AZAN_MODES = [
+  { key: 'full' as const, emoji: '🕌', label: 'Full adhan', desc: 'The complete call to prayer' },
+  { key: 'short' as const, emoji: '⏱️', label: 'Short adhan', desc: 'A brief, shortened call' },
+  { key: 'silent' as const, emoji: '🔕', label: 'Silent', desc: 'Notification only, no sound' },
+];
+type AzanMode = (typeof AZAN_MODES)[number]['key'];
 
 export default function SettingsScreen() {
   const [method, setMethod] = useState('MuslimWorldLeague');
@@ -74,9 +82,9 @@ export default function SettingsScreen() {
 
   useEffect(() => { loadSettings(); }, []);
 
-  // E2E: poll azan playback state so a test can assert it after firing a notification.
+  // Poll azan playback state — drives the Preview button's play/stop label, and
+  // lets an E2E test assert playback after firing a test notification.
   useEffect(() => {
-    if (!E2E) return;
     const id = setInterval(() => setAzanPlaying(isAzanPlaying()), 300);
     return () => clearInterval(id);
   }, []);
@@ -108,12 +116,24 @@ export default function SettingsScreen() {
   const handleAdvanceChange = async (value: number) => {
     setAdvance(value); await setAdvanceMinutes(value); setShowAdvanceModal(false);
   };
-  const handleAzanSoundToggle = async (value: boolean) => {
-    setAzanSoundOn(value); await setAzanSoundEnabled(value);
-    if (!value) await stopAzan();
+  // One 3-way choice (full / short / silent) mapped onto the two underlying flags
+  // the audio + notification services already read — no service changes needed.
+  const handleAzanModeChange = async (mode: AzanMode) => {
+    if (mode === 'silent') {
+      setAzanSoundOn(false); await setAzanSoundEnabled(false);
+      await stopAzan();
+    } else {
+      setAzanSoundOn(true); await setAzanSoundEnabled(true);
+      const short = mode === 'short';
+      setAzanShortOn(short); await setAzanShortEnabled(short);
+    }
+    setUserProperty('azan_mode', mode);
   };
-  const handleAzanShortToggle = async (value: boolean) => {
-    setAzanShortOn(value); await setAzanShortEnabled(value);
+  // Let users hear the selected adhan on demand. playAzan() honors the current
+  // full/short choice; tap again (or let it finish) to stop.
+  const handleAzanPreview = async () => {
+    if (isAzanPlaying()) await stopAzan();
+    else await playAzan();
   };
   const handleReciterChange = async (id: string) => {
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
@@ -147,6 +167,7 @@ export default function SettingsScreen() {
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
   const currentAdvanceLabel = ADVANCE_OPTIONS.find((o) => o.value === advance)?.label || `${advance} min before`;
   const currentReciterLabel = RECITERS.find((r) => r.id === reciter)?.name || 'Default';
+  const azanMode: AzanMode = !azanSoundOn ? 'silent' : azanShortOn ? 'short' : 'full';
 
   return (
     <View style={styles.container}>
@@ -262,49 +283,58 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Azan Sound */}
+        {/* Azan Sound — one 3-way choice (full / short / silent) instead of two toggles */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔊 AZAN SOUND</Text>
-          <SettingRow
-            emoji="🎵"
-            tint={c.isha}
-            label="Play Azan Audio"
-            value={azanSoundOn ? 'Plays when prayer time arrives' : 'Notification only'}
-            right={
-              <Switch
-                value={azanSoundOn}
-                onValueChange={handleAzanSoundToggle}
-                trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-                thumbColor={azanSoundOn ? c.gold : c.switchThumbOff}
-              />
-            }
-          />
-
-          {azanSoundOn && (
-            <SettingRow
-              emoji="⏱️"
-              tint={c.teal}
-              label="Short Azan"
-              value={azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
-              style={{ marginTop: Theme.spacing.sm }}
-              right={
-                <Switch
-                  value={azanShortOn}
-                  onValueChange={handleAzanShortToggle}
-                  trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-                  thumbColor={azanShortOn ? c.gold : c.switchThumbOff}
+          <Text style={styles.sectionTitle}>🔊 WHEN IT'S TIME TO PRAY</Text>
+          {AZAN_MODES.map((m) => {
+            const selected = azanMode === m.key;
+            return (
+              <Pressable
+                key={m.key}
+                testID={`azan-mode-${m.key}`}
+                onPress={() => handleAzanModeChange(m.key)}
+                style={[styles.azanOption, selected && styles.azanOptionActive]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`${m.label}. ${m.desc}`}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={[styles.settingIcon, { backgroundColor: (selected ? c.gold : c.textMuted) + '18' }]}>
+                    <Text style={{ fontSize: Theme.fontSize.body }}>{m.emoji}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.settingLabel, selected && { color: c.goldText }]}>{m.label}</Text>
+                    <Text style={styles.settingValue}>{m.desc}</Text>
+                  </View>
+                </View>
+                <FontAwesome
+                  name={selected ? 'check-circle' : 'circle-o'}
+                  size={22}
+                  color={selected ? c.gold : c.textMuted + '70'}
                 />
-              }
-            />
+              </Pressable>
+            );
+          })}
+
+          {azanMode !== 'silent' && (
+            <Pressable
+              testID="azan-preview"
+              onPress={handleAzanPreview}
+              style={styles.azanPreview}
+              accessibilityRole="button"
+              accessibilityLabel={azanPlaying ? 'Stop preview' : 'Preview adhan'}
+            >
+              <FontAwesome name={azanPlaying ? 'stop' : 'play'} size={13} color={c.teal} />
+              <Text style={styles.azanPreviewText}>{azanPlaying ? 'Stop preview' : 'Preview adhan'}</Text>
+            </Pressable>
           )}
 
-          {azanSoundOn && RECITERS.length > 1 && (
+          {azanMode !== 'silent' && RECITERS.length > 1 && (
             <SettingRow
-              emoji="🕌"
+              emoji="🎙️"
               tint={c.gold}
-              label="Azan Reciter"
+              label="Adhan voice"
               value={currentReciterLabel}
-              style={{ marginTop: Theme.spacing.sm }}
               onPress={() => setShowReciterModal(true)}
             />
           )}
@@ -615,5 +645,43 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   modalItemTextActive: {
     color: c.gold,
     fontWeight: Theme.fontWeight.bold,
+  },
+
+  // Azan mode selector (full / short / silent)
+  azanOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: c.card,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: c.cardBorder,
+  },
+  azanOptionActive: {
+    backgroundColor: c.cardHighlight,
+    borderColor: c.gold + '50',
+    borderWidth: 1.5,
+  },
+  azanPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.sm,
+    alignSelf: 'flex-start',
+    marginTop: Theme.spacing.xs,
+    marginBottom: Theme.spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: c.teal + '12',
+    borderWidth: 1,
+    borderColor: c.teal + '25',
+  },
+  azanPreviewText: {
+    fontSize: Theme.fontSize.sm,
+    color: c.teal,
+    fontWeight: Theme.fontWeight.semibold,
   },
 });
