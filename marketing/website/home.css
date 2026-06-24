@@ -65,6 +65,8 @@ img { max-width: 100%; display: block; }
 .btn-ghost { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.22); backdrop-filter: blur(6px); }
 .btn-ghost:hover { background: rgba(255,255,255,.16); }
 .btn-dark { background: var(--navy); color: #fff; }
+.btn-yt { background: #FF0000; color: #fff; box-shadow: 0 10px 28px -12px rgba(255,0,0,.6); }
+.btn-yt:hover { background: #E60000; color: #fff; }
 .btn .ic { font-size: 18px; line-height: 1; }
 .btn small { display: block; font-size: 10px; font-weight: 600; opacity: .7; letter-spacing: .04em; margin-bottom: -3px; }
 .btn .big { font-size: 15px; }
