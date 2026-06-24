@@ -121,7 +121,10 @@ img { max-width: 100%; display: block; }
 .hero-visual { position: relative; display: grid; place-items: center; min-height: 540px; }
 .glow { position: absolute; inset: 0; background: radial-gradient(closest-side, rgba(212,175,55,.28), transparent 70%); filter: blur(10px); }
 .hero-phone-main { position: relative; z-index: 3; animation: float 6s ease-in-out infinite; }
-.hero-phone-side {
+/* Higher specificity than the base `.phone { position: relative }` (which is
+   defined later in the file) so the side phone actually floats as an accent
+   instead of stacking in-flow and stretching the hero column. */
+.hero-visual .hero-phone-side {
   position: absolute; z-index: 2; right: -6%; bottom: 2%; width: 168px; opacity: .96;
   transform: rotate(6deg); animation: float 7s ease-in-out infinite .6s;
 }
