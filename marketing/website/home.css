@@ -109,7 +109,7 @@ img { max-width: 100%; display: block; }
   content: '﷽'; position: absolute; top: 8%; right: -2%;
   font-size: 300px; color: rgba(212,175,55,.05); pointer-events: none; line-height: 1;
 }
-.hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; position: relative; z-index: 2; }
+.hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 64px; align-items: center; position: relative; z-index: 2; }
 .hero h1 { font-size: clamp(38px, 5.4vw, 64px); margin: 18px 0 20px; color: #fff; }
 .hero .sub { font-size: clamp(17px, 2vw, 20px); color: rgba(255,255,255,.82); max-width: 540px; }
 .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin: 32px 0 20px; }
@@ -285,12 +285,18 @@ section { position: relative; }
 }
 
 /* ---------- responsive ---------- */
-@media (max-width: 960px) {
-  .hero-grid { grid-template-columns: 1fr; text-align: center; gap: 20px; }
+/* Hero collapses to a centered single column below ~1140px so the two-column
+   layout only shows when there's ample room. The phone + floating cards are
+   capped and centered so nothing crowds or clips at narrow-desktop widths. */
+@media (max-width: 1140px) {
+  .hero-grid { grid-template-columns: 1fr; text-align: center; gap: 24px; }
   .hero { padding-top: 130px; }
   .hero .sub { margin: 0 auto; }
   .hero-cta, .trust { justify-content: center; }
-  .hero-visual { min-height: 480px; margin-top: 20px; }
+  .hero-visual { min-height: 480px; margin: 28px auto 0; max-width: 560px; }
+}
+
+@media (max-width: 960px) {
   .feature { grid-template-columns: 1fr; gap: 32px; text-align: center; padding: 48px 0; }
   .feature.rev .feat-media { order: 0; }
   .feat-text > p { margin-left: auto; margin-right: auto; }
