@@ -99,7 +99,7 @@ Listen to Quran recitation, nasheeds, and Islamic lectures. Live streams from ar
 
 🔒 PRIVACY FIRST
 
-Your location never leaves your device. No account required. No tracking. No ads that follow you around the web. Just the app.
+Your location never leaves your device. No account required. No hidden tracking. The only ad is a single banner — nothing that interrupts your prayer. Just the app.
 
 🌍 DESIGNED FOR EVERY MUSLIM
 

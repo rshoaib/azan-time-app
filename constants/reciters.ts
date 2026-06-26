@@ -70,7 +70,7 @@ export const RECITERS: Reciter[] = [
     //     name: 'Fajr Adhan',
     //     location: 'With As-salatu khayrun min an-nawm',
     //     description: 'Traditional Fajr adhan with extra line',
-    //     audioSource: require('../assets/audio/azan-fajr.mp3'),
+    //     audioSource: require('../assets/audio/azan_fajr.mp3'),
     // },
 ];
 
@@ -91,12 +91,12 @@ export function getReciter(id: string): Reciter {
  * don't have, so it needs a different recording.
  *
  * To enable Fajr-specific azan:
- *   1. Drop `azan-fajr.mp3` into `assets/audio/`
- *   2. Add `./assets/audio/azan-fajr.mp3` to `expo.plugins[expo-notifications].sounds` in app.json
+ *   1. Drop `azan_fajr.mp3` into `assets/audio/`
+ *   2. Add `./assets/audio/azan_fajr.mp3` to `expo.plugins[expo-notifications].sounds` in app.json
  *   3. Uncomment the `fajr` line below
  *   4. (Android background) Uncomment the `prayer-azan-fajr` channel block in services/notificationService.ts
  */
 import type { PrayerName } from '../services/prayerService';
 export const PRAYER_SPECIFIC_AUDIO: Partial<Record<PrayerName, any>> = {
-    fajr: require('../assets/audio/azan-fajr.mp3'),
+    fajr: require('../assets/audio/azan_fajr.mp3'),
 };

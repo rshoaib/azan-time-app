@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { LogBox } from 'react-native';
+import { initializeAds } from '@/services/adsService';
 import { bootstrapAnalytics, logScreenView } from '@/services/analyticsService';
 import { bootstrapCrashlytics, recordNonFatal } from '@/services/crashlyticsService';
 import { bootstrapPerformance } from '@/services/performanceService';
@@ -80,6 +81,12 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Initialize the AdMob SDK + UMP consent once at startup. Fire-and-forget
+  // and idempotent; safe in Expo Go / web (silently no-ops there).
+  useEffect(() => {
+    initializeAds();
+  }, []);
 
   // Bootstrap Firebase Analytics — records the install date on first run and
   // fires `app_open_day_2` on the day-after-install return. Safe to call in

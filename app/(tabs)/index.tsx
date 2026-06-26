@@ -1,3 +1,4 @@
+import AdBanner from '@/components/AdBanner';
 import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
@@ -357,6 +358,9 @@ export default function HomeScreen() {
             />
           ))}
         </View>
+
+        {/* Ad Banner */}
+        <AdBanner style={{ marginTop: 16, marginHorizontal: 24 }} />
 
         {/* Daily Ayah Card */}
         <View style={styles.ayahWrapper}>

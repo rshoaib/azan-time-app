@@ -1,2 +1,4 @@
-// AdMob fully removed on 2026-05-05.
-// This file is intentionally left as an empty stub because the workspace
+// Web stub — native ads are not supported on web.
+export default function AdBanner() {
+  return null;
+}

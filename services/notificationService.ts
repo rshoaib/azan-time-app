@@ -154,15 +154,21 @@ export async function requestNotificationPermission(): Promise<boolean> {
         });
 
         // Fajr-specific channel — Fajr's adhan has the extra "As-salatu khayrun
-        // min an-nawm" line, so it plays azan-fajr.mp3 instead of azan.mp3.
-        // (Background sound requires azan-fajr.mp3 bundled via app.json sounds +
+        // min an-nawm" line, so it plays azan_fajr.mp3 instead of azan.mp3.
+        // (Background sound requires azan_fajr.mp3 bundled via app.json sounds +
         // a native rebuild; foreground playback uses PRAYER_SPECIFIC_AUDIO.)
-        await notif.setNotificationChannelAsync('prayer-azan-fajr', {
+        // NOTE: the file is azan_fajr.mp3 (underscore) — Android res/raw names
+        // can't contain hyphens, which silently broke packaging when it was
+        // azan-fajr.mp3. The channel id is bumped to `-v2` because Android
+        // notification channels are immutable after creation: existing installs
+        // created `prayer-azan-fajr` with the (broken) old sound, and a fresh id
+        // is the only way to move them onto the now-working azan_fajr.mp3.
+        await notif.setNotificationChannelAsync('prayer-azan-fajr-v2', {
             name: 'Fajr Prayer (Azan)',
             description: 'Fajr prayer notifications with Fajr-specific Azan',
             importance: notif.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
-            sound: 'azan-fajr.mp3',
+            sound: 'azan_fajr.mp3',
         });
     }
 
@@ -223,14 +229,14 @@ export async function schedulePrayerNotifications(
         const channelId = !azanEnabled
             ? 'prayer-times'
             : azanShort ? 'prayer-azan-short'
-            : prayer.name === 'fajr' ? 'prayer-azan-fajr'
+            : prayer.name === 'fajr' ? 'prayer-azan-fajr-v2'
             : 'prayer-azan';
         // `true` = system default sound. Bundled files resolve fine; the string
         // 'default' does not — it throws.
         const soundFile: string | boolean = !azanEnabled
             ? true
             : azanShort ? 'azanshort.mp3'
-            : prayer.name === 'fajr' ? 'azan-fajr.mp3'
+            : prayer.name === 'fajr' ? 'azan_fajr.mp3'
             : 'azan.mp3';
 
         await notif.scheduleNotificationAsync({
