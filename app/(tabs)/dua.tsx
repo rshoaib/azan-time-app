@@ -16,12 +16,14 @@ import {
     Vibration,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type DuaTab = 'morning' | 'evening' | 'daily' | 'tasbih';
 
 export default function DuaScreen() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<DuaTab>('morning');
   const [tasbihCount, setTasbihCountState] = useState(0);
   const [tasbihType, setTasbihType] = useState(0);
@@ -72,7 +74,7 @@ export default function DuaScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={[styles.header, { paddingTop: insets.top + Theme.spacing.smd }]}>
           <Text style={styles.title}>📿 Dua & Dhikr</Text>
           <Text style={styles.subtitle}>Daily remembrance of Allah</Text>
         </LinearGradient>
@@ -206,6 +208,10 @@ function DuaCard({ dua }: { dua: DuaItem }) {
     <Pressable
       style={[styles.duaCard, expanded && styles.duaCardExpanded]}
       onPress={() => setExpanded(!expanded)}
+      accessibilityRole="button"
+      accessibilityState={{ expanded }}
+      accessibilityLabel={dua.occasion ? `Dua: ${dua.occasion}` : 'Dua'}
+      accessibilityHint={expanded ? 'Hides the translation' : 'Shows transliteration and translation'}
     >
       {dua.occasion && (
         <View style={styles.occasionBadge}>
@@ -226,6 +232,8 @@ function DuaCard({ dua }: { dua: DuaItem }) {
             onPress={(e) => { e.stopPropagation(); toggleAudio(); }}
             style={[styles.audioButton, isPlaying && styles.audioButtonActive]}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Stop dua audio' : 'Play dua audio'}
           >
             <Animated.Text style={[styles.audioIcon, { opacity: isPlaying ? pulseAnim : 1 }]}>
               {isPlaying ? '⏹️' : '🔊'}
@@ -345,7 +353,7 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   tasbihArabic: { fontSize: Theme.fontSize.xl, color: c.goldLight, marginBottom: Theme.spacing.sm },
   tasbihCountText: { fontSize: 52, fontWeight: Theme.fontWeight.heavy, color: c.onAccent },
-  tasbihTarget: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: Theme.spacing.xs },
+  tasbihTarget: { fontSize: Theme.fontSize.sm, color: 'rgba(255,255,255,0.8)', marginTop: Theme.spacing.xs },
   progressBarBg: {
     width: '80%', height: 6, borderRadius: 3,
     backgroundColor: c.cardBorder, marginBottom: Theme.spacing.smd, overflow: 'hidden',

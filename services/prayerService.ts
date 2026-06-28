@@ -5,10 +5,15 @@ import {
     Prayer,
     Qibla,
     CalculationParameters,
+    Madhab,
 } from 'adhan';
 import { e2eNow } from './e2eConfig';
 
 export type PrayerName = 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+
+// Asr juristic method. 'standard' (Shafiʿi/Maliki/Hanbali) uses shadow = 1×
+// object length; 'hanafi' uses 2× (a later Asr). Default is 'standard'.
+export type MadhabKey = 'standard' | 'hanafi';
 
 export interface PrayerTimeEntry {
     name: PrayerName;
@@ -57,10 +62,13 @@ export function getPrayerTimes(
     latitude: number,
     longitude: number,
     date: Date = new Date(),
-    methodKey: string = 'MuslimWorldLeague'
+    methodKey: string = 'MuslimWorldLeague',
+    madhab: MadhabKey = 'standard'
 ): PrayerTimesResult {
     const coordinates = new Coordinates(latitude, longitude);
     const params = getCalculationParams(methodKey);
+    // Only the Asr calculation depends on the madhab; everything else is shared.
+    params.madhab = madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
     const prayerTimes = new PrayerTimes(coordinates, date, params);
 
     const prayers: PrayerTimeEntry[] = [

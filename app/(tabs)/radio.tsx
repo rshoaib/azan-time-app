@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Pressable,
   ScrollView,
@@ -8,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Theme, ThemeColors } from '@/constants/theme';
@@ -25,6 +27,7 @@ import { useNavigation } from 'expo-router';
 export default function RadioScreen() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const insets = useSafeAreaInsets();
   const [activeCategory, setActiveCategory] = useState<RadioCategory>('featured');
   const [currentStation, setCurrentStation] = useState<RadioStation | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -187,7 +190,7 @@ export default function RadioScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={[styles.header, { paddingTop: insets.top + Theme.spacing.smd }]}>
           <Text style={styles.title}>📖 Quran Tilawat</Text>
           <Text style={styles.subtitle}>Quran recitations, anytime</Text>
         </LinearGradient>
@@ -245,9 +248,7 @@ export default function RadioScreen() {
                 >
                   <View style={styles.mainPlayCircle}>
                     {isLoading ? (
-                      <Animated.View style={{ opacity: pulseAnim }}>
-                        <FontAwesome name="spinner" size={24} color="#FFFFFF" />
-                      </Animated.View>
+                      <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : isPlaying ? (
                       <FontAwesome name="stop" size={20} color="#FFFFFF" />
                     ) : (

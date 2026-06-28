@@ -24,6 +24,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TrackerPrayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 const TRACKER_PRAYERS: TrackerPrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
@@ -43,6 +44,7 @@ const statusLabel: Record<string, string> = {
 export default function TrackerScreen() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const insets = useSafeAreaInsets();
   const [today, setToday] = useState(new Date());
   const [dayLog, setDayLog] = useState<DayLog>({ fajr: null, dhuhr: null, asr: null, maghrib: null, isha: null });
   const [weekLog, setWeekLog] = useState<{ date: Date; log: DayLog }[]>([]);
@@ -107,7 +109,7 @@ export default function TrackerScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={[styles.header, { paddingTop: insets.top + Theme.spacing.smd }]}>
           <Text style={styles.title}>📊 Prayer Tracker</Text>
           <Text style={styles.subtitle}>Track your daily prayers</Text>
         </LinearGradient>

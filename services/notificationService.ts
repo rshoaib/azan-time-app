@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
-import { getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
+import { getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getMadhab, getSavedLocation } from './storageService';
 import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
@@ -202,6 +202,7 @@ export async function schedulePrayerNotifications(
     // Schedule notifications for today + the next 2 days (3 days total)
     const loc = await getSavedLocation();
     const method = await getCalculationMethod();
+    const madhab = await getMadhab();
 
     const allPrayers: PrayerTimeEntry[] = [...prayers];
 
@@ -210,7 +211,7 @@ export async function schedulePrayerNotifications(
         for (let dayOffset = 1; dayOffset <= 2; dayOffset++) {
             const futureDate = new Date();
             futureDate.setDate(futureDate.getDate() + dayOffset);
-            const futureTimes = getPrayerTimes(loc.latitude, loc.longitude, futureDate, method);
+            const futureTimes = getPrayerTimes(loc.latitude, loc.longitude, futureDate, method, madhab);
             allPrayers.push(...futureTimes.prayers);
         }
     }

@@ -8,6 +8,7 @@ import {
     formatTime,
     getPrayerTimes,
     getTimeRemaining,
+    MadhabKey,
     PrayerTimeEntry,
     PrayerTimesResult
 } from '@/services/prayerService';
@@ -17,6 +18,7 @@ import {
     getAdvanceMinutes,
     getCalculationMethod,
     getEnabledPrayers,
+    getMadhab,
     getSavedLocation,
     setSavedLocation,
 } from '@/services/storageService';
@@ -38,6 +40,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -45,6 +48,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const insets = useSafeAreaInsets();
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
   const [location, setLocation] = useState<LocationResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +56,7 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState('');
   const [calcMethod, setCalcMethod] = useState('MuslimWorldLeague');
+  const [madhab, setMadhab] = useState<MadhabKey>('standard');
   const isLoadingRef = useRef(false);
 
   // Render prayer times for a location and (re)schedule its notifications.
@@ -62,7 +67,9 @@ export default function HomeScreen() {
 
     const method = await getCalculationMethod();
     setCalcMethod(method);
-    const times = getPrayerTimes(loc.latitude, loc.longitude, e2eNow(), method);
+    const asrMadhab = await getMadhab();
+    setMadhab(asrMadhab);
+    const times = getPrayerTimes(loc.latitude, loc.longitude, e2eNow(), method, asrMadhab);
     setPrayerTimes(times);
 
     // Schedule notifications (dynamically imported to avoid Expo Go errors)
@@ -224,7 +231,7 @@ export default function HomeScreen() {
     const label = i === 0 ? 'Today' : dayNames[d.getDay()];
     if (!location) return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 };
     try {
-      const times = getPrayerTimes(location.latitude, location.longitude, d, calcMethod);
+      const times = getPrayerTimes(location.latitude, location.longitude, d, calcMethod, madhab);
       const fajr = times.prayers.find(p => p.name === 'fajr');
       const maghrib = times.prayers.find(p => p.name === 'maghrib');
       const fajrMin = fajr ? fajr.time.getHours() * 60 + fajr.time.getMinutes() : 0;
@@ -258,11 +265,11 @@ export default function HomeScreen() {
         {/* Header */}
         <LinearGradient
           colors={[c.background, c.surfaceDark]}
-          style={styles.header}
+          style={[styles.header, { paddingTop: insets.top + Theme.spacing.lg }]}
         >
           <Pressable
             testID="home-open-settings"
-            style={styles.settingsButton}
+            style={[styles.settingsButton, { top: insets.top + Theme.spacing.lg }]}
             onPress={() => router.push('/(tabs)/settings')}
             hitSlop={10}
             accessibilityRole="button"
@@ -339,7 +346,9 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.countdownPill}>
                 <FontAwesome name="clock-o" size={14} color={c.goldLight} />
-                <Text style={styles.countdownText}>{countdown}</Text>
+                <Text style={styles.countdownText}>
+                  {countdown || getTimeRemaining(prayerTimes.nextPrayerTime)}
+                </Text>
               </View>
             </LinearGradient>
           </View>
@@ -402,8 +411,14 @@ export default function HomeScreen() {
                   <View style={[styles.comparisonBar, styles.comparisonBarFajr, { height: day.fajrHeight }]} />
                   <View style={[styles.comparisonBar, styles.comparisonBarMaghrib, { height: day.maghribHeight }]} />
                 </View>
-                <Text style={styles.comparisonTime}>{day.fajrStr}</Text>
-                <Text style={styles.comparisonTime}>{day.maghribStr}</Text>
+                <View style={styles.comparisonTimeRow}>
+                  <View style={[styles.comparisonTimeDot, { backgroundColor: c.fajr }]} />
+                  <Text style={styles.comparisonTime}>{day.fajrStr}</Text>
+                </View>
+                <View style={styles.comparisonTimeRow}>
+                  <View style={[styles.comparisonTimeDot, { backgroundColor: c.maghrib }]} />
+                  <Text style={styles.comparisonTime}>{day.maghribStr}</Text>
+                </View>
               </View>
             ))}
           </View>
@@ -803,6 +818,8 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   comparisonBar: { width: 8, borderRadius: 4 },
   comparisonBarFajr: { backgroundColor: c.fajr },
   comparisonBarMaghrib: { backgroundColor: c.maghrib },
+  comparisonTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  comparisonTimeDot: { width: 5, height: 5, borderRadius: 2.5 },
   comparisonTime: { fontSize: Theme.fontSize.xs, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
   comparisonLegend: { flexDirection: 'row', justifyContent: 'center', gap: Theme.spacing.mlg, marginTop: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PrayerName } from './prayerService';
+import { MadhabKey, PrayerName } from './prayerService';
 
 const KEYS = {
     CALCULATION_METHOD: 'calculation_method',
+    ASR_MADHAB: 'asr_madhab',
     NOTIFICATION_ENABLED: 'notification_enabled',
     ENABLED_PRAYERS: 'enabled_prayers',
     ADVANCE_MINUTES: 'advance_minutes',
@@ -39,6 +40,17 @@ export async function getCalculationMethod(): Promise<string> {
 
 export async function setCalculationMethod(method: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.CALCULATION_METHOD, method);
+}
+
+// Asr juristic method — 'standard' (Shafiʿi/Maliki/Hanbali) or 'hanafi'.
+// Defaults to 'standard' to match the app's historical behaviour.
+export async function getMadhab(): Promise<MadhabKey> {
+    const value = await AsyncStorage.getItem(KEYS.ASR_MADHAB);
+    return value === 'hanafi' ? 'hanafi' : 'standard';
+}
+
+export async function setMadhab(madhab: MadhabKey): Promise<void> {
+    await AsyncStorage.setItem(KEYS.ASR_MADHAB, madhab);
 }
 
 // Theme mode — 'light' | 'dark' | 'system' (defaults to following the OS)
