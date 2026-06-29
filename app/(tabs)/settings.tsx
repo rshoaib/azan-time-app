@@ -40,7 +40,7 @@ import {
   setAzanShortEnabled,
   ThemeMode,
 } from '@/services/storageService';
-import { stopAzan, isAzanPlaying, playAzan } from '@/services/audioService';
+import { stopAzan, isAzanPlaying, playAzan, previewReciter } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
@@ -83,13 +83,20 @@ export default function SettingsScreen() {
   const [locationMsg, setLocationMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
   const [azanPlaying, setAzanPlaying] = useState(false);
+  // Which voice is currently being auditioned in the picker (null = none).
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
 
   useEffect(() => { loadSettings(); }, []);
 
   // Poll azan playback state — drives the Preview button's play/stop label, and
   // lets an E2E test assert playback after firing a test notification.
   useEffect(() => {
-    const id = setInterval(() => setAzanPlaying(isAzanPlaying()), 300);
+    const id = setInterval(() => {
+      const playing = isAzanPlaying();
+      setAzanPlaying(playing);
+      // When a preview finishes on its own, drop the per-row "stop" affordance.
+      if (!playing) setPreviewingId(null);
+    }, 300);
     return () => clearInterval(id);
   }, []);
 
@@ -145,8 +152,22 @@ export default function SettingsScreen() {
     else await playAzan();
   };
   const handleReciterChange = async (id: string) => {
+    await stopAzan(); setPreviewingId(null);
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
     setUserProperty('azan_reciter', id);
+  };
+  // Stop any preview audio when the picker closes so it doesn't keep playing.
+  const closeReciterModal = () => {
+    stopAzan(); setPreviewingId(null); setShowReciterModal(false);
+  };
+  // Audition a specific voice without committing to it. Tapping the playing
+  // row again (or another row) stops/swaps the preview.
+  const handlePreviewVoice = async (id: string) => {
+    if (previewingId === id && isAzanPlaying()) {
+      await stopAzan(); setPreviewingId(null);
+    } else {
+      setPreviewingId(id); await previewReciter(id);
+    }
   };
 
   // Explicit, user-driven location refresh. Unlike the home screen's throttled
@@ -489,34 +510,48 @@ export default function SettingsScreen() {
       </Modal>
 
       {/* Reciter Modal */}
-      <Modal visible={showReciterModal} animationType="slide" transparent onRequestClose={() => setShowReciterModal(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowReciterModal(false)}>
+      <Modal visible={showReciterModal} animationType="slide" transparent onRequestClose={closeReciterModal}>
+        <Pressable style={styles.modalOverlay} onPress={closeReciterModal}>
           <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Azan Reciter</Text>
-              <Pressable onPress={() => setShowReciterModal(false)} style={styles.modalClose}>
+              <Text style={styles.modalTitle}>Azan Voice</Text>
+              <Pressable onPress={closeReciterModal} style={styles.modalClose}>
                 <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
             </View>
             <FlatList
               data={RECITERS}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={[styles.modalItem, item.id === reciter && styles.modalItemActive]}
-                  onPress={() => handleReciterChange(item.id)}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.modalItemText, item.id === reciter && styles.modalItemTextActive]}>
-                      {item.name}
-                    </Text>
-                    <Text style={{ fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 2 }}>
-                      {item.location}
-                    </Text>
-                  </View>
-                  {item.id === reciter && <FontAwesome name="check" size={16} color={c.gold} />}
-                </Pressable>
-              )}
+              renderItem={({ item }) => {
+                const isPreviewing = previewingId === item.id && azanPlaying;
+                return (
+                  <Pressable
+                    testID={`reciter-${item.id}`}
+                    style={[styles.modalItem, item.id === reciter && styles.modalItemActive]}
+                    onPress={() => handleReciterChange(item.id)}
+                  >
+                    {/* Preview button — auditions the voice without selecting it. */}
+                    <Pressable
+                      testID={`reciter-preview-${item.id}`}
+                      onPress={() => handlePreviewVoice(item.id)}
+                      hitSlop={8}
+                      style={styles.reciterPreviewBtn}
+                      accessibilityLabel={isPreviewing ? `Stop ${item.name} preview` : `Preview ${item.name}`}
+                    >
+                      <FontAwesome name={isPreviewing ? 'stop' : 'play'} size={14} color={c.teal} />
+                    </Pressable>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalItemText, item.id === reciter && styles.modalItemTextActive]}>
+                        {item.name}
+                      </Text>
+                      <Text style={{ fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 2 }}>
+                        {item.location}
+                      </Text>
+                    </View>
+                    {item.id === reciter && <FontAwesome name="check" size={16} color={c.gold} />}
+                  </Pressable>
+                );
+              }}
             />
           </LinearGradient>
         </Pressable>
@@ -689,6 +724,15 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   modalItemActive: {
     backgroundColor: c.gold + '10',
+  },
+  reciterPreviewBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.teal + '1A',
+    marginRight: Theme.spacing.md,
   },
   modalItemText: {
     fontSize: Theme.fontSize.md,
