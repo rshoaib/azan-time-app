@@ -8,7 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { LogBox } from 'react-native';
-import { initializeAds } from '@/services/adsService';
+import { initializeAds, preloadInterstitial } from '@/services/adsService';
 import { bootstrapAnalytics, logScreenView } from '@/services/analyticsService';
 import { bootstrapCrashlytics, recordNonFatal } from '@/services/crashlyticsService';
 import { bootstrapPerformance } from '@/services/performanceService';
@@ -91,7 +91,9 @@ export default function RootLayout() {
   // runs. Still fire-and-forget, idempotent, and a no-op in Expo Go / web.
   useEffect(() => {
     const timer = setTimeout(() => {
-      initializeAds();
+      // Once the SDK + consent are ready, warm up an interstitial so the first
+      // eligible transition can show one instantly (still off the launch path).
+      initializeAds().then(preloadInterstitial);
     }, 1500);
     return () => clearTimeout(timer);
   }, []);

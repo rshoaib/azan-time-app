@@ -1,4 +1,6 @@
 import AdBanner from '@/components/AdBanner';
+import { maybeShowInterstitial, preloadInterstitial } from '@/services/adsService';
+import { isAzanPlaying } from '@/services/audioService';
 import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
@@ -120,9 +122,20 @@ export default function HomeScreen() {
 
   // Load prayer times on mount AND whenever the tab comes into focus
   // (useFocusEffect fires on mount too, so no separate useEffect needed)
+  // Show a frequency-capped interstitial when the user RETURNS to Home from
+  // another tab — a natural transition. Never on the first focus (i.e. never on
+  // launch) and never while an azan is playing; the service enforces the ≥4-min
+  // / ≤5-per-day caps. This is the interstitial surface for impression volume.
+  const hasFocusedOnceRef = useRef(false);
   useFocusEffect(
     useCallback(() => {
       loadPrayerTimes();
+      if (hasFocusedOnceRef.current) {
+        maybeShowInterstitial({ isBusy: isAzanPlaying });
+      } else {
+        hasFocusedOnceRef.current = true;
+        preloadInterstitial(); // warm one up for the first eligible return
+      }
     }, [loadPrayerTimes])
   );
 
@@ -368,9 +381,6 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Ad Banner */}
-        <AdBanner style={{ marginTop: 16, marginHorizontal: 24 }} />
-
         {/* Daily Ayah Card */}
         <View style={styles.ayahWrapper}>
           <LinearGradient
@@ -436,6 +446,11 @@ export default function HomeScreen() {
 
         <View style={{ height: 30 }} />
       </ScrollView>
+
+      {/* Anchored adaptive banner — pinned above the tab bar so it stays
+          visible while the user reads their prayer times (steady, viewable
+          impressions), without overlapping the scrolling content. */}
+      <AdBanner style={styles.anchoredBanner} />
     </View>
   );
 }
@@ -507,6 +522,14 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 120,
+  },
+  anchoredBanner: {
+    // Pinned footer strip above the tab bar; hairline separator keeps it
+    // visually distinct from content so it never reads as part of the UI.
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: c.tabBarBorder,
+    backgroundColor: c.background,
+    paddingVertical: 2,
   },
 
   // Loading

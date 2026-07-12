@@ -33,6 +33,15 @@ export const AD_UNIT_IDS = {
     android: 'ca-app-pub-3166995085202346/5942887541',
     ios: 'ca-app-pub-3166995085202346/8822195777',
   } as AdUnitMap,
+  // Interstitial — PLACEHOLDER until an "Interstitial" ad unit is created in
+  // AdMob (publisher pub-3166995085202346). Paste the real unit IDs here and it
+  // activates in production automatically (see hasRealInterstitialUnit). Until
+  // then it is a NO-OP in release builds; dev/emulator still exercises the full
+  // flow through Google's official test interstitial ID.
+  interstitialMain: {
+    android: 'ca-app-pub-3166995085202346/PLACEHOLDER_INTERSTITIAL',
+    ios: 'ca-app-pub-3166995085202346/PLACEHOLDER_INTERSTITIAL',
+  } as AdUnitMap,
 } as const;
 
 export type AdUnitKey = keyof typeof AD_UNIT_IDS;
@@ -182,4 +191,124 @@ export function initializeAds(): Promise<void> {
     }
   })();
   return initPromise;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Interstitial (frequency-capped, policy-conservative)
+// ──────────────────────────────────────────────────────────────────────────────
+//
+// Shown only at natural transitions (returning to the Home tab) — never on
+// launch, never during azan playback, and never more than the caps below. This
+// keeps a steady but respectful impression stream without hurting retention or
+// the app's rating. All state is in-memory and resets on cold start (which errs
+// toward FEWER ads).
+
+const INTERSTITIAL_MIN_INTERVAL_MS = 4 * 60 * 1000; // ≥ 4 min between shows
+const INTERSTITIAL_MAX_PER_DAY = 5;
+
+let interstitialAd: any = null;
+let interstitialLoaded = false;
+let interstitialLoading = false;
+let lastInterstitialShownAt = 0;
+let interstitialShownToday = 0;
+let interstitialDayStamp = ''; // YYYY-MM-DD, for the daily-cap rollover
+
+/** True once a real (non-placeholder) interstitial unit ID has been configured. */
+function hasRealInterstitialUnit(): boolean {
+  return !AD_UNIT_IDS.interstitialMain.android.includes('PLACEHOLDER');
+}
+
+/**
+ * Resolve the interstitial unit ID. Uses Google's test ID in dev; in a release
+ * build returns null (no-op) until a real unit ID is pasted into AD_UNIT_IDS —
+ * so we never fire invalid requests against a placeholder in production.
+ */
+function interstitialUnitId(): string | null {
+  const ads = loadAdsModule();
+  if (!ads) return null;
+  if (__DEV__ && ads.TestIds?.INTERSTITIAL) return ads.TestIds.INTERSTITIAL;
+  if (!hasRealInterstitialUnit()) return null;
+  const map = AD_UNIT_IDS.interstitialMain;
+  return Platform.select({ android: map.android, ios: map.ios, default: map.android })!;
+}
+
+/**
+ * Preload an interstitial so a later show() is instant. Safe/idempotent; no-ops
+ * until the SDK + consent are ready and a usable unit ID exists. Auto-reloads
+ * the next one after each close.
+ */
+export function preloadInterstitial(): void {
+  const ads = loadAdsModule();
+  if (!ads || !consentResolved) return;
+  if (interstitialLoaded || interstitialLoading) return;
+  const unitId = interstitialUnitId();
+  if (!unitId) return;
+
+  const { InterstitialAd, AdEventType } = ads;
+  if (!InterstitialAd || !AdEventType) return;
+
+  try {
+    interstitialLoading = true;
+    const ad = InterstitialAd.createForAdRequest(unitId, {
+      requestNonPersonalizedAdsOnly: getRequestNonPersonalizedAdsOnly(),
+    });
+    ad.addAdEventListener(AdEventType.LOADED, () => {
+      interstitialLoaded = true;
+      interstitialLoading = false;
+    });
+    ad.addAdEventListener(AdEventType.ERROR, (err: any) => {
+      interstitialLoading = false;
+      interstitialLoaded = false;
+      interstitialAd = null;
+      console.warn('[ads] interstitial load error:', err?.message ?? err);
+    });
+    ad.addAdEventListener(AdEventType.CLOSED, () => {
+      interstitialLoaded = false;
+      interstitialAd = null;
+      preloadInterstitial(); // warm the next one for later
+    });
+    interstitialAd = ad;
+    ad.load();
+  } catch (err) {
+    interstitialLoading = false;
+    console.warn('[ads] preloadInterstitial failed:', err);
+  }
+}
+
+/**
+ * Show a frequency-capped interstitial if one is ready and all guards pass.
+ * Returns true only if an ad was actually shown. Caller supplies an optional
+ * `isBusy` predicate (e.g. azan playing) to suppress at sensitive moments.
+ */
+export function maybeShowInterstitial(opts?: { isBusy?: () => boolean }): boolean {
+  const ads = loadAdsModule();
+  if (!ads) return false;
+
+  const now = Date.now();
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (day !== interstitialDayStamp) {
+    interstitialDayStamp = day;
+    interstitialShownToday = 0;
+  }
+
+  if (interstitialShownToday >= INTERSTITIAL_MAX_PER_DAY) return false;
+  if (now - lastInterstitialShownAt < INTERSTITIAL_MIN_INTERVAL_MS) return false;
+  if (opts?.isBusy?.()) return false;
+
+  if (!interstitialLoaded || !interstitialAd) {
+    preloadInterstitial(); // not ready yet — warm one for next time
+    return false;
+  }
+
+  try {
+    interstitialAd.show();
+    lastInterstitialShownAt = now;
+    interstitialShownToday += 1;
+    return true;
+  } catch (err) {
+    console.warn('[ads] interstitial show failed:', err);
+    interstitialLoaded = false;
+    interstitialAd = null;
+    return false;
+  }
 }
