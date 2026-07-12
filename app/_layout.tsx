@@ -82,10 +82,18 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  // Initialize the AdMob SDK + UMP consent once at startup. Fire-and-forget
-  // and idempotent; safe in Expo Go / web (silently no-ops there).
+  // Initialize the AdMob SDK + UMP consent — DEFERRED off the launch critical
+  // path. `initializeAds()` presents the UMP consent form (a native Activity)
+  // and runs heavy native SDK init; doing that during cold start, before the
+  // root window has gained focus, caused startup ANRs ("Input dispatching timed
+  // out (No focused window)") and slower cold starts. Delaying past first paint
+  // lets the first screen render and the window gain focus before any ad work
+  // runs. Still fire-and-forget, idempotent, and a no-op in Expo Go / web.
   useEffect(() => {
-    initializeAds();
+    const timer = setTimeout(() => {
+      initializeAds();
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Bootstrap Firebase Analytics — records the install date on first run and
