@@ -33,13 +33,13 @@ export const AD_UNIT_IDS = {
     android: 'ca-app-pub-3166995085202346/5942887541',
     ios: 'ca-app-pub-3166995085202346/8822195777',
   } as AdUnitMap,
-  // Interstitial — PLACEHOLDER until an "Interstitial" ad unit is created in
-  // AdMob (publisher pub-3166995085202346). Paste the real unit IDs here and it
-  // activates in production automatically (see hasRealInterstitialUnit). Until
-  // then it is a NO-OP in release builds; dev/emulator still exercises the full
-  // flow through Google's official test interstitial ID.
+  // Interstitial. Android unit is live ("Interstitial", created in AdMob under
+  // publisher pub-3166995085202346, 2026-07). iOS unit is still a PLACEHOLDER —
+  // the per-platform guard in hasRealInterstitialUnit() keeps iOS a no-op until
+  // a real iOS unit is created (iOS isn't shipped yet). Dev/emulator always uses
+  // Google's official test interstitial ID regardless of platform.
   interstitialMain: {
-    android: 'ca-app-pub-3166995085202346/PLACEHOLDER_INTERSTITIAL',
+    android: 'ca-app-pub-3166995085202346/1260065927',
     ios: 'ca-app-pub-3166995085202346/PLACEHOLDER_INTERSTITIAL',
   } as AdUnitMap,
 } as const;
@@ -213,9 +213,15 @@ let lastInterstitialShownAt = 0;
 let interstitialShownToday = 0;
 let interstitialDayStamp = ''; // YYYY-MM-DD, for the daily-cap rollover
 
-/** True once a real (non-placeholder) interstitial unit ID has been configured. */
+/**
+ * True once a real (non-placeholder) interstitial unit ID exists for the CURRENT
+ * platform. Android is live; iOS is still a placeholder, so this stays false on
+ * iOS and keeps the interstitial a no-op there until an iOS unit is created.
+ */
 function hasRealInterstitialUnit(): boolean {
-  return !AD_UNIT_IDS.interstitialMain.android.includes('PLACEHOLDER');
+  const map = AD_UNIT_IDS.interstitialMain;
+  const id = Platform.select({ android: map.android, ios: map.ios, default: map.android })!;
+  return !id.includes('PLACEHOLDER');
 }
 
 /**
