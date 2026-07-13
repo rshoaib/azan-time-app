@@ -188,7 +188,7 @@ You don't need followers. You need 2 things: the right hashtag, the right time.
 
 > I built this because I kept missing Fajr.
 >
-> Azan Time — free prayer app. Accurate times, real adhan, offline Qibla, streak tracker. No ads, no subscription.
+> Azan Time — free prayer app. Accurate times, real adhan, offline Qibla, streak tracker. No subscription, just one small banner.
 >
 > [1-2 screenshots]
 >

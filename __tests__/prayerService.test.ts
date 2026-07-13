@@ -63,6 +63,26 @@ describe('prayerService', () => {
       }
     });
 
+    it('defaults to the Standard (Shafi) madhab for Asr', () => {
+      const a = getPrayerTimes(lat, lng, testDate, 'Karachi');
+      const b = getPrayerTimes(lat, lng, testDate, 'Karachi', 'standard');
+      const asrA = a.prayers.find((p) => p.name === 'asr')!.time.getTime();
+      const asrB = b.prayers.find((p) => p.name === 'asr')!.time.getTime();
+      expect(asrA).toBe(asrB);
+    });
+
+    it('Hanafi madhab yields a later Asr than Standard', () => {
+      const standard = getPrayerTimes(lat, lng, testDate, 'Karachi', 'standard');
+      const hanafi = getPrayerTimes(lat, lng, testDate, 'Karachi', 'hanafi');
+      const asrStd = standard.prayers.find((p) => p.name === 'asr')!.time.getTime();
+      const asrHanafi = hanafi.prayers.find((p) => p.name === 'asr')!.time.getTime();
+      expect(asrHanafi).toBeGreaterThan(asrStd);
+      // Only Asr changes — Fajr/Maghrib are identical between madhabs
+      const fajrStd = standard.prayers.find((p) => p.name === 'fajr')!.time.getTime();
+      const fajrHanafi = hanafi.prayers.find((p) => p.name === 'fajr')!.time.getTime();
+      expect(fajrStd).toBe(fajrHanafi);
+    });
+
     it('falls back to MuslimWorldLeague for unknown method', () => {
       const fallback = getPrayerTimes(lat, lng, testDate, 'SomeUnknownMethod');
       const mwl = getPrayerTimes(lat, lng, testDate, 'MuslimWorldLeague');

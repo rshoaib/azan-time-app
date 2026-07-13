@@ -24,54 +24,67 @@ export interface Reciter {
     // `audioSource` is the result of a `require()` statement.
     // Typed as `any` because React Native's asset require returns a number.
     audioSource: any;
+    // Bare filename for the Android notification channel sound (background
+    // playback). Must match an entry in app.json expo-notifications.sounds.
+    androidSound: string;
 }
 
-// NOTE: replace the `require` paths with real files once you add them to
-// assets/audio/. For now only the default `azan.mp3` exists.
+// IMPORTANT: filenames use underscores, NOT hyphens. On Android these files are
+// bundled into res/raw (via app.json expo-notifications.sounds) so the OS can
+// play them for background notifications, and res/raw names cannot contain
+// hyphens — a hyphen silently breaks packaging (see azan_fajr.mp3 history).
+//
+// The `androidSound` field is the bare filename the Android notification channel
+// references; it must match an entry in app.json's expo-notifications.sounds.
 export const RECITERS: Reciter[] = [
     {
         id: 'default',
-        name: 'Default',
-        location: 'Classic adhan',
+        name: 'Default Adhan',
+        location: 'Classic',
         description: 'The built-in azan, bundled with the app',
         audioSource: require('../assets/audio/azan.mp3'),
+        androidSound: 'azan.mp3',
     },
-    // Uncomment as you add each audio file:
-    // {
-    //     id: 'makkah',
-    //     name: 'Sheikh Ali Ahmad Mulla',
-    //     location: 'Masjid al-Haram, Makkah',
-    //     description: 'The iconic adhan from the Great Mosque',
-    //     audioSource: require('../assets/audio/azan-makkah.mp3'),
-    // },
-    // {
-    //     id: 'madinah',
-    //     name: 'Sheikh Essam Bukhari',
-    //     location: "Masjid an-Nabawi, Madinah",
-    //     description: "Adhan from the Prophet's Mosque",
-    //     audioSource: require('../assets/audio/azan-madinah.mp3'),
-    // },
-    // {
-    //     id: 'aqsa',
-    //     name: 'Masjid al-Aqsa',
-    //     location: 'Jerusalem',
-    //     description: 'Adhan from the third holiest mosque',
-    //     audioSource: require('../assets/audio/azan-aqsa.mp3'),
-    // },
-    // {
-    //     id: 'turkish',
-    //     name: 'Turkish Adhan',
-    //     location: 'Istanbul',
-    //     description: 'Ottoman-style melodic adhan',
-    //     audioSource: require('../assets/audio/azan-turkish.mp3'),
-    // },
-    // {
-    //     id: 'fajr',
-    //     name: 'Fajr Adhan',
-    //     location: 'With As-salatu khayrun min an-nawm',
-    //     description: 'Traditional Fajr adhan with extra line',
-    //     audioSource: require('../assets/audio/azan-fajr.mp3'),
-    // },
+    {
+        id: 'makkah',
+        name: 'Makkah — Sheikh Ali Mulla',
+        location: 'Masjid al-Haram, Makkah',
+        description: 'The iconic adhan from the Grand Mosque',
+        audioSource: require('../assets/audio/azan_makkah.mp3'),
+        androidSound: 'azan_makkah.mp3',
+    },
+    {
+        id: 'madinah',
+        name: 'Madinah',
+        location: "Masjid an-Nabawi, Madinah",
+        description: "Adhan from the Prophet's Mosque",
+        audioSource: require('../assets/audio/azan_madinah.mp3'),
+        androidSound: 'azan_madinah.mp3',
+    },
+    {
+        id: 'aqsa',
+        name: 'Al-Aqsa',
+        location: 'Jerusalem',
+        description: 'Adhan from the third holiest mosque',
+        audioSource: require('../assets/audio/azan_aqsa.mp3'),
+        androidSound: 'azan_aqsa.mp3',
+    },
+    {
+        id: 'mishary',
+        name: 'Mishary Rashid Alafasy',
+        location: 'Kuwait',
+        description: 'Melodic adhan by the renowned reciter',
+        audioSource: require('../assets/audio/azan_mishary.mp3'),
+        androidSound: 'azan_mishary.mp3',
+    },
+    {
+        id: 'basit',
+        name: 'Abdul Basit Abd us-Samad',
+        location: 'Egypt',
+        description: 'Classic adhan in the warm Egyptian style',
+        audioSource: require('../assets/audio/azan_basit.mp3'),
+        androidSound: 'azan_basit.mp3',
+    },
 ];
 
 // Short adhan clip — a brief takbir, used when the "Short Azan" setting is on.
@@ -91,12 +104,12 @@ export function getReciter(id: string): Reciter {
  * don't have, so it needs a different recording.
  *
  * To enable Fajr-specific azan:
- *   1. Drop `azan-fajr.mp3` into `assets/audio/`
- *   2. Add `./assets/audio/azan-fajr.mp3` to `expo.plugins[expo-notifications].sounds` in app.json
+ *   1. Drop `azan_fajr.mp3` into `assets/audio/`
+ *   2. Add `./assets/audio/azan_fajr.mp3` to `expo.plugins[expo-notifications].sounds` in app.json
  *   3. Uncomment the `fajr` line below
  *   4. (Android background) Uncomment the `prayer-azan-fajr` channel block in services/notificationService.ts
  */
 import type { PrayerName } from '../services/prayerService';
 export const PRAYER_SPECIFIC_AUDIO: Partial<Record<PrayerName, any>> = {
-    // fajr: require('../assets/audio/azan-fajr.mp3'),
+    fajr: require('../assets/audio/azan_fajr.mp3'),
 };

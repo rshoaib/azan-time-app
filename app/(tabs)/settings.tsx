@@ -13,14 +13,17 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { Theme, ThemeColors, CALCULATION_METHODS, PRAYER_CONFIG } from '@/constants/theme';
 import { RECITERS } from '@/constants/reciters';
-import { PrayerName } from '@/services/prayerService';
+import { MadhabKey, PrayerName } from '@/services/prayerService';
 import {
   getCalculationMethod,
   setCalculationMethod,
+  getMadhab,
+  setMadhab,
   getNotificationEnabled,
   setNotificationEnabled,
   getEnabledPrayers,
@@ -37,7 +40,7 @@ import {
   setAzanShortEnabled,
   ThemeMode,
 } from '@/services/storageService';
-import { stopAzan, isAzanPlaying } from '@/services/audioService';
+import { stopAzan, isAzanPlaying, playAzan, previewReciter } from '@/services/audioService';
 import { getScheduledNotificationCount, fireTestNotification } from '@/services/notificationService';
 import { getCurrentLocation } from '@/services/locationService';
 import { setUserProperty } from '@/services/analyticsService';
@@ -53,8 +56,17 @@ const ADVANCE_OPTIONS = [
   { value: 30, label: '30 minutes before' },
 ];
 
+// The Azan Sound section is one mutually-exclusive choice, not two toggles.
+const AZAN_MODES = [
+  { key: 'full' as const, emoji: '🕌', label: 'Full adhan', desc: 'The complete call to prayer' },
+  { key: 'short' as const, emoji: '⏱️', label: 'Short adhan', desc: 'A brief, shortened call' },
+  { key: 'silent' as const, emoji: '🔕', label: 'Silent', desc: 'Notification only, no sound' },
+];
+type AzanMode = (typeof AZAN_MODES)[number]['key'];
+
 export default function SettingsScreen() {
   const [method, setMethod] = useState('MuslimWorldLeague');
+  const [madhab, setMadhabState] = useState<MadhabKey>('standard');
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [enabledPrayers, setEnabledPrayersState] = useState<Record<PrayerName, boolean>>({
     fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true,
@@ -71,18 +83,26 @@ export default function SettingsScreen() {
   const [locationMsg, setLocationMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
   const [azanPlaying, setAzanPlaying] = useState(false);
+  // Which voice is currently being auditioned in the picker (null = none).
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
 
   useEffect(() => { loadSettings(); }, []);
 
-  // E2E: poll azan playback state so a test can assert it after firing a notification.
+  // Poll azan playback state — drives the Preview button's play/stop label, and
+  // lets an E2E test assert playback after firing a test notification.
   useEffect(() => {
-    if (!E2E) return;
-    const id = setInterval(() => setAzanPlaying(isAzanPlaying()), 300);
+    const id = setInterval(() => {
+      const playing = isAzanPlaying();
+      setAzanPlaying(playing);
+      // When a preview finishes on its own, drop the per-row "stop" affordance.
+      if (!playing) setPreviewingId(null);
+    }, 300);
     return () => clearInterval(id);
   }, []);
 
   const loadSettings = async () => {
     const m = await getCalculationMethod(); setMethod(m);
+    const md = await getMadhab(); setMadhabState(md);
     const n = await getNotificationEnabled(); setNotificationsOn(n);
     const e = await getEnabledPrayers(); setEnabledPrayersState(e);
     const a = await getAdvanceMinutes(); setAdvance(a);
@@ -98,6 +118,10 @@ export default function SettingsScreen() {
     setMethod(key); await setCalculationMethod(key); setShowMethodModal(false);
     setUserProperty('calculation_method', key);
   };
+  const handleMadhabChange = async (next: MadhabKey) => {
+    setMadhabState(next); await setMadhab(next);
+    setUserProperty('asr_madhab', next);
+  };
   const handleNotificationToggle = async (value: boolean) => {
     setNotificationsOn(value); await setNotificationEnabled(value);
   };
@@ -108,16 +132,42 @@ export default function SettingsScreen() {
   const handleAdvanceChange = async (value: number) => {
     setAdvance(value); await setAdvanceMinutes(value); setShowAdvanceModal(false);
   };
-  const handleAzanSoundToggle = async (value: boolean) => {
-    setAzanSoundOn(value); await setAzanSoundEnabled(value);
-    if (!value) await stopAzan();
+  // One 3-way choice (full / short / silent) mapped onto the two underlying flags
+  // the audio + notification services already read — no service changes needed.
+  const handleAzanModeChange = async (mode: AzanMode) => {
+    if (mode === 'silent') {
+      setAzanSoundOn(false); await setAzanSoundEnabled(false);
+      await stopAzan();
+    } else {
+      setAzanSoundOn(true); await setAzanSoundEnabled(true);
+      const short = mode === 'short';
+      setAzanShortOn(short); await setAzanShortEnabled(short);
+    }
+    setUserProperty('azan_mode', mode);
   };
-  const handleAzanShortToggle = async (value: boolean) => {
-    setAzanShortOn(value); await setAzanShortEnabled(value);
+  // Let users hear the selected adhan on demand. playAzan() honors the current
+  // full/short choice; tap again (or let it finish) to stop.
+  const handleAzanPreview = async () => {
+    if (isAzanPlaying()) await stopAzan();
+    else await playAzan();
   };
   const handleReciterChange = async (id: string) => {
+    await stopAzan(); setPreviewingId(null);
     setReciter(id); await setAzanReciter(id); setShowReciterModal(false);
     setUserProperty('azan_reciter', id);
+  };
+  // Stop any preview audio when the picker closes so it doesn't keep playing.
+  const closeReciterModal = () => {
+    stopAzan(); setPreviewingId(null); setShowReciterModal(false);
+  };
+  // Audition a specific voice without committing to it. Tapping the playing
+  // row again (or another row) stops/swaps the preview.
+  const handlePreviewVoice = async (id: string) => {
+    if (previewingId === id && isAzanPlaying()) {
+      await stopAzan(); setPreviewingId(null);
+    } else {
+      setPreviewingId(id); await previewReciter(id);
+    }
   };
 
   // Explicit, user-driven location refresh. Unlike the home screen's throttled
@@ -143,10 +193,12 @@ export default function SettingsScreen() {
 
   const { mode: themeMode, setMode: setThemeModePref, colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const insets = useSafeAreaInsets();
 
   const currentMethodLabel = CALCULATION_METHODS.find((m) => m.key === method)?.label || method;
   const currentAdvanceLabel = ADVANCE_OPTIONS.find((o) => o.value === advance)?.label || `${advance} min before`;
   const currentReciterLabel = RECITERS.find((r) => r.id === reciter)?.name || 'Default';
+  const azanMode: AzanMode = !azanSoundOn ? 'silent' : azanShortOn ? 'short' : 'full';
 
   return (
     <View style={styles.container}>
@@ -154,7 +206,7 @@ export default function SettingsScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={[styles.header, { paddingTop: insets.top + Theme.spacing.smd }]}>
           <Text style={styles.title}>⚙️ Settings</Text>
           <Text style={styles.subtitle}>Customize your Azan experience</Text>
         </LinearGradient>
@@ -169,6 +221,38 @@ export default function SettingsScreen() {
             value={currentMethodLabel}
             onPress={() => setShowMethodModal(true)}
           />
+          <SettingRow
+            testID="settings-asr-madhab"
+            emoji="🕓"
+            tint={c.asr}
+            label="Asr Calculation"
+            style={{ marginTop: Theme.spacing.sm }}
+            right={
+              <View style={styles.segment}>
+                {([
+                  { key: 'standard' as MadhabKey, label: 'Standard' },
+                  { key: 'hanafi' as MadhabKey, label: 'Hanafi' },
+                ]).map((opt) => (
+                  <Pressable
+                    key={opt.key}
+                    testID={`asr-madhab-${opt.key}`}
+                    onPress={() => handleMadhabChange(opt.key)}
+                    style={[styles.segmentBtn, madhab === opt.key && styles.segmentBtnActive]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: madhab === opt.key }}
+                    accessibilityLabel={`${opt.label} Asr calculation`}
+                  >
+                    <Text style={[styles.segmentText, madhab === opt.key && styles.segmentTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            }
+          />
+          <Text style={styles.madhabHint}>
+            Hanafi calculates a later Asr (shadow twice the object's length). Standard suits the Shafiʿi, Maliki and Hanbali schools.
+          </Text>
         </View>
 
         {/* Appearance */}
@@ -262,49 +346,58 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Azan Sound */}
+        {/* Azan Sound — one 3-way choice (full / short / silent) instead of two toggles */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔊 AZAN SOUND</Text>
-          <SettingRow
-            emoji="🎵"
-            tint={c.isha}
-            label="Play Azan Audio"
-            value={azanSoundOn ? 'Plays when prayer time arrives' : 'Notification only'}
-            right={
-              <Switch
-                value={azanSoundOn}
-                onValueChange={handleAzanSoundToggle}
-                trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-                thumbColor={azanSoundOn ? c.gold : c.switchThumbOff}
-              />
-            }
-          />
-
-          {azanSoundOn && (
-            <SettingRow
-              emoji="⏱️"
-              tint={c.teal}
-              label="Short Azan"
-              value={azanShortOn ? 'Plays a brief adhan' : 'Plays the full adhan'}
-              style={{ marginTop: Theme.spacing.sm }}
-              right={
-                <Switch
-                  value={azanShortOn}
-                  onValueChange={handleAzanShortToggle}
-                  trackColor={{ false: c.textMuted + '40', true: c.gold + '50' }}
-                  thumbColor={azanShortOn ? c.gold : c.switchThumbOff}
+          <Text style={styles.sectionTitle}>🔊 WHEN IT'S TIME TO PRAY</Text>
+          {AZAN_MODES.map((m) => {
+            const selected = azanMode === m.key;
+            return (
+              <Pressable
+                key={m.key}
+                testID={`azan-mode-${m.key}`}
+                onPress={() => handleAzanModeChange(m.key)}
+                style={[styles.azanOption, selected && styles.azanOptionActive]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`${m.label}. ${m.desc}`}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={[styles.settingIcon, { backgroundColor: (selected ? c.gold : c.textMuted) + '18' }]}>
+                    <Text style={{ fontSize: Theme.fontSize.body }}>{m.emoji}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.settingLabel, selected && { color: c.goldText }]}>{m.label}</Text>
+                    <Text style={styles.settingValue}>{m.desc}</Text>
+                  </View>
+                </View>
+                <FontAwesome
+                  name={selected ? 'check-circle' : 'circle-o'}
+                  size={22}
+                  color={selected ? c.gold : c.textMuted + '70'}
                 />
-              }
-            />
+              </Pressable>
+            );
+          })}
+
+          {azanMode !== 'silent' && (
+            <Pressable
+              testID="azan-preview"
+              onPress={handleAzanPreview}
+              style={styles.azanPreview}
+              accessibilityRole="button"
+              accessibilityLabel={azanPlaying ? 'Stop preview' : 'Preview adhan'}
+            >
+              <FontAwesome name={azanPlaying ? 'stop' : 'play'} size={13} color={c.teal} />
+              <Text style={styles.azanPreviewText}>{azanPlaying ? 'Stop preview' : 'Preview adhan'}</Text>
+            </Pressable>
           )}
 
-          {azanSoundOn && RECITERS.length > 1 && (
+          {azanMode !== 'silent' && RECITERS.length > 1 && (
             <SettingRow
-              emoji="🕌"
+              emoji="🎙️"
               tint={c.gold}
-              label="Azan Reciter"
+              label="Adhan voice"
               value={currentReciterLabel}
-              style={{ marginTop: Theme.spacing.sm }}
               onPress={() => setShowReciterModal(true)}
             />
           )}
@@ -362,9 +455,9 @@ export default function SettingsScreen() {
       </ScrollView>
 
       {/* Calculation Method Modal */}
-      <Modal visible={showMethodModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
+      <Modal visible={showMethodModal} animationType="slide" transparent onRequestClose={() => setShowMethodModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowMethodModal(false)}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Calculation Method</Text>
               <Pressable onPress={() => setShowMethodModal(false)} style={styles.modalClose}>
@@ -387,13 +480,13 @@ export default function SettingsScreen() {
               )}
             />
           </LinearGradient>
-        </View>
+        </Pressable>
       </Modal>
 
       {/* Advance Time Modal */}
-      <Modal visible={showAdvanceModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
+      <Modal visible={showAdvanceModal} animationType="slide" transparent onRequestClose={() => setShowAdvanceModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowAdvanceModal(false)}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Notification Time</Text>
               <Pressable onPress={() => setShowAdvanceModal(false)} style={styles.modalClose}>
@@ -413,41 +506,55 @@ export default function SettingsScreen() {
               </Pressable>
             ))}
           </LinearGradient>
-        </View>
+        </Pressable>
       </Modal>
 
       {/* Reciter Modal */}
-      <Modal visible={showReciterModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent}>
+      <Modal visible={showReciterModal} animationType="slide" transparent onRequestClose={closeReciterModal}>
+        <Pressable style={styles.modalOverlay} onPress={closeReciterModal}>
+          <LinearGradient colors={[c.backgroundLight, c.background]} style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Azan Reciter</Text>
-              <Pressable onPress={() => setShowReciterModal(false)} style={styles.modalClose}>
+              <Text style={styles.modalTitle}>Azan Voice</Text>
+              <Pressable onPress={closeReciterModal} style={styles.modalClose}>
                 <FontAwesome name="times" size={20} color={c.textSecondary} />
               </Pressable>
             </View>
             <FlatList
               data={RECITERS}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={[styles.modalItem, item.id === reciter && styles.modalItemActive]}
-                  onPress={() => handleReciterChange(item.id)}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.modalItemText, item.id === reciter && styles.modalItemTextActive]}>
-                      {item.name}
-                    </Text>
-                    <Text style={{ fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 2 }}>
-                      {item.location}
-                    </Text>
-                  </View>
-                  {item.id === reciter && <FontAwesome name="check" size={16} color={c.gold} />}
-                </Pressable>
-              )}
+              renderItem={({ item }) => {
+                const isPreviewing = previewingId === item.id && azanPlaying;
+                return (
+                  <Pressable
+                    testID={`reciter-${item.id}`}
+                    style={[styles.modalItem, item.id === reciter && styles.modalItemActive]}
+                    onPress={() => handleReciterChange(item.id)}
+                  >
+                    {/* Preview button — auditions the voice without selecting it. */}
+                    <Pressable
+                      testID={`reciter-preview-${item.id}`}
+                      onPress={() => handlePreviewVoice(item.id)}
+                      hitSlop={8}
+                      style={styles.reciterPreviewBtn}
+                      accessibilityLabel={isPreviewing ? `Stop ${item.name} preview` : `Preview ${item.name}`}
+                    >
+                      <FontAwesome name={isPreviewing ? 'stop' : 'play'} size={14} color={c.teal} />
+                    </Pressable>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalItemText, item.id === reciter && styles.modalItemTextActive]}>
+                        {item.name}
+                      </Text>
+                      <Text style={{ fontSize: Theme.fontSize.xs, color: c.textMuted, marginTop: 2 }}>
+                        {item.location}
+                      </Text>
+                    </View>
+                    {item.id === reciter && <FontAwesome name="check" size={16} color={c.gold} />}
+                  </Pressable>
+                );
+              }}
             />
           </LinearGradient>
-        </View>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -488,6 +595,13 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: Theme.spacing.sm,
     paddingLeft: Theme.spacing.xs,
   },
+  madhabHint: {
+    fontSize: Theme.fontSize.xs,
+    color: c.textMuted,
+    marginTop: Theme.spacing.sm,
+    paddingLeft: Theme.spacing.xs,
+    lineHeight: 16,
+  },
 
   // Appearance segmented control
   segment: {
@@ -507,7 +621,10 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: Theme.fontWeight.semibold,
     color: c.textSecondary,
   },
-  segmentTextActive: { color: c.textPrimary },
+  // Fixed dark ink: the selected pill is always gold, so a theme-reactive
+  // textPrimary (near-white in dark mode) would fail contrast (~2.5:1). Dark
+  // ink on gold is ~5.9:1 in both light and dark. (M1)
+  segmentTextActive: { color: '#1A1D2E' },
 
   // Setting cards
   settingCard: {
@@ -608,6 +725,15 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   modalItemActive: {
     backgroundColor: c.gold + '10',
   },
+  reciterPreviewBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.teal + '1A',
+    marginRight: Theme.spacing.md,
+  },
   modalItemText: {
     fontSize: Theme.fontSize.md,
     color: c.textPrimary,
@@ -615,5 +741,43 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   modalItemTextActive: {
     color: c.gold,
     fontWeight: Theme.fontWeight.bold,
+  },
+
+  // Azan mode selector (full / short / silent)
+  azanOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: c.card,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: c.cardBorder,
+  },
+  azanOptionActive: {
+    backgroundColor: c.cardHighlight,
+    borderColor: c.gold + '50',
+    borderWidth: 1.5,
+  },
+  azanPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Theme.spacing.sm,
+    alignSelf: 'flex-start',
+    marginTop: Theme.spacing.xs,
+    marginBottom: Theme.spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: c.teal + '12',
+    borderWidth: 1,
+    borderColor: c.teal + '25',
+  },
+  azanPreviewText: {
+    fontSize: Theme.fontSize.sm,
+    color: c.teal,
+    fontWeight: Theme.fontWeight.semibold,
   },
 });

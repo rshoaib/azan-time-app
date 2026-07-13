@@ -1,7 +1,8 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
-import { getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getSavedLocation } from './storageService';
+import { getAzanReciter, getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getMadhab, getSavedLocation } from './storageService';
+import { RECITERS, getReciter } from '../constants/reciters';
 import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
@@ -124,14 +125,20 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
     // Android notification channels
     if (Platform.OS === 'android') {
-        // Channel WITH Azan sound (for prayer notifications when Azan is enabled)
-        await notif.setNotificationChannelAsync('prayer-azan', {
-            name: 'Prayer Times (Azan)',
-            description: 'Prayer time notifications with Azan sound',
-            importance: notif.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            sound: 'azan.mp3',
-        });
+        // One channel per reciter voice (background azan playback). The OS plays
+        // the channel's bundled sound when the app isn't in the foreground, so
+        // each selectable voice needs its own channel — Android channel sounds
+        // are fixed at creation time and can't be swapped later. Channel id is
+        // `prayer-azan-<reciterId>`; the sound is the reciter's bundled file.
+        for (const r of RECITERS) {
+            await notif.setNotificationChannelAsync(`prayer-azan-${r.id}`, {
+                name: `Prayer Times (${r.name})`,
+                description: `Prayer time notifications with the ${r.name} adhan`,
+                importance: notif.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+                sound: r.androidSound,
+            });
+        }
 
         // Channel with the SHORT azan (when "Short Azan" is enabled)
         await notif.setNotificationChannelAsync('prayer-azan-short', {
@@ -153,23 +160,23 @@ export async function requestNotificationPermission(): Promise<boolean> {
             // literally named "default" and throw "Custom sound not found".
         });
 
-        // Fajr-specific channel — enable once `azan-fajr.mp3` is bundled. Until
-        // then, Fajr falls through to `prayer-azan` (same recording as the other
-        // prayers). Foreground playback already picks the Fajr file via
-        // PRAYER_SPECIFIC_AUDIO the moment you uncomment it in reciters.ts.
-        // To enable for BACKGROUND Android:
-        //   1. Drop `assets/audio/azan-fajr.mp3`
-        //   2. Add it to `expo.plugins[expo-notifications].sounds` in app.json
-        //   3. Uncomment the block below
-        //   4. Route Fajr to this channel in schedulePrayerNotifications (also commented below)
-        //
-        // await notif.setNotificationChannelAsync('prayer-azan-fajr', {
-        //     name: 'Fajr Prayer (Azan)',
-        //     description: 'Fajr prayer notifications with Fajr-specific Azan',
-        //     importance: notif.AndroidImportance.MAX,
-        //     vibrationPattern: [0, 250, 250, 250],
-        //     sound: 'azan-fajr.mp3',
-        // });
+        // Fajr-specific channel — Fajr's adhan has the extra "As-salatu khayrun
+        // min an-nawm" line, so it plays azan_fajr.mp3 instead of azan.mp3.
+        // (Background sound requires azan_fajr.mp3 bundled via app.json sounds +
+        // a native rebuild; foreground playback uses PRAYER_SPECIFIC_AUDIO.)
+        // NOTE: the file is azan_fajr.mp3 (underscore) — Android res/raw names
+        // can't contain hyphens, which silently broke packaging when it was
+        // azan-fajr.mp3. The channel id is bumped to `-v2` because Android
+        // notification channels are immutable after creation: existing installs
+        // created `prayer-azan-fajr` with the (broken) old sound, and a fresh id
+        // is the only way to move them onto the now-working azan_fajr.mp3.
+        await notif.setNotificationChannelAsync('prayer-azan-fajr-v2', {
+            name: 'Fajr Prayer (Azan)',
+            description: 'Fajr prayer notifications with Fajr-specific Azan',
+            importance: notif.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            sound: 'azan_fajr.mp3',
+        });
     }
 
     return true;
@@ -198,10 +205,12 @@ export async function schedulePrayerNotifications(
     const now = new Date();
     const azanEnabled = await getAzanSoundEnabled();
     const azanShort = await getAzanShortEnabled();
+    const reciter = getReciter(await getAzanReciter());
 
     // Schedule notifications for today + the next 2 days (3 days total)
     const loc = await getSavedLocation();
     const method = await getCalculationMethod();
+    const madhab = await getMadhab();
 
     const allPrayers: PrayerTimeEntry[] = [...prayers];
 
@@ -210,7 +219,7 @@ export async function schedulePrayerNotifications(
         for (let dayOffset = 1; dayOffset <= 2; dayOffset++) {
             const futureDate = new Date();
             futureDate.setDate(futureDate.getDate() + dayOffset);
-            const futureTimes = getPrayerTimes(loc.latitude, loc.longitude, futureDate, method);
+            const futureTimes = getPrayerTimes(loc.latitude, loc.longitude, futureDate, method, madhab);
             allPrayers.push(...futureTimes.prayers);
         }
     }
@@ -223,24 +232,24 @@ export async function schedulePrayerNotifications(
 
         if (notificationTime <= now) continue;
 
-        // Use Azan sound channel if enabled, otherwise default sound.
-        // Once `azan-fajr.mp3` is bundled (see channel setup above), route Fajr
-        // to its own channel so Android background notifications also use the
-        // Fajr-specific recording:
-        //   const channelId = !azanEnabled
-        //       ? 'prayer-times'
-        //       : prayer.name === 'fajr' ? 'prayer-azan-fajr' : 'prayer-azan';
-        //   const soundFile = !azanEnabled
-        //       ? 'default'
-        //       : prayer.name === 'fajr' ? 'azan-fajr.mp3' : 'azan.mp3';
+        // Channel + sound per prayer. Fajr uses its own recording (the extra
+        // "As-salatu khayrun min an-nawm" line); the short azan is the same brief
+        // takbir for every prayer, so it isn't Fajr-specific.
+        // Fajr keeps its own recording (the extra "As-salatu khayrun min an-nawm"
+        // line), the short azan overrides everything, and otherwise we use the
+        // user's selected reciter voice — channel + sound must agree.
         const channelId = !azanEnabled
             ? 'prayer-times'
-            : azanShort ? 'prayer-azan-short' : 'prayer-azan';
-        // `true` = system default sound. Bundled files ('azan.mp3' / 'azanshort.mp3')
-        // resolve fine; the string 'default' does not — it throws.
+            : azanShort ? 'prayer-azan-short'
+            : prayer.name === 'fajr' ? 'prayer-azan-fajr-v2'
+            : `prayer-azan-${reciter.id}`;
+        // `true` = system default sound. Bundled files resolve fine; the string
+        // 'default' does not — it throws.
         const soundFile: string | boolean = !azanEnabled
             ? true
-            : azanShort ? 'azanshort.mp3' : 'azan.mp3';
+            : azanShort ? 'azanshort.mp3'
+            : prayer.name === 'fajr' ? 'azan_fajr.mp3'
+            : reciter.androidSound;
 
         await notif.scheduleNotificationAsync({
             content: {

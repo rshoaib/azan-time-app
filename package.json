@@ -1,7 +1,7 @@
 {
   "name": "azanapp",
   "main": "expo-router/entry",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Azan Time — free prayer times, adhan, Qibla compass, duas and a prayer streak tracker.",
   "scripts": {
     "start": "expo start",
@@ -44,6 +44,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.6",
+    "react-native-google-mobile-ads": "16.0.3",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.23.0",

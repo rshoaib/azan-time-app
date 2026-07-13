@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { LogBox } from 'react-native';
+import { initializeAds, preloadInterstitial } from '@/services/adsService';
 import { bootstrapAnalytics, logScreenView } from '@/services/analyticsService';
 import { bootstrapCrashlytics, recordNonFatal } from '@/services/crashlyticsService';
 import { bootstrapPerformance } from '@/services/performanceService';
@@ -80,6 +81,22 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Initialize the AdMob SDK + UMP consent — DEFERRED off the launch critical
+  // path. `initializeAds()` presents the UMP consent form (a native Activity)
+  // and runs heavy native SDK init; doing that during cold start, before the
+  // root window has gained focus, caused startup ANRs ("Input dispatching timed
+  // out (No focused window)") and slower cold starts. Delaying past first paint
+  // lets the first screen render and the window gain focus before any ad work
+  // runs. Still fire-and-forget, idempotent, and a no-op in Expo Go / web.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Once the SDK + consent are ready, warm up an interstitial so the first
+      // eligible transition can show one instantly (still off the launch path).
+      initializeAds().then(preloadInterstitial);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Bootstrap Firebase Analytics — records the install date on first run and
   // fires `app_open_day_2` on the day-after-install return. Safe to call in

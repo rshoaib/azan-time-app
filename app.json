@@ -2,8 +2,8 @@
   "expo": {
     "name": "Azan Time",
     "slug": "azan-time",
-    "version": "1.2.5",
-    "description": "Free prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker. No subscription, no ads.",
+    "version": "1.3.5",
+    "description": "Free prayer times, authentic adhan, offline Qibla compass, duas and a prayer streak tracker. No subscription — supported by a single small banner ad.",
     "primaryColor": "#D4AF37",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -30,7 +30,7 @@
       }
     },
     "android": {
-      "versionCode": 22,
+      "versionCode": 32,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0F1B45"
@@ -66,7 +66,13 @@
           "color": "#D4AF37",
           "sounds": [
             "./assets/audio/azan.mp3",
-            "./assets/audio/azanshort.mp3"
+            "./assets/audio/azan_fajr.mp3",
+            "./assets/audio/azanshort.mp3",
+            "./assets/audio/azan_makkah.mp3",
+            "./assets/audio/azan_madinah.mp3",
+            "./assets/audio/azan_aqsa.mp3",
+            "./assets/audio/azan_mishary.mp3",
+            "./assets/audio/azan_basit.mp3"
           ]
         }
       ],
@@ -80,8 +86,18 @@
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/perf",
       [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3166995085202346~7372137520",
+          "iosAppId": "ca-app-pub-3166995085202346~9205339156"
+        }
+      ],
+      [
         "expo-build-properties",
         {
+          "android": {
+            "useLegacyPackaging": true
+          },
           "ios": {
             "useFrameworks": "static"
           }

@@ -89,6 +89,46 @@ export async function playAzan(prayerName?: PrayerName): Promise<void> {
 }
 
 /**
+ * Preview a specific reciter's adhan on demand, regardless of the currently
+ * saved selection or the full/short/silent toggle. Used by the voice picker so
+ * users can audition each voice before choosing it. Shares the same currentSound
+ * machinery as playAzan(), so stopAzan()/isAzanPlaying() work for previews too.
+ */
+export async function previewReciter(reciterId: string): Promise<void> {
+    if (isStarting) return;
+    isStarting = true;
+    try {
+        await stopAzan();
+        await configureAudio();
+
+        const AudioModule = await getAudioModule();
+        if (!AudioModule) return;
+
+        const reciter = getReciter(reciterId);
+        if (!reciter.audioSource) {
+            console.warn(`No audio source for reciter ${reciterId}`);
+            return;
+        }
+
+        const { sound } = await AudioModule.Sound.createAsync(
+            reciter.audioSource,
+            { shouldPlay: true, volume: 1.0 }
+        );
+        currentSound = sound;
+        sound.setOnPlaybackStatusUpdate((status: any) => {
+            if (status.isLoaded && status.didJustFinish) {
+                sound.unloadAsync();
+                currentSound = null;
+            }
+        });
+    } catch (error) {
+        console.warn('Failed to preview reciter audio:', error);
+    } finally {
+        isStarting = false;
+    }
+}
+
+/**
  * Stop the currently playing Azan sound.
  */
 export async function stopAzan(): Promise<void> {

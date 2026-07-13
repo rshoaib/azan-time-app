@@ -21,6 +21,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 const COMPASS_SIZE = Math.min(width * 0.65, 280);
@@ -28,6 +29,7 @@ const COMPASS_SIZE = Math.min(width * 0.65, 280);
 export default function QiblaScreen() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemeStyles(makeStyles);
+  const insets = useSafeAreaInsets();
   const [heading, setHeading] = useState(0);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +121,7 @@ export default function QiblaScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient colors={[c.background, c.surfaceDark]} style={styles.header}>
+        <LinearGradient colors={[c.background, c.surfaceDark]} style={[styles.header, { paddingTop: insets.top + Theme.spacing.smd }]}>
           <Text style={styles.title}>🕋 Qibla & Mosques</Text>
           <Text style={styles.subtitle}>Direction to the Holy Kaaba</Text>
           {locationName ? (
