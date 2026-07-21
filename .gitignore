@@ -49,3 +49,7 @@ google-play-key.json
 # generated native folders
 /ios
 /android
+
+# fastlane run logs & Metro dev-server logs (transient build/ship artifacts)
+/fastlane-release*.log
+/metro-e2e.log

@@ -47,6 +47,7 @@ import { setUserProperty } from '@/services/analyticsService';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { SettingRow } from '@/components/ui/SettingRow';
 import { E2E, e2eSetForceError } from '@/services/e2eConfig';
+import { e2eGetInterstitialShown } from '@/services/adsService';
 
 const ADVANCE_OPTIONS = [
   { value: 0, label: 'At prayer time' },
@@ -83,6 +84,9 @@ export default function SettingsScreen() {
   const [locationMsg, setLocationMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [e2eScheduled, setE2eScheduled] = useState<number | null>(null);
   const [azanPlaying, setAzanPlaying] = useState(false);
+  // E2E-only: how many interstitials have been shown this session (see the
+  // adsService seam). Polled below so the ad-trigger test can read it off-screen.
+  const [e2eAdShown, setE2eAdShown] = useState(0);
   // Which voice is currently being auditioned in the picker (null = none).
   const [previewingId, setPreviewingId] = useState<string | null>(null);
 
@@ -96,6 +100,7 @@ export default function SettingsScreen() {
       setAzanPlaying(playing);
       // When a preview finishes on its own, drop the per-row "stop" affordance.
       if (!playing) setPreviewingId(null);
+      if (E2E) setE2eAdShown(e2eGetInterstitialShown());
     }, 300);
     return () => clearInterval(id);
   }, []);
@@ -293,6 +298,9 @@ export default function SettingsScreen() {
               </Text>
               <Text testID="e2e-azan-state" style={styles.settingValue}>
                 azan: {azanPlaying ? 'playing' : 'idle'}
+              </Text>
+              <Text testID="e2e-interstitial-count" style={styles.settingValue}>
+                interstitials: {e2eAdShown}
               </Text>
               <Pressable testID="e2e-fire-azan" onPress={() => fireTestNotification()}>
                 <Text style={styles.settingLabel}>E2E: fire test azan</Text>

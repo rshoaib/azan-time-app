@@ -1,6 +1,4 @@
-import AdBanner from '@/components/AdBanner';
-import { maybeShowInterstitial, preloadInterstitial } from '@/services/adsService';
-import { isAzanPlaying } from '@/services/audioService';
+import { preloadInterstitial } from '@/services/adsService';
 import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
@@ -121,21 +119,17 @@ export default function HomeScreen() {
   }, [applyLocation]);
 
   // Load prayer times on mount AND whenever the tab comes into focus
-  // (useFocusEffect fires on mount too, so no separate useEffect needed)
-  // Show a frequency-capped interstitial when the user RETURNS to Home from
-  // another tab — a natural transition. Never on the first focus (i.e. never on
-  // launch) and never while an azan is playing; the service enforces the ≥4-min
-  // / ≤5-per-day caps. This is the interstitial surface for impression volume.
-  const hasFocusedOnceRef = useRef(false);
+  // (useFocusEffect fires on mount too, so no separate useEffect needed).
+  // NOTE: the interstitial is deliberately NOT shown here. Tab focus / returning
+  // to Home is navigation, not a completion moment — firing an ad on it is the
+  // exact anti-pattern we avoid. The interstitial now fires only on genuine
+  // completions (azan finishing in audioService, completing the day in the
+  // tracker). We still warm one up on focus so those moments can show instantly;
+  // preloadInterstitial() is idempotent and no-ops until SDK + consent are ready.
   useFocusEffect(
     useCallback(() => {
       loadPrayerTimes();
-      if (hasFocusedOnceRef.current) {
-        maybeShowInterstitial({ isBusy: isAzanPlaying });
-      } else {
-        hasFocusedOnceRef.current = true;
-        preloadInterstitial(); // warm one up for the first eligible return
-      }
+      preloadInterstitial();
     }, [loadPrayerTimes])
   );
 
@@ -446,11 +440,9 @@ export default function HomeScreen() {
 
         <View style={{ height: 30 }} />
       </ScrollView>
-
-      {/* Anchored adaptive banner — pinned above the tab bar so it stays
-          visible while the user reads their prayer times (steady, viewable
-          impressions), without overlapping the scrolling content. */}
-      <AdBanner style={styles.anchoredBanner} />
+      {/* The banner is now a single pinned strip rendered globally above the tab
+          bar in (tabs)/_layout.tsx — one banner per screen, no per-screen
+          instances that reload on every navigation. */}
     </View>
   );
 }
@@ -522,14 +514,6 @@ const makeStyles = (c: ThemeColors) => StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 120,
-  },
-  anchoredBanner: {
-    // Pinned footer strip above the tab bar; hairline separator keeps it
-    // visually distinct from content so it never reads as part of the UI.
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.tabBarBorder,
-    backgroundColor: c.background,
-    paddingVertical: 2,
   },
 
   // Loading

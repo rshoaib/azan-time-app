@@ -34,6 +34,22 @@ platform :android do
     )
   end
 
+  desc "Upload the latest signed AAB to production as a STAGED rollout (default 20%). Ships the what's-new changelog; leaves the rest of the listing untouched. Override with `fastlane release_staged rollout:0.5`."
+  lane :release_staged do |options|
+    rollout = options[:rollout] || "0.2"
+    upload_to_play_store(
+      track: "production",
+      release_status: "inProgress",         # staged rollout, not a full/completed release
+      rollout: rollout,                     # fraction of users, e.g. "0.2" = 20%
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      # Ship the what's-new notes for this versionCode; leave store listing/images alone.
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: false
+    )
+  end
+
   desc "Upload the latest signed AAB straight to production — full rollout (all users)"
   lane :release do
     upload_to_play_store(

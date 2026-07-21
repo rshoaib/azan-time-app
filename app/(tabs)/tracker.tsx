@@ -2,6 +2,7 @@ import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
+import { maybeShowInterstitial } from '@/services/adsService';
 import { onStreakMilestone } from '@/services/reviewPromptService';
 import {
     DayLog,
@@ -74,8 +75,23 @@ export default function TrackerScreen() {
       current === 'prayed' ? 'missed' :
       current === 'missed' ? 'qada' :
       null;
+
+    // A genuine completion moment: this tap marks the LAST remaining prayer of
+    // the day as prayed (all five now ✅). That's a natural, earned transition —
+    // an appropriate, policy-safe surface for the frequency-capped interstitial.
+    // The service enforces the ≥4-min / ≤5-per-day caps, so this never stacks
+    // with an azan-finish ad. Only true when we're setting THIS prayer to
+    // 'prayed' and the other four are already 'prayed'.
+    const completesTheDay =
+      nextStatus === 'prayed' &&
+      TRACKER_PRAYERS.every((p) => p === prayer || dayLog[p] === 'prayed');
+
     await setPrayerStatus(today, prayer, nextStatus);
     await loadData();
+
+    if (completesTheDay) {
+      maybeShowInterstitial();
+    }
   };
 
   /**

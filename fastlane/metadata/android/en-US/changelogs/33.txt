@@ -1,0 +1,4 @@
+- Ads now appear only at natural moments — never when you switch tabs or return to the home screen.
+- The banner is now a single, steady strip above the navigation bar on every tab, clear of the system bar on edge-to-edge devices.
+- Auditioning adhan voices in Settings no longer triggers a full-screen ad.
+- Stability and polish improvements.

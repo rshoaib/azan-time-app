@@ -46,7 +46,11 @@ async function getNotifications() {
                 const prayerName = notification?.request?.content?.data?.prayer as
                     | PrayerName
                     | undefined;
-                playAzan(prayerName);
+                // Ad-eligible: a real prayer azan playing to completion in the
+                // foreground is the interstitial's primary surface. Preview taps
+                // in Settings call playAzan() without this flag, so they never
+                // pop an ad.
+                playAzan(prayerName, { adOnFinish: true });
             }
         });
 

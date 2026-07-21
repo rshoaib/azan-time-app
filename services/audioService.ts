@@ -1,5 +1,7 @@
+import { AppState } from 'react-native';
 import { getAzanReciter, getAzanShortEnabled, getAzanSoundEnabled } from './storageService';
 import { getAudioModule } from './audioModuleLoader';
+import { maybeShowInterstitial } from './adsService';
 import { getReciter, PRAYER_SPECIFIC_AUDIO, SHORT_AZAN_AUDIO } from '../constants/reciters';
 import type { PrayerName } from './prayerService';
 
@@ -31,7 +33,10 @@ export async function configureAudio(): Promise<void> {
  * Falls back to the user's selected reciter if no prayer-specific audio exists
  * (e.g. Fajr has its own recording with "As-salatu khayrun min an-nawm").
  */
-export async function playAzan(prayerName?: PrayerName): Promise<void> {
+export async function playAzan(
+    prayerName?: PrayerName,
+    opts?: { adOnFinish?: boolean }
+): Promise<void> {
     const enabled = await getAzanSoundEnabled();
     if (!enabled) return;
 
@@ -74,11 +79,23 @@ export async function playAzan(prayerName?: PrayerName): Promise<void> {
 
         currentSound = sound;
 
-        // Clean up when playback finishes
+        // Clean up when playback finishes — and treat a *naturally finished*
+        // azan as a genuine completion moment: the primary, policy-safe surface
+        // for the frequency-capped interstitial (the service enforces the
+        // ≥4-min / ≤5-per-day caps). Two guards keep this compliant:
+        //   • adOnFinish — only the real prayer azan (fired from the notification
+        //     listener) is ad-eligible. A settings "Preview adhan" tap calls
+        //     playAzan() with no opts, so auditioning a voice never pops an ad.
+        //   • AppState 'active' — an azan that finishes while the app is
+        //     backgrounded (played from a notification) never shows an ad over
+        //     the lock screen or another app.
         sound.setOnPlaybackStatusUpdate((status: any) => {
             if (status.isLoaded && status.didJustFinish) {
                 sound.unloadAsync();
                 currentSound = null;
+                if (opts?.adOnFinish && AppState.currentState === 'active') {
+                    maybeShowInterstitial();
+                }
             }
         });
     } catch (error) {

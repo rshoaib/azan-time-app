@@ -1,6 +1,9 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
+import { BottomTabBar } from '@react-navigation/bottom-tabs';
+import { StyleSheet, View } from 'react-native';
+import AdBanner from '@/components/AdBanner';
 import { useTheme } from '@/constants/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,7 +36,27 @@ export default function TabLayout() {
           fontWeight: '600',
         },
         headerShown: false,
-      }}>
+      }}
+      // Single pinned banner shared across ALL tabs — one banner per screen,
+      // rendered as a strip directly ABOVE the default tab bar. Because it sits
+      // on top of BottomTabBar (which already pads insets.bottom), the banner is
+      // always clear of the system navigation bar: this placement sidesteps the
+      // edge-to-edge (SDK 55/57) bottom-clip trap where a bottom-anchored banner
+      // gets cut off by the gesture bar. Mounted once here, it also survives tab
+      // switches instead of reloading on every navigation.
+      tabBar={(props) => (
+        <View style={{ backgroundColor: c.tabBar }}>
+          <AdBanner
+            style={{
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: c.tabBarBorder,
+              backgroundColor: c.background,
+            }}
+          />
+          <BottomTabBar {...props} />
+        </View>
+      )}
+    >
       <Tabs.Screen
         name="index"
         options={{

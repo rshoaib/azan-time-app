@@ -13,6 +13,25 @@
 
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { E2E } from './e2eConfig';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// E2E interstitial observability seam (compile-time false in release builds, so
+// every branch below is dead-code-eliminated and nothing ships to users).
+// ──────────────────────────────────────────────────────────────────────────────
+//
+// A test needs to assert *whether* an interstitial fired — but a real full-screen
+// ad would block the run and depend on ad fill. So under E2E, maybeShowInterstitial()
+// records the decision here instead of calling the native show(). Tests read this
+// count via a hidden Settings row (testID="e2e-interstitial-count") to verify the
+// ad fires ONLY on genuine completions and NEVER on tab navigation / returning Home.
+let e2eInterstitialShown = 0;
+export function e2eGetInterstitialShown(): number {
+  return e2eInterstitialShown;
+}
+export function e2eResetInterstitialShown(): void {
+  e2eInterstitialShown = 0;
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Ad unit IDs
@@ -288,7 +307,9 @@ export function preloadInterstitial(): void {
  */
 export function maybeShowInterstitial(opts?: { isBusy?: () => boolean }): boolean {
   const ads = loadAdsModule();
-  if (!ads) return false;
+  // In E2E we still evaluate the caps below even if the native module is absent,
+  // so tests can verify the trigger wiring without a real ads runtime.
+  if (!ads && !E2E) return false;
 
   const now = Date.now();
   const day = new Date(now).toISOString().slice(0, 10);
@@ -300,6 +321,16 @@ export function maybeShowInterstitial(opts?: { isBusy?: () => boolean }): boolea
   if (interstitialShownToday >= INTERSTITIAL_MAX_PER_DAY) return false;
   if (now - lastInterstitialShownAt < INTERSTITIAL_MIN_INTERVAL_MS) return false;
   if (opts?.isBusy?.()) return false;
+
+  if (E2E) {
+    // Deterministic, non-blocking test path: honor the same frequency caps as
+    // production, but record the decision instead of popping a real ad. This is
+    // what the ad-trigger regression test observes.
+    lastInterstitialShownAt = now;
+    interstitialShownToday += 1;
+    e2eInterstitialShown += 1;
+    return true;
+  }
 
   if (!interstitialLoaded || !interstitialAd) {
     preloadInterstitial(); // not ready yet — warm one for next time

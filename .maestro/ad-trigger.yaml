@@ -1,0 +1,55 @@
+# Ad-placement regression — the Maestro twin of e2e/ad-trigger.test.js, runnable
+# on the real device via the existing E2E dev client (no Detox native build needed).
+# Reads the hidden Settings counter row testID="e2e-interstitial-count" (only
+# present under EXPO_PUBLIC_E2E). Under E2E the ads service records show-decisions
+# instead of popping a real full-screen ad, so this is deterministic.
+appId: com.azantime.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "NEXT PRAYER"
+    timeout: 90000
+
+# Baseline: no interstitials yet.
+- tapOn: "Settings"
+- assertVisible:
+    id: "e2e-interstitial-count"
+    text: "interstitials: 0"
+
+# Returning to Home from other tabs must NOT fire an interstitial (the old bug).
+- repeat:
+    times: 3
+    commands:
+      - tapOn: "Tracker"
+      - tapOn: "Prayers"
+      - tapOn: "Dua"
+      - tapOn: "Prayers"
+- tapOn: "Settings"
+- assertVisible:
+    id: "e2e-interstitial-count"
+    text: "interstitials: 0"
+
+# Completing the day (last prayer marked) MUST fire exactly one interstitial.
+- tapOn: "Tracker"
+- tapOn:
+    id: "tracker-prayer-fajr"
+- tapOn:
+    id: "tracker-prayer-dhuhr"
+- tapOn:
+    id: "tracker-prayer-asr"
+- tapOn:
+    id: "tracker-prayer-maghrib"
+- tapOn:
+    id: "tracker-prayer-isha"
+- tapOn: "Settings"
+- assertVisible:
+    id: "e2e-interstitial-count"
+    text: "interstitials: 1"
+
+# The pinned banner strip is present (and, being above the tab bar, not clipped).
+- tapOn: "Prayers"
+- assertVisible:
+    id: "ad-banner"

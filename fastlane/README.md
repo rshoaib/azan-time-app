@@ -39,6 +39,14 @@ Upload the latest signed AAB to the INTERNAL testing track (solo QA)
 
 Promote the latest INTERNAL build to production — full rollout (all users)
 
+### android release_staged
+
+```sh
+[bundle exec] fastlane android release_staged
+```
+
+Upload the latest signed AAB to production as a STAGED rollout (default 20%). Ships the what's-new changelog; leaves the rest of the listing untouched. Override with `fastlane release_staged rollout:0.5`.
+
 ### android release
 
 ```sh
