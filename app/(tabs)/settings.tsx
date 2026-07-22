@@ -15,6 +15,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
+import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { Theme, ThemeColors, CALCULATION_METHODS, PRAYER_CONFIG } from '@/constants/theme';
 import { RECITERS } from '@/constants/reciters';
@@ -66,6 +67,7 @@ const AZAN_MODES = [
 type AzanMode = (typeof AZAN_MODES)[number]['key'];
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const [method, setMethod] = useState('MuslimWorldLeague');
   const [madhab, setMadhabState] = useState<MadhabKey>('standard');
   const [notificationsOn, setNotificationsOn] = useState(true);
@@ -452,6 +454,13 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </View>
+          <SettingRow
+            emoji="💬"
+            tint={c.emerald}
+            label="Contact & Feedback"
+            style={{ marginTop: Theme.spacing.sm }}
+            onPress={() => router.push('/contact')}
+          />
           <SettingRow
             emoji="🔒"
             tint={c.teal}

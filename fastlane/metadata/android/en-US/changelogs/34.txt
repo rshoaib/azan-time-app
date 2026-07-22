@@ -1,0 +1,2 @@
+- Fixed an ads consent issue so the app correctly serves ads based on your region.
+- Added a Contact & Feedback screen so you can reach us by WhatsApp or email.

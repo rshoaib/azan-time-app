@@ -131,6 +131,126 @@ export function isConsentResolved(): boolean {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Consent resolution (status-first) + change notification
+// ──────────────────────────────────────────────────────────────────────────────
+//
+// Listeners fire whenever consent (re)resolves so mounted banners can re-issue
+// their ad request with the correct NPA flag — the first banner mounts at first
+// paint, before the deferred initializeAds() has resolved consent.
+
+type ConsentListener = () => void;
+const consentListeners = new Set<ConsentListener>();
+
+/**
+ * Subscribe to consent resolution. Fires immediately if consent has already
+ * resolved, and again after any successful retry. Returns an unsubscribe fn.
+ */
+export function onConsentResolved(listener: ConsentListener): () => void {
+  consentListeners.add(listener);
+  if (consentResolved) listener();
+  return () => {
+    consentListeners.delete(listener);
+  };
+}
+
+function notifyConsentResolved(): void {
+  consentListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      // a listener must never break consent bookkeeping
+    }
+  });
+}
+
+/**
+ * Decide personalized vs non-personalized from the final UMP consent STATUS.
+ * Exported for unit tests.
+ *
+ *  - NOT_REQUIRED → user is outside EEA/UK/CH. No consent form exists and no
+ *    TCF string is written, so getUserChoices() would decode an EMPTY model
+ *    (every purpose false) and wrongly force NPA for the entire non-GDPR
+ *    audience — the bug this replaces. Status alone is authoritative:
+ *    personalized ads are allowed.
+ *  - OBTAINED → the form was completed (this session or a previous one); the
+ *    user's recorded TCF purpose choices are the source of truth.
+ *  - REQUIRED / UNKNOWN → form unavailable, dismissed, or failed: NPA.
+ */
+export async function evaluatePersonalizedAdsAllowed(
+  AdsConsent: any,
+  AdsConsentStatus: any,
+  status: unknown,
+): Promise<boolean> {
+  if (status === (AdsConsentStatus?.NOT_REQUIRED ?? 'NOT_REQUIRED')) {
+    return true;
+  }
+  if (status === (AdsConsentStatus?.OBTAINED ?? 'OBTAINED')) {
+    if (typeof AdsConsent?.getUserChoices === 'function') {
+      const choices = await AdsConsent.getUserChoices();
+      return !!choices?.selectPersonalisedAds;
+    }
+    // No choices API on this SDK version: the consent flow completed, and the
+    // native SDK enforces the recorded TCF purposes itself.
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Run the full UMP flow: info update → form if required → status decision.
+ * Exported for unit tests. Throws on UMP errors so the caller can stay NPA
+ * and schedule a retry.
+ */
+export async function resolveUmpConsent(
+  AdsConsent: any,
+  AdsConsentStatus: any,
+): Promise<boolean> {
+  if (!AdsConsent || typeof AdsConsent.requestInfoUpdate !== 'function') {
+    // No UMP API on this SDK version — assume NPA to stay policy-safe.
+    return false;
+  }
+  const consentInfo = await AdsConsent.requestInfoUpdate();
+  let status = consentInfo?.status;
+  if (
+    consentInfo?.isConsentFormAvailable &&
+    status === (AdsConsentStatus?.REQUIRED ?? 'REQUIRED')
+  ) {
+    // Showing the form advances the status (REQUIRED → OBTAINED). Prefer the
+    // info returned by the call; older SDKs return void, so re-query then.
+    const updated = await AdsConsent.loadAndShowConsentFormIfRequired();
+    if (updated?.status) {
+      status = updated.status;
+    } else if (typeof AdsConsent.getConsentInfo === 'function') {
+      status = (await AdsConsent.getConsentInfo())?.status ?? status;
+    }
+  }
+  return evaluatePersonalizedAdsAllowed(AdsConsent, AdsConsentStatus, status);
+}
+
+// A UMP error previously latched NPA for the entire session with no retry.
+// Retry with backoff; a success flips the flag and re-notifies listeners so
+// live banners re-request with the correct flag.
+const CONSENT_RETRY_DELAYS_MS = [5_000, 30_000];
+let consentRetryAttempt = 0;
+
+function scheduleConsentRetry(AdsConsent: any, AdsConsentStatus: any): void {
+  if (consentRetryAttempt >= CONSENT_RETRY_DELAYS_MS.length) return;
+  const delayMs = CONSENT_RETRY_DELAYS_MS[consentRetryAttempt];
+  consentRetryAttempt += 1;
+  setTimeout(() => {
+    resolveUmpConsent(AdsConsent, AdsConsentStatus)
+      .then((allowed) => {
+        canRequestPersonalizedAds = allowed;
+        notifyConsentResolved();
+      })
+      .catch((err) => {
+        console.warn('[ads] UMP consent retry failed:', err);
+        scheduleConsentRetry(AdsConsent, AdsConsentStatus);
+      });
+  }, delayMs);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Initialization
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -165,39 +285,16 @@ export function initializeAds(): Promise<void> {
 
       // UMP consent — only matters in EEA/UK/Switzerland; no-op elsewhere.
       try {
-        if (AdsConsent && typeof AdsConsent.requestInfoUpdate === 'function') {
-          const consentInfo = await AdsConsent.requestInfoUpdate();
-          if (
-            consentInfo?.isConsentFormAvailable &&
-            consentInfo?.status === AdsConsentStatus?.REQUIRED
-          ) {
-            await AdsConsent.loadAndShowConsentFormIfRequired();
-          }
-          // After (potentially) showing the form, evaluate whether we can
-          // request personalized ads. Different SDK versions expose this via
-          // different helpers; try both.
-          let allowed = false;
-          if (typeof AdsConsent.getUserChoices === 'function') {
-            const choices = await AdsConsent.getUserChoices();
-            allowed = !!choices?.selectPersonalisedAds;
-          } else if (typeof AdsConsent.canRequestAds === 'function') {
-            allowed = await AdsConsent.canRequestAds();
-          } else {
-            // Fall back to the consent status itself: NOT_REQUIRED means
-            // outside scope so personalized ads are allowed.
-            allowed = consentInfo?.status === AdsConsentStatus?.NOT_REQUIRED ||
-                      consentInfo?.status === AdsConsentStatus?.OBTAINED;
-          }
-          canRequestPersonalizedAds = allowed;
-        } else {
-          // No UMP API on this SDK version — assume NPA to stay policy-safe.
-          canRequestPersonalizedAds = false;
-        }
+        canRequestPersonalizedAds = await resolveUmpConsent(AdsConsent, AdsConsentStatus);
       } catch (err) {
         console.warn('[ads] UMP consent failed:', err);
+        // Policy-safe until a retry succeeds. UMP failures are usually
+        // transient network errors — don't latch NPA for the whole session.
         canRequestPersonalizedAds = false;
+        scheduleConsentRetry(AdsConsent, AdsConsentStatus);
       } finally {
         consentResolved = true;
+        notifyConsentResolved();
       }
 
       try {

@@ -164,6 +164,7 @@ function RootNavigation() {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="contact" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

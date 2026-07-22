@@ -3,6 +3,7 @@ import {
   getAdsModule,
   getRequestNonPersonalizedAdsOnly,
   isAdsRuntimeAvailable,
+  onConsentResolved,
   resolveAdUnitId,
 } from '@/services/adsService';
 import React from 'react';
@@ -22,6 +23,18 @@ const BannerAdSize: any = ads?.BannerAdSize ?? null;
 const TestIds: any = ads?.TestIds ?? null;
 
 export default function AdBanner({ unitKey = 'bannerHome', style, testID = 'ad-banner' }: AdBannerProps) {
+  // The banner mounts at first paint, BEFORE the deferred initializeAds() has
+  // resolved UMP consent, so a render-time snapshot of the NPA flag was always
+  // the conservative default (npa=1) — and nothing re-rendered when consent
+  // arrived, so the whole session stayed low-eCPM NPA. Track the flag in state
+  // and re-read it whenever consent (re)resolves; the `key` on the banner
+  // remounts the native view so a fresh request goes out with the right flag.
+  const [npa, setNpa] = React.useState(getRequestNonPersonalizedAdsOnly());
+  React.useEffect(
+    () => onConsentResolved(() => setNpa(getRequestNonPersonalizedAdsOnly())),
+    [],
+  );
+
   if (!isAdsRuntimeAvailable() || !BannerAdComponent || !BannerAdSize) {
     return null;
   }
@@ -31,13 +44,13 @@ export default function AdBanner({ unitKey = 'bannerHome', style, testID = 'ad-b
   return (
     <View testID={testID} style={[styles.container, style]}>
       <BannerAdComponent
+        key={npa ? 'npa' : 'personalized'}
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{
-          // Driven by real UMP consent, not a hard-coded value. When the user
-          // has consented to personalized ads (or is outside GDPR scope) this
-          // is `false` and we get full eCPM.
-          requestNonPersonalizedAdsOnly: getRequestNonPersonalizedAdsOnly(),
+          // Driven by real UMP consent via the state hook above — `false` once
+          // the user has consented or is outside GDPR scope → full eCPM.
+          requestNonPersonalizedAdsOnly: npa,
         }}
         onAdLoaded={() => {
           if (__DEV__) console.log(`[ads] banner loaded (${unitKey})`);

@@ -1,6 +1,5 @@
-# Ad-placement regression — the Maestro twin of e2e/ad-trigger.test.js, runnable
-# on the real device via the existing E2E dev client (no Detox native build needed).
-# Reads the hidden Settings counter row testID="e2e-interstitial-count" (only
+# Ad-placement regression, runnable on the real device via the existing E2E dev
+# client. Reads the hidden Settings counter row testID="e2e-interstitial-count" (only
 # present under EXPO_PUBLIC_E2E). Under E2E the ads service records show-decisions
 # instead of popping a real full-screen ad, so this is deterministic.
 appId: com.azantime.app
