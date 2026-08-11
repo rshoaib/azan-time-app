@@ -1,6 +1,41 @@
 default_platform(:android)
 
+# fastlane executes lanes with Dir.pwd = the ./fastlane directory, so a repo-
+# relative path would resolve to fastlane/android/... and never find the AAB.
+# Anchor to the repo root (parent of ./fastlane) and hand upload_to_play_store
+# an absolute path.
+ROOT = File.expand_path("..")
+AAB_PATH = File.join(ROOT, "android/app/build/outputs/bundle/release/app-release.aab")
+
 platform :android do
+  # Hard gate before any AAB upload. Mirrors scripts/build-release-aab.mjs so a
+  # by-hand `gradlew bundleRelease` (dirty tree, stale commit, or debug-signed)
+  # can't be pushed to Play. This is the class of failure that got Silent Mode
+  # rejected: AABs built from uncommitted/stale trees, and a debug-signed artifact.
+  private_lane :preflight_release do
+    # 1. Clean working tree.
+    dirty = sh("git status --porcelain", log: false).strip
+    UI.user_error!("Working tree is dirty — commit before deploying.\n#{dirty}") unless dirty.empty?
+
+    UI.user_error!("Missing #{AAB_PATH}. Build it with `npm run build:release`.") unless File.exist?(AAB_PATH)
+
+    # 2. Artifact provenance: built from the commit we're standing on.
+    prov_path = File.join(File.dirname(AAB_PATH), "BUILD_PROVENANCE.json")
+    UI.user_error!("Missing BUILD_PROVENANCE.json — build via `npm run build:release`, not raw gradlew.") unless File.exist?(prov_path)
+    prov = JSON.parse(File.read(prov_path))
+    head = sh("git rev-parse HEAD", log: false).strip
+    if prov["commit"] != head
+      UI.user_error!("AAB was built from #{prov['commit'][0,10]} but HEAD is #{head[0,10]}. Rebuild `npm run build:release`.")
+    end
+
+    # 3. Release-signed, not debug.
+    cert = sh("keytool -printcert -jarfile #{AAB_PATH}", log: false)
+    owner = cert[/Owner:\s*(.+)/, 1].to_s.strip
+    UI.user_error!("AAB is unsigned.") if owner.empty?
+    UI.user_error!("AAB is DEBUG-signed (#{owner}) — must be the upload key.") if owner =~ /CN=Android Debug/i
+    UI.success("Preflight OK — #{prov['version']} (vc#{prov['versionCode']}), commit #{head[0,10]}, signed by #{owner}")
+  end
+
   desc "Validate the Google Play service-account key (no upload)"
   lane :validate do
     validate_play_store_json_key(json_key: "google-play-key.json")
@@ -8,10 +43,26 @@ platform :android do
 
   desc "Upload the latest signed AAB to the INTERNAL testing track (solo QA)"
   lane :internal do
+    preflight_release
     upload_to_play_store(
       track: "internal",
       release_status: "completed",
-      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      aab: AAB_PATH,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
+    )
+  end
+
+  desc "Promote the latest INTERNAL build to the CLOSED (alpha) testing track"
+  lane :closed do
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "alpha",
+      track_promote_release_status: "completed",
+      skip_upload_aab: true,
+      skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
@@ -36,12 +87,13 @@ platform :android do
 
   desc "Upload the latest signed AAB to production as a STAGED rollout (default 20%). Ships the what's-new changelog; leaves the rest of the listing untouched. Override with `fastlane release_staged rollout:0.5`."
   lane :release_staged do |options|
+    preflight_release
     rollout = options[:rollout] || "0.2"
     upload_to_play_store(
       track: "production",
       release_status: "inProgress",         # staged rollout, not a full/completed release
       rollout: rollout,                     # fraction of users, e.g. "0.2" = 20%
-      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      aab: AAB_PATH,
       # Ship the what's-new notes for this versionCode; leave store listing/images alone.
       skip_upload_metadata: true,
       skip_upload_images: true,
@@ -52,10 +104,11 @@ platform :android do
 
   desc "Upload the latest signed AAB straight to production — full rollout (all users)"
   lane :release do
+    preflight_release
     upload_to_play_store(
       track: "production",
       release_status: "completed",          # full release, not a draft/staged hold
-      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      aab: AAB_PATH,
       # We only ship the binary here — leave the existing store listing untouched.
       skip_upload_metadata: true,
       skip_upload_images: true,
