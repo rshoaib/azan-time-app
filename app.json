@@ -108,7 +108,15 @@
       "expo-web-browser",
       "expo-localization",
       "./plugins/withExactAlarmPermissions",
-      "./plugins/withReactNativeArchitectures"
+      "./plugins/withReactNativeArchitectures",
+      [
+        "./plugins/withReleaseSigning",
+        {
+          "slug": "azanapp",
+          "keystoreBackup": "azanapp-upload-keystore.jks",
+          "storeFile": "upload-keystore.jks"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
