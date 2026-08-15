@@ -53,3 +53,6 @@ google-play-key.json
 # fastlane run logs & Metro dev-server logs (transient build/ship artifacts)
 /fastlane-release*.log
 /metro-e2e.log
+
+# generated promo video assets (fleet promo-video pipeline)
+/_promo/

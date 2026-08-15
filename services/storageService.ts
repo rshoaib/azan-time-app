@@ -249,3 +249,31 @@ export async function getTasbihCount(): Promise<number> {
 export async function setTasbihCount(count: number): Promise<void> {
     await AsyncStorage.setItem('tasbih_count', count.toString());
 }
+
+// Radio: last host that successfully connected a Quran stream on this device.
+// Some networks can only reach one of qurango's two mirrors, so a host proven
+// here is tried first next time. Expires so a device isn't pinned forever to a
+// mirror that was only briefly the better one.
+const PREFERRED_HOST_TTL_MS = 24 * 60 * 60 * 1000;
+
+export async function getPreferredStreamHost(): Promise<string | null> {
+    try {
+        const raw = await AsyncStorage.getItem('radio_preferred_host');
+        if (!raw) return null;
+        const { host, ts } = JSON.parse(raw);
+        if (!host || typeof ts !== 'number') return null;
+        if (Date.now() - ts > PREFERRED_HOST_TTL_MS) return null;
+        return host;
+    } catch {
+        return null;
+    }
+}
+
+export async function setPreferredStreamHost(host: string): Promise<void> {
+    try {
+        await AsyncStorage.setItem(
+            'radio_preferred_host',
+            JSON.stringify({ host, ts: Date.now() }),
+        );
+    } catch {}
+}

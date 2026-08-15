@@ -26,7 +26,7 @@ import { E2E, e2eConsumeForceError, e2eNow } from '@/services/e2eConfig';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Dimensions,
@@ -54,7 +54,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState('');
   const [calcMethod, setCalcMethod] = useState('MuslimWorldLeague');
   const [madhab, setMadhab] = useState<MadhabKey>('standard');
   const isLoadingRef = useRef(false);
@@ -133,21 +132,9 @@ export default function HomeScreen() {
     }, [loadPrayerTimes])
   );
 
-  // Countdown timer — auto-advances to next prayer when current one passes
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (prayerTimes?.nextPrayerTime) {
-        const remaining = getTimeRemaining(prayerTimes.nextPrayerTime);
-        setCountdown(remaining);
-
-        // When current next-prayer has passed, recalculate
-        if (remaining === '—') {
-          loadPrayerTimes();
-        }
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [prayerTimes, loadPrayerTimes]);
+  // NOTE: the per-second countdown lives in its own <Countdown> component below,
+  // so ticking it re-renders ONLY the timer text — not this whole screen (which
+  // would otherwise recompute the 7×getPrayerTimes week chart every second).
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -167,6 +154,56 @@ export default function HomeScreen() {
       onRamadanMidpoint(r.dayOfRamadan);
     }
   }, [prayerTimes]);
+
+  // ── Derived values — memoized so they recompute only when the underlying data
+  // changes (a real load/focus/refresh, keyed on prayerTimes' fresh reference),
+  // never on a countdown tick. `weekComparison` in particular runs getPrayerTimes
+  // 7× (astronomical math); before this it re-ran on every render (once/second).
+  const dateStr = useMemo(
+    () =>
+      e2eNow().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+    [prayerTimes],
+  );
+  const hijri = useMemo(() => getHijriDate(), [prayerTimes]);
+  const ramadan = useMemo(() => getRamadanInfo(prayerTimes), [prayerTimes]);
+  const ayah = useMemo(() => getDailyAyah(), [prayerTimes]);
+  const nextPrayerConfig = useMemo(
+    () => (prayerTimes?.nextPrayer ? PRAYER_CONFIG[prayerTimes.nextPrayer] : null),
+    [prayerTimes],
+  );
+
+  // Fajr & Maghrib for the next 7 days (7× getPrayerTimes). Recomputes only when
+  // the location / calc method / madhab / day (via prayerTimes) actually change.
+  const weekComparison = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const label = i === 0 ? 'Today' : dayNames[d.getDay()];
+      if (!location) return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 };
+      try {
+        const times = getPrayerTimes(location.latitude, location.longitude, d, calcMethod, madhab);
+        const fajr = times.prayers.find((p) => p.name === 'fajr');
+        const maghrib = times.prayers.find((p) => p.name === 'maghrib');
+        const fajrMin = fajr ? fajr.time.getHours() * 60 + fajr.time.getMinutes() : 0;
+        const maghribMin = maghrib ? maghrib.time.getHours() * 60 + maghrib.time.getMinutes() : 0;
+        return {
+          label,
+          fajrStr: fajr ? formatTime(fajr.time).replace(' ', '') : '--',
+          maghribStr: maghrib ? formatTime(maghrib.time).replace(' ', '') : '--',
+          fajrHeight: Math.max(15, (fajrMin / 360) * 50),
+          maghribHeight: Math.max(15, ((maghribMin - 720) / 360) * 50),
+        };
+      } catch {
+        return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 };
+      }
+    });
+  }, [location, calcMethod, madhab, prayerTimes]);
 
   if (loading) {
     return (
@@ -213,45 +250,6 @@ export default function HomeScreen() {
       </LinearGradient>
     );
   }
-
-  const today = e2eNow();
-  const dateStr = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  const hijri = getHijriDate();
-  const ramadan = getRamadanInfo(prayerTimes);
-  const ayah = getDailyAyah();
-
-  const nextPrayerConfig = prayerTimes?.nextPrayer
-    ? PRAYER_CONFIG[prayerTimes.nextPrayer]
-    : null;
-
-  // Prayer comparison data (Fajr & Maghrib for 7 days)
-  const weekComparison = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const label = i === 0 ? 'Today' : dayNames[d.getDay()];
-    if (!location) return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 };
-    try {
-      const times = getPrayerTimes(location.latitude, location.longitude, d, calcMethod, madhab);
-      const fajr = times.prayers.find(p => p.name === 'fajr');
-      const maghrib = times.prayers.find(p => p.name === 'maghrib');
-      const fajrMin = fajr ? fajr.time.getHours() * 60 + fajr.time.getMinutes() : 0;
-      const maghribMin = maghrib ? maghrib.time.getHours() * 60 + maghrib.time.getMinutes() : 0;
-      return {
-        label,
-        fajrStr: fajr ? formatTime(fajr.time).replace(' ', '') : '--',
-        maghribStr: maghrib ? formatTime(maghrib.time).replace(' ', '') : '--',
-        fajrHeight: Math.max(15, (fajrMin / 360) * 50),
-        maghribHeight: Math.max(15, ((maghribMin - 720) / 360) * 50),
-      };
-    } catch { return { label, fajrStr: '--', maghribStr: '--', fajrHeight: 20, maghribHeight: 20 }; }
-  });
 
   return (
     <View style={styles.container}>
@@ -353,9 +351,11 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.countdownPill}>
                 <FontAwesome name="clock-o" size={14} color={c.goldLight} />
-                <Text style={styles.countdownText}>
-                  {countdown || getTimeRemaining(prayerTimes.nextPrayerTime)}
-                </Text>
+                <Countdown
+                  nextPrayerTime={prayerTimes.nextPrayerTime}
+                  onElapsed={loadPrayerTimes}
+                  textStyle={styles.countdownText}
+                />
               </View>
             </LinearGradient>
           </View>
@@ -447,7 +447,40 @@ export default function HomeScreen() {
   );
 }
 
-function PrayerCard({
+// Self-contained per-second countdown. Owning the ticking `remaining` state here
+// means only THIS component re-renders each second — the parent HomeScreen (and
+// its 7×getPrayerTimes week chart, hijri/ramadan/ayah derivations) does not.
+const Countdown = React.memo(function Countdown({
+  nextPrayerTime,
+  onElapsed,
+  textStyle,
+}: {
+  nextPrayerTime: Date;
+  onElapsed: () => void;
+  textStyle: any;
+}) {
+  const [remaining, setRemaining] = useState(() => getTimeRemaining(nextPrayerTime));
+  // Keep the latest onElapsed without re-arming the interval each render.
+  const onElapsedRef = useRef(onElapsed);
+  onElapsedRef.current = onElapsed;
+
+  useEffect(() => {
+    setRemaining(getTimeRemaining(nextPrayerTime));
+    const timer = setInterval(() => {
+      const r = getTimeRemaining(nextPrayerTime);
+      setRemaining(r);
+      // When the current next-prayer passes, ask the parent to recalculate.
+      if (r === '—') onElapsedRef.current();
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [nextPrayerTime]);
+
+  return <Text style={textStyle}>{remaining}</Text>;
+});
+
+// React.memo so ticking the countdown / toggling refresh never re-renders the
+// prayer rows (each row also builds its themed StyleSheet).
+const PrayerCard = React.memo(function PrayerCard({
   prayer,
   isNext,
   isPast,
@@ -502,7 +535,7 @@ function PrayerCard({
       </Text>
     </View>
   );
-}
+});
 
 const makeStyles = (c: ThemeColors) => StyleSheet.create({
   container: {

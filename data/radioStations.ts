@@ -9,6 +9,11 @@ export interface RadioStation {
 
 export type RadioCategory = 'featured' | 'reciters' | 'translations' | 'special';
 
+// NOTE: these URLs are authored against qurango's `backup.` mirror, which
+// measures ~63% connect success. Never stream `station.url` directly — go
+// through services/streamResolver.ts, which reorders onto the healthy primary
+// host and fails over. See that file for the measurements.
+
 export const RADIO_CATEGORIES: { key: RadioCategory; label: string; emoji: string }[] = [
   { key: 'featured', label: 'Featured', emoji: '⭐' },
   { key: 'reciters', label: 'Reciters', emoji: '🎙️' },

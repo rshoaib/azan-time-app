@@ -22,7 +22,46 @@ import {
 } from '@/data/radioStations';
 import { getAudioModule } from '@/services/audioModuleLoader';
 import { configureAudio } from '@/services/audioService';
+import {
+  CancelledError,
+  connectWithFailover,
+} from '@/services/streamResolver';
+import {
+  getPreferredStreamHost,
+  setPreferredStreamHost,
+} from '@/services/storageService';
 import { useNavigation } from 'expo-router';
+
+// createAsync resolves once the stream is buffered enough to play. Race it
+// against a timeout; if the host is too slow we reject and (if it later
+// resolves) unload the orphaned sound so it can't play over a newer selection.
+// The timeout is chosen per attempt by the resolver — short on the first pass,
+// longer on the final retry.
+async function createSoundWithTimeout(Audio: any, uri: string, timeoutMs: number): Promise<any> {
+  const createPromise = Audio.Sound.createAsync(
+    { uri },
+    { shouldPlay: true, volume: 1.0, isLooping: false },
+  );
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('stream-connect-timeout')), timeoutMs);
+  });
+  try {
+    const { sound } = (await Promise.race([createPromise, timeout])) as { sound: any };
+    return sound;
+  } catch (err) {
+    // If the slow createAsync eventually settles, discard its orphaned sound.
+    createPromise
+      .then(({ sound }: any) => {
+        sound.stopAsync().catch(() => {});
+        sound.unloadAsync().catch(() => {});
+      })
+      .catch(() => {});
+    throw err;
+  } finally {
+    clearTimeout(timer!);
+  }
+}
 
 export default function RadioScreen() {
   const { colors: c, scheme } = useTheme();
@@ -33,6 +72,9 @@ export default function RadioScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioAvailable, setAudioAvailable] = useState(true);
+  // Set when every host failed. Without this the spinner silently reverted to
+  // "PAUSED" and the user was left with no idea why nothing played.
+  const [connectFailed, setConnectFailed] = useState(false);
   const soundRef = useRef<any>(null);
   // Monotonic request token. Each playStation() call claims the next value;
   // any older load still in flight whose token is no longer current discards
@@ -109,16 +151,26 @@ export default function RadioScreen() {
 
     setIsPlaying(false);
     setIsLoading(true);
+    setConnectFailed(false);
     setCurrentStation(station);
 
     try {
       await configureAudio();
       if (token !== playTokenRef.current) return; // superseded while configuring
 
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: station.url },
-        { shouldPlay: true, volume: 1.0, isLooping: false },
-      );
+      // Healthiest host first, every attempt bounded, one backed-off retry —
+      // see services/streamResolver.ts for the measured rationale.
+      const preferred = await getPreferredStreamHost();
+      if (token !== playTokenRef.current) return; // superseded while reading prefs
+
+      const sound = await connectWithFailover(station.url, {
+        connect: (uri, timeoutMs) => createSoundWithTimeout(Audio, uri, timeoutMs),
+        sleep: (ms) => new Promise<void>((r) => setTimeout(r, ms)),
+        now: () => Date.now(),
+        isCancelled: () => token !== playTokenRef.current,
+        onHostSucceeded: (host) => { setPreferredStreamHost(host).catch(() => {}); },
+        onAttemptFailed: (uri, err) => console.warn(`Stream connect failed (${uri}):`, err),
+      }, preferred);
 
       // createAsync starts playback immediately (shouldPlay). If a newer tap
       // superseded us while this was loading, this sound is an orphan — stop
@@ -144,12 +196,15 @@ export default function RadioScreen() {
         }
       });
     } catch (error) {
+      // A superseded load is an expected outcome, not a failure to report.
+      if (error instanceof CancelledError) return;
       console.warn('Failed to play radio:', error);
       // Only clear the loading UI if we're still the active request, so a
       // discarded load can't wipe a newer tap's spinner/playing state.
       if (token === playTokenRef.current) {
         setIsPlaying(false);
         setIsLoading(false);
+        setConnectFailed(true);
       }
     }
   };
@@ -165,6 +220,7 @@ export default function RadioScreen() {
     }
     setIsPlaying(false);
     setIsLoading(false);
+    setConnectFailed(false);
   };
 
   const togglePlayback = async (station: RadioStation) => {
@@ -230,7 +286,13 @@ export default function RadioScreen() {
 
                 <View style={styles.nowPlayingInfo}>
                   <Text style={styles.nowPlayingLabel}>
-                    {isLoading ? '⏳ Connecting...' : isPlaying ? '🔴 NOW PLAYING' : '⏸ PAUSED'}
+                    {isLoading
+                      ? '⏳ Connecting...'
+                      : isPlaying
+                        ? '🔴 NOW PLAYING'
+                        : connectFailed
+                          ? '⚠️ UNAVAILABLE'
+                          : '⏸ PAUSED'}
                   </Text>
                   <Text style={styles.nowPlayingName} numberOfLines={1}>
                     {currentStation.name}
@@ -258,6 +320,15 @@ export default function RadioScreen() {
                 </Pressable>
               </LinearGradient>
             </Animated.View>
+
+            {/* Stream failed on every host — say so instead of silently idling */}
+            {connectFailed && audioAvailable && (
+              <View style={styles.audioNotice} testID="radio-connect-failed">
+                <Text style={styles.audioNoticeText}>
+                  ⚠️ Couldn't reach this station. Check your connection and tap play to retry.
+                </Text>
+              </View>
+            )}
 
             {/* Audio unavailable notice */}
             {!audioAvailable && (

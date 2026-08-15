@@ -1,0 +1,53 @@
+# Verifies the stream actually CONNECTS, not just that the card renders.
+#
+# The backup qurango mirror measured ~63% connect success (see
+# services/streamResolver.ts); the resolver reorders onto the healthy primary
+# host and fails over. This flow is the end-to-end proof of that: reaching
+# "NOW PLAYING" means a real audio stream buffered on-device.
+#
+# Unlike radio.yaml (which tolerates a failed stream and only checks structure),
+# this flow is allowed to fail when the device genuinely has no network.
+#
+# SELECTOR NOTE: Maestro matches a selector against the element's WHOLE text, so
+# the status labels must be matched as regexes — the rendered nodes carry an
+# emoji prefix ("🔴 NOW PLAYING", "⏸ PAUSED"). A bare "NOW PLAYING" never matches.
+appId: com.azantime.app
+---
+- launchApp:
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: "Tilawat"
+    timeout: 90000
+- tapOn: "Tilawat"
+- assertVisible: "Quran recitations, anytime"
+
+- tapOn: "Main Quran Radio"
+# Whole attempt plan is budgeted at 13s; allow slack for lazy expo-av import.
+- extendedWaitUntil:
+    visible: ".*NOW PLAYING.*"
+    timeout: 60000
+# The failure notice must NOT be showing when we are playing.
+- assertNotVisible:
+    id: "radio-connect-failed"
+
+# Switching stations must not leave two recitations overlapping, and the second
+# station must connect just as reliably as the first.
+- tapOn: "Beautiful Recitations"
+- extendedWaitUntil:
+    visible: ".*NOW PLAYING.*"
+    timeout: 60000
+- assertVisible: "Beautiful Recitations"
+
+# Stop returns to a clean paused state with no error banner. Tapping the station
+# row that is already playing toggles it off (togglePlayback). The now-playing
+# card also renders this name, so index:1 targets the tappable LIST row rather
+# than the card's static label.
+- tapOn:
+    text: "Beautiful Recitations"
+    index: 1
+- extendedWaitUntil:
+    visible: ".*PAUSED.*"
+    timeout: 15000
+- assertNotVisible:
+    id: "radio-connect-failed"

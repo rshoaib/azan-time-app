@@ -31,6 +31,14 @@ Validate the Google Play service-account key (no upload)
 
 Upload the latest signed AAB to the INTERNAL testing track (solo QA)
 
+### android closed
+
+```sh
+[bundle exec] fastlane android closed
+```
+
+Promote the latest INTERNAL build to the CLOSED (alpha) testing track
+
 ### android promote
 
 ```sh
