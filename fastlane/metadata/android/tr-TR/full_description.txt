@@ -1,0 +1,63 @@
+🕌 Azan Time — Günlük Namaz Arkadaşınız
+
+Doğru namaz vakitleri, kıble pusulası, namaz takibi ve eksiksiz zikir & dua koleksiyonu — şık koyu bir tasarımla. Hesap gerekmez, kayıt gerekmez.
+
+Beş vakit için net ezan bildirimleri: İmsak, Öğle, İkindi, Akşam ve Yatsı. Her namazı kaydedin ve düzeninizi koruyun.
+
+✨ ÖNE ÇIKAN ÖZELLİKLER
+
+🕐 NAMAZ VAKİTLERİ
+• İmsak, Güneş, Öğle, İkindi, Akşam ve Yatsı vakitleri
+• GPS ile otomatik konum belirleme
+• 11 hesaplama yöntemi (Diyanet, Türkiye, Müslüman Dünya Birliği, Ümmü'l-Kura, ISNA ve daha fazlası)
+• Sonraki namaza geri sayım
+
+📊 NAMAZ TAKİBİ
+• Her namazı kaydedin: ✅ Kılındı, ❌ Kaçırıldı, 🔄 Kaza
+• 🔥 Aralıksız gün sayacı
+• Haftalık düzeninizi gösteren tablo
+
+📿 ZİKİR & DUA
+• Sabah ve akşam zikirleri
+• Her duruma uygun günlük dualar: yemek, uyku, yolculuk ve daha fazlası
+• Hafif titreşimli dijital tesbih
+• SübhanAllah, Elhamdülillah, Allahu Ekber ve daha fazlası
+• Arapça metin, okunuş ve çeviri
+
+🕋 KIBLE PUSULASI
+• Kâbe'yi gösteren anlık pusula
+• Doğru hizalandığında yeşil parıltı
+• Kıble açısı ve yön göstergesi
+
+🕌 YAKINDAKİ CAMİLER
+• 5 km içindeki camileri bulun
+• En yakından başlayarak sıralanır
+• Tek dokunuşla Google Haritalar ile yol tarifi
+• OpenStreetMap ile (ücretsiz, takipsiz)
+
+📻 KURAN RADYOSU
+• 30+ canlı Kuran radyo istasyonu
+• Tanınmış hafızlar: Mishary Alafasy, Sudeys, Gamidi ve daha fazlası
+• Arka planda ses oynatma
+• İstasyonlar qurango.net üzerinden
+
+🔔 AKILLI BİLDİRİMLER
+• Özelleştirilebilir namaz hatırlatıcıları
+• Hangi vakitler için bildirim alacağınızı seçin
+• Önceden bildirim (5/10/15/30 dakika)
+• Ezan sesi çalma seçeneği
+
+🛡️ GİZLİLİK & REKLAMLAR
+• Hesap veya giriş gerekmez
+• Namaz kaydınız, tesbihiniz ve ayarlarınız cihazınızda kalır
+• Konum yalnızca namaz vakitlerini ve kıbleyi hesaplamak için kullanılır — GPS konumunuz bize gönderilmez
+• Tek bir banner reklamla desteklenir (Google AdMob). AdMob, reklam göstermek için cihazınızın reklam kimliğini ve yaklaşık (IP tabanlı) konumunu kullanır; bunu cihaz ayarlarınızdan sıfırlayabilir veya sınırlayabilirsiniz
+• AEA/Birleşik Krallık/İsviçre'deki kullanıcılara ilk açılışta reklam izni sorulur
+• Tüm ayrıntılar Gizlilik Politikamızda: azantime.app/privacy
+
+🎨 PREMIUM KOYU TASARIM
+• Degrade kartlar ve cam efekti
+• Akıcı animasyonlar
+• Göz yormayan tasarım
+
+Azan Time'ı bugün indirin, bir daha namaz kaçırmayın! 🤲

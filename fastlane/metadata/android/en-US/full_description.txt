@@ -1,0 +1,69 @@
+🕌 Azan Time — Your Complete Namaz & Prayer Companion
+
+Azan Time brings you accurate prayer times, a beautiful Qibla compass, a daily namaz & prayer tracker, and a complete dua & dhikr collection — all wrapped in a stunning premium dark design. No account required.
+
+Whether you call it namaz, salah, or salat, Azan Time keeps you on time with clear athan (adhan) alerts for all five daily prayers — Fajr, Dhuhr, Asr, Maghrib and Isha. Use the built-in namaz tracker to log every prayer and build a consistent salah streak.
+
+✨ KEY FEATURES:
+
+🕐 ACCURATE PRAYER TIMES
+• Precise Fajr, Sunrise, Dhuhr, Asr, Maghrib & Isha times
+• Auto-detect location with GPS
+• 11 calculation methods (Muslim World League, ISNA, Umm Al-Qura, Egyptian, and more)
+• Next prayer countdown timer
+• Beautiful hero card showing upcoming prayer
+
+📊 PRAYER TRACKER
+• Tap to log each prayer: ✅ Prayed, ❌ Missed, 🔄 Qada
+• 🔥 Streak counter to build consistency
+• Weekly heatmap showing your prayer pattern
+• Motivational messages to keep you going
+
+📿 DUA & DHIKR
+• Morning Adhkar (أذكار الصباح)
+• Evening Adhkar (أذكار المساء)
+• Daily Duas for every occasion (eating, sleeping, travel, etc.)
+• Digital Tasbih counter with haptic feedback
+• 5 dhikr types: SubhanAllah, Alhamdulillah, Allahu Akbar & more
+• Arabic text + transliteration + English translation
+
+🕋 QIBLA COMPASS
+• Real-time compass pointing to the Kaaba
+• Green glow when perfectly aligned
+• Heading and Qibla angle display
+
+🕌 MOSQUES NEAR ME
+• Find nearby mosques within 5km
+• Sorted by distance (closest first)
+• One-tap Google Maps navigation
+• Powered by OpenStreetMap (free, no tracking)
+
+📻 QURAN RADIO
+• 30+ live Quran radio stations
+• Top reciters: Mishary Alafasy, Al-Sudais, Al-Ghamdi & more
+• Categories: Featured, Popular Reciters, Special & Translations
+• Beautiful Now Playing card with live indicator
+• Background audio streaming
+• Stations powered by qurango.net
+
+🔔 SMART NOTIFICATIONS
+• Customizable prayer reminders
+• Choose which prayers to be notified for
+• Advance notifications (5/10/15/30 min before)
+• Azan audio playback option
+
+🛡️ PRIVACY & ADS
+• No account or sign-in required
+• Your prayer tracking, tasbih and settings stay on your device
+• Location is used to calculate prayer times and Qibla — your GPS position is not sent to us
+• Supported by a single banner ad (Google AdMob). AdMob uses your device's advertising ID and approximate (IP-based) location to show ads; you can reset or limit this in your device settings
+• Users in the EEA/UK/Switzerland are asked for ad-consent on first launch
+• Full details in our Privacy Policy: azantime.app/privacy
+
+🎨 PREMIUM DARK DESIGN
+• Beautiful gradient cards and glassmorphism
+• Emoji-based prayer icons
+• Smooth animations and premium feel
+• Designed for low eye strain
+
+Download Azan Time today and never miss a prayer again! 🤲

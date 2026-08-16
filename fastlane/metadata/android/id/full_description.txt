@@ -1,0 +1,63 @@
+🕌 Azan Time — Teman Sholat Harian Anda
+
+Jadwal sholat yang akurat, kompas kiblat, pencatat sholat, dan kumpulan dzikir & doa lengkap — dalam desain gelap yang elegan. Tanpa akun, tanpa pendaftaran.
+
+Pengingat adzan yang jelas untuk lima waktu sholat: Subuh, Dzuhur, Ashar, Maghrib, dan Isya. Catat setiap sholat dan jaga konsistensi Anda.
+
+✨ FITUR UTAMA
+
+🕐 JADWAL SHOLAT AKURAT
+• Waktu Subuh, Terbit, Dzuhur, Ashar, Maghrib & Isya
+• Deteksi lokasi otomatis dengan GPS
+• 11 metode perhitungan (Muslim World League, Umm Al-Qura, Singapura, Karachi, Mesir, ISNA, dan lainnya)
+• Hitung mundur menuju sholat berikutnya
+
+📊 PENCATAT SHOLAT
+• Catat setiap sholat: ✅ Sudah, ❌ Terlewat, 🔄 Qadha
+• 🔥 Penghitung hari berturut-turut
+• Peta mingguan yang menunjukkan pola sholat Anda
+
+📿 DZIKIR & DOA
+• Dzikir pagi dan petang
+• Doa harian untuk berbagai keperluan: makan, tidur, bepergian, dan lainnya
+• Tasbih digital dengan getaran halus
+• SubhanAllah, Alhamdulillah, Allahu Akbar, dan lainnya
+• Teks Arab, transliterasi, dan terjemahan
+
+🕋 KOMPAS KIBLAT
+• Kompas real-time yang mengarah ke Ka'bah
+• Menyala hijau saat arah sudah tepat
+• Menampilkan sudut kiblat dan arah
+
+🕌 MASJID TERDEKAT
+• Temukan masjid dalam radius 5 km
+• Diurutkan dari yang terdekat
+• Navigasi Google Maps sekali ketuk
+• Didukung OpenStreetMap (gratis, tanpa pelacakan)
+
+📻 RADIO QURAN
+• 30+ stasiun radio Quran langsung
+• Qari terkemuka: Mishary Alafasy, As-Sudais, Al-Ghamdi, dan lainnya
+• Pemutaran audio di latar belakang
+• Stasiun dari qurango.net
+
+🔔 NOTIFIKASI CERDAS
+• Pengingat sholat yang dapat disesuaikan
+• Pilih sholat mana yang ingin diingatkan
+• Notifikasi lebih awal (5/10/15/30 menit)
+• Opsi memutar suara adzan
+
+🛡️ PRIVASI & IKLAN
+• Tanpa akun atau login
+• Catatan sholat, tasbih, dan pengaturan tersimpan di perangkat Anda
+• Lokasi hanya dipakai untuk menghitung jadwal sholat dan kiblat — posisi GPS Anda tidak dikirim ke kami
+• Didukung satu iklan banner (Google AdMob). AdMob menggunakan ID iklan perangkat dan lokasi perkiraan (berbasis IP) untuk menampilkan iklan; Anda dapat mengatur ulang atau membatasinya di pengaturan perangkat
+• Pengguna di EEA/Inggris/Swiss diminta persetujuan iklan saat pertama kali membuka aplikasi
+• Detail lengkap di Kebijakan Privasi kami: azantime.app/privacy
+
+🎨 DESAIN GELAP PREMIUM
+• Kartu gradien dan efek kaca
+• Animasi yang halus
+• Nyaman di mata
+
+Unduh Azan Time sekarang dan jangan sampai terlewat sholat lagi! 🤲
