@@ -1,172 +1,219 @@
 /**
- * In-App Review Prompt Service
+ * In-App Review Prompt — Azan Time
  * ---------------------------------
- * Trigger the native App Store / Play Store review dialog at moments of
- * delight — never on first launch, never on error, never more than once
- * per 90 days per user.
+ * Aligned with the shared OVC Tech portfolio template (3 positive actions /
+ * 120-day spacing / 2 lifetime asks) so every app behaves the same way.
  *
- * Moments we consider "delight":
- *   - User has logged 7+ completed prayer days in the tracker
- *   - User has used the Qibla compass 3+ times
- *   - User hits a prayer streak of 7, 30, or 100 days
- *   - Eid al-Fitr / Eid al-Adha day (detected via Hijri calendar)
- *   - Ramadan day 15 (mid-Ramadan, user is emotionally engaged)
+ * WHY THIS WAS REWRITTEN (2026-08-16)
+ * The previous version fired only on exact-equality milestones — Qibla opened
+ * *exactly* 3 times, a streak of *exactly* 7/30/100 — plus Ramadan day 15 and
+ * Eid. Both seasonal triggers fell before the prompt shipped (2026-07-20) and
+ * do not recur until ~Feb 2027, and the equality checks give a single one-frame
+ * window each. Net effect: Azan took 0 ratings in the window where Mentalism —
+ * same library, same Play API, but a reachable "3 completed drills" trigger —
+ * took 3. The API was never the problem; the triggers were unreachable.
  *
- * Platform fallback:
- *   - iOS: SKStoreReviewController (via expo-store-review)
- *   - Android: Google Play In-App Review API (same module)
- *   - Web: no-op
+ * The fix is to count *genuine success moments* instead of hitting exact
+ * numbers, and to add the one moment engaged users reach daily: marking the
+ * last remaining prayer of the day, so all five are complete.
+ *
+ * Guarantees:
+ *   - Never throws into the calling flow (fire-and-forget, fully swallowed).
+ *   - Never prompts on first launch (needs MIN_POSITIVE_ACTIONS first).
+ *   - Honors an explicit user decline forever.
+ *   - Every exit path is logged, so "never asked" is distinguishable from
+ *     "asked and Play stayed silent".
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { logEvent } from './analyticsService';
 
-const KEYS = {
-    LAST_PROMPT_DATE: 'review_last_prompt_date',
-    PROMPT_COUNT: 'review_prompt_count',
-    QIBLA_USE_COUNT: 'qibla_use_count',
-    REVIEW_DECLINED: 'review_declined',
-};
+const KEY_ACTIONS = '@review/positiveActions'; // lifetime count of success moments
+const KEY_LAST_ASKED = '@review/lastAskedAt';  // ms timestamp of the last requestReview()
+const KEY_ASK_COUNT = '@review/askCount';      // how many times we've asked
+const KEY_DONE = '@review/done';               // hard "never ask again" flag
+const KEY_QIBLA_USES = 'qibla_use_count';      // retained from the previous version
 
-// Minimum days between prompts (Apple recommends 3 prompts/year max)
-const MIN_DAYS_BETWEEN_PROMPTS = 90;
-// Max lifetime prompts
-const MAX_LIFETIME_PROMPTS = 3;
+/** Earn this many success moments before the FIRST prompt (never on first launch). */
+const MIN_POSITIVE_ACTIONS = 3;
+/** Minimum spacing between prompts. Play enforces its own quota on top of this. */
+const MIN_INTERVAL_MS = 120 * 24 * 60 * 60 * 1000; // ~120 days
+/** Lifetime cap on prompts — belt-and-suspenders so we never re-nag. */
+const MAX_ASKS = 2;
+/** Qibla opens before repeat use counts as a success moment (skips tyre-kickers). */
+const QIBLA_USES_BEFORE_COUNTING = 3;
 
-type DelightTrigger =
-    | 'tracker_week_complete'   // 7 days of tracker use
-    | 'streak_milestone_7'
-    | 'streak_milestone_30'
-    | 'streak_milestone_100'
-    | 'qibla_third_use'
-    | 'ramadan_day_15'
-    | 'eid_day';
-
-async function getDaysSinceLastPrompt(): Promise<number> {
-    const raw = await AsyncStorage.getItem(KEYS.LAST_PROMPT_DATE);
-    if (!raw) return Infinity;
-    const last = parseInt(raw, 10);
-    return (Date.now() - last) / (1000 * 60 * 60 * 24);
-}
-
-async function getPromptCount(): Promise<number> {
-    const raw = await AsyncStorage.getItem(KEYS.PROMPT_COUNT);
-    return raw ? parseInt(raw, 10) : 0;
-}
-
-async function recordPrompt(): Promise<void> {
-    const count = await getPromptCount();
-    await AsyncStorage.multiSet([
-        [KEYS.LAST_PROMPT_DATE, Date.now().toString()],
-        [KEYS.PROMPT_COUNT, (count + 1).toString()],
-    ]);
-}
+/** A delight moment. Recorded on the event so the funnel is attributable. */
+export type DelightSource =
+  | 'tracker_day_complete'
+  | 'streak_milestone'
+  | 'qibla_repeat_use'
+  | 'ramadan_midpoint'
+  | 'eid_day';
 
 /**
- * Can we prompt for review right now?
- * Honors Apple's 3/year cap, our 90-day gap, and the user's explicit decline.
+ * Funnel telemetry. Until now nothing recorded whether a prompt was even
+ * attempted, so "no ratings" could not be told apart from "never asked".
+ * `review_requested` is the only outcome that means we reached Play.
  */
-export async function canPromptForReview(): Promise<boolean> {
-    if (Platform.OS === 'web') return false;
-
-    // User explicitly declined → never ask again
-    const declined = await AsyncStorage.getItem(KEYS.REVIEW_DECLINED);
-    if (declined === 'true') return false;
-
-    const count = await getPromptCount();
-    if (count >= MAX_LIFETIME_PROMPTS) return false;
-
-    const days = await getDaysSinceLastPrompt();
-    if (days < MIN_DAYS_BETWEEN_PROMPTS) return false;
-
-    return true;
+function blocked(reason: string): false {
+  void logEvent('review_gate_blocked', { reason });
+  return false;
 }
 
 /**
- * Call this at a delight moment. It will:
- *   1. Check whether we're allowed to prompt.
- *   2. If yes, trigger the native review dialog.
- *   3. Record the prompt so we don't ask again too soon.
+ * Load expo-store-review lazily so web / Expo Go bundles (where the native
+ * module is absent) never crash. Present in native release builds.
+ */
+async function loadStoreReview(): Promise<null | {
+  isAvailableAsync: () => Promise<boolean>;
+  requestReview: () => Promise<void>;
+}> {
+  try {
+    // @ts-ignore optional native module, installed via `npx expo install expo-store-review`
+    return await import('expo-store-review');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ask for a review only if every guardrail passes.
  *
- * The expo-store-review module handles all the platform-specific behavior,
- * including Apple's throttling (which silently suppresses excess prompts).
+ * @returns true when the request actually reached Play — callers use this to
+ *          avoid stacking another full-screen surface on the same tap.
  */
-export async function promptForReview(trigger: DelightTrigger): Promise<void> {
-    const allowed = await canPromptForReview();
-    if (!allowed) return;
+export async function requestReviewIfAppropriate(): Promise<boolean> {
+  try {
+    if (Platform.OS === 'web') return false;
+    if ((await AsyncStorage.getItem(KEY_DONE)) === '1') return blocked('lifetime_cap');
 
-    try {
-        // Dynamic import so web builds don't crash.
-        // @ts-ignore - module is optional, installed via `npx expo install expo-store-review`
-        const StoreReview = await import('expo-store-review').catch(() => null);
-        if (!StoreReview) return;
+    const lastRaw = await AsyncStorage.getItem(KEY_LAST_ASKED);
+    if (lastRaw && Date.now() - parseInt(lastRaw, 10) < MIN_INTERVAL_MS) return blocked('cooldown');
 
-        const available = await StoreReview.isAvailableAsync();
-        if (!available) return;
+    const StoreReview = await loadStoreReview();
+    if (!StoreReview) return blocked('module_absent');
+    if (!(await StoreReview.isAvailableAsync())) return blocked('unavailable');
 
-        await StoreReview.requestReview();
-        await recordPrompt();
+    // Record the attempt BEFORE requesting: the platform never reveals whether
+    // the dialog actually appeared, so we treat the request itself as "asked".
+    const askCount = parseInt((await AsyncStorage.getItem(KEY_ASK_COUNT)) ?? '0', 10) + 1;
+    await AsyncStorage.setItem(KEY_LAST_ASKED, String(Date.now()));
+    await AsyncStorage.setItem(KEY_ASK_COUNT, String(askCount));
+    if (askCount >= MAX_ASKS) await AsyncStorage.setItem(KEY_DONE, '1');
 
-        // Fire-and-forget analytics hook (wire up later when you add an analytics MCP)
-        if (__DEV__) console.log(`[review] prompted via trigger: ${trigger}`);
-    } catch (e) {
-        if (__DEV__) console.warn('[review] prompt failed', e);
-    }
+    void logEvent('review_requested', { ask_count: askCount });
+    await StoreReview.requestReview();
+    return true;
+  } catch {
+    // Swallow — a review prompt must never break the flow that triggered it.
+    return false;
+  }
 }
 
 /**
- * Call when user opens Qibla compass.
- * After 3 successful uses, we consider this a delight moment and prompt.
+ * Call at a genuine success moment. Counts it and, once the user has earned
+ * enough context, tries to prompt (subject to all guardrails).
+ *
+ * @returns true when a review request reached Play on this call.
+ */
+export async function registerPositiveAction(source: DelightSource): Promise<boolean> {
+  try {
+    const count = parseInt((await AsyncStorage.getItem(KEY_ACTIONS)) ?? '0', 10) + 1;
+    await AsyncStorage.setItem(KEY_ACTIONS, String(count));
+    void logEvent('review_action', { count, source });
+    if (count < MIN_POSITIVE_ACTIONS) return false;
+    return await requestReviewIfAppropriate();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The strongest moment Azan has: the user just marked the last remaining
+ * prayer, so all five are complete for the day. Reached daily by engaged
+ * users — this is the trigger the old version was missing entirely.
+ */
+export async function onTrackerDayComplete(): Promise<boolean> {
+  return registerPositiveAction('tracker_day_complete');
+}
+
+/**
+ * Streak milestone. Now `>=` with a once-per-tier guard rather than `===`, so
+ * a user who opens the app on day 8 instead of day 7 is no longer skipped.
+ */
+export async function onStreakMilestone(streak: number): Promise<boolean> {
+  try {
+    if (streak < 7) return false;
+    const tier = streak >= 100 ? 100 : streak >= 30 ? 30 : 7;
+    const seenRaw = await AsyncStorage.getItem('@review/streakTierSeen');
+    const seen = seenRaw ? parseInt(seenRaw, 10) : 0;
+    if (tier <= seen) return false; // already credited this tier
+    await AsyncStorage.setItem('@review/streakTierSeen', String(tier));
+    return await registerPositiveAction('streak_milestone');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Qibla compass opened. Counts as a success moment from the 3rd use onward —
+ * `>=` rather than the old `=== 3`, which gave exactly one chance forever.
  */
 export async function recordQiblaUse(): Promise<void> {
-    const raw = await AsyncStorage.getItem(KEYS.QIBLA_USE_COUNT);
-    const count = raw ? parseInt(raw, 10) + 1 : 1;
-    await AsyncStorage.setItem(KEYS.QIBLA_USE_COUNT, count.toString());
-
-    if (count === 3) {
-        // Delay slightly so we don't interrupt the compass animation
-        setTimeout(() => promptForReview('qibla_third_use'), 2500);
+  try {
+    const raw = await AsyncStorage.getItem(KEY_QIBLA_USES);
+    const count = (raw ? parseInt(raw, 10) : 0) + 1;
+    await AsyncStorage.setItem(KEY_QIBLA_USES, String(count));
+    if (count >= QIBLA_USES_BEFORE_COUNTING) {
+      // Delay slightly so we never interrupt the compass settling animation.
+      setTimeout(() => { void registerPositiveAction('qibla_repeat_use'); }, 2500);
     }
+  } catch {
+    // Swallow.
+  }
 }
 
 /**
- * Call when user reaches a streak milestone.
+ * Kept for the tracker's existing call site.
+ * @deprecated prefer {@link onTrackerDayComplete} — a completed day is a
+ * stronger and far more frequent signal than a days-logged count.
  */
-export async function onStreakMilestone(streak: number): Promise<void> {
-    if (streak === 7) await promptForReview('streak_milestone_7');
-    else if (streak === 30) await promptForReview('streak_milestone_30');
-    else if (streak === 100) await promptForReview('streak_milestone_100');
+export async function onTrackerMilestone(daysLogged: number): Promise<boolean> {
+  if (daysLogged < 7) return false;
+  return registerPositiveAction('tracker_day_complete');
 }
 
-/**
- * Call when user completes 7+ days of tracker usage.
- */
-export async function onTrackerMilestone(daysLogged: number): Promise<void> {
-    if (daysLogged === 7) {
-        await promptForReview('tracker_week_complete');
-    }
+/** Ramadan day 15. A bonus path — dead most of the year, never the only one. */
+export async function onRamadanMidpoint(dayOfRamadan: number): Promise<boolean> {
+  if (dayOfRamadan !== 15) return false;
+  return registerPositiveAction('ramadan_midpoint');
 }
 
-/**
- * Call from the home screen on Eid days (detected via Hijri calendar).
- */
-export async function onEidDay(): Promise<void> {
-    await promptForReview('eid_day');
-}
-
-/**
- * Call from the Ramadan banner on day 15.
- */
-export async function onRamadanMidpoint(dayOfRamadan: number): Promise<void> {
-    if (dayOfRamadan === 15) {
-        await promptForReview('ramadan_day_15');
-    }
+/** Eid al-Fitr / Eid al-Adha. Bonus path, same caveat as Ramadan. */
+export async function onEidDay(): Promise<boolean> {
+  return registerPositiveAction('eid_day');
 }
 
 /**
  * If you ever build a custom "Rate us" button that links to the store instead
- * of the native prompt, call this first so we know the user engaged.
+ * of the native prompt, call this first so we never double-ask.
  */
 export async function markReviewDeclined(): Promise<void> {
-    await AsyncStorage.setItem(KEYS.REVIEW_DECLINED, 'true');
+  try {
+    await AsyncStorage.setItem(KEY_DONE, '1');
+    void logEvent('review_declined');
+  } catch {
+    // Swallow.
+  }
+}
+
+/** Exposed for tests and diagnostics. */
+export async function canPromptForReview(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  if ((await AsyncStorage.getItem(KEY_DONE)) === '1') return false;
+  const lastRaw = await AsyncStorage.getItem(KEY_LAST_ASKED);
+  if (lastRaw && Date.now() - parseInt(lastRaw, 10) < MIN_INTERVAL_MS) return false;
+  return true;
 }

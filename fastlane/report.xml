@@ -5,17 +5,17 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.0020329">
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.0009372">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="1: Switch to android preflight_release lane" time="0.0027379">
+      <testcase classname="fastlane.lanes" name="1: Switch to android preflight_release lane" time="0.0009041">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="2: shell command" time="0.1998349">
+      <testcase classname="fastlane.lanes" name="2: shell command" time="0.1409641">
         
       </testcase>
     

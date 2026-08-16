@@ -3,7 +3,7 @@ import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
 import { maybeShowInterstitial } from '@/services/adsService';
-import { onStreakMilestone } from '@/services/reviewPromptService';
+import { onStreakMilestone, onTrackerDayComplete } from '@/services/reviewPromptService';
 import {
     DayLog,
     getDayLog,
@@ -90,7 +90,12 @@ export default function TrackerScreen() {
     await loadData();
 
     if (completesTheDay) {
-      maybeShowInterstitial();
+      // Completing all five prayers is the app's strongest delight moment, so
+      // it feeds the review prompt too. Whichever surface shows, only ONE
+      // shows: if the review request reached Play we skip the interstitial,
+      // so the user is never handed an ad and a rating dialog on one tap.
+      const prompted = await onTrackerDayComplete();
+      if (!prompted) maybeShowInterstitial();
     }
   };
 
