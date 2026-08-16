@@ -63,6 +63,14 @@ Upload the latest signed AAB to production as a STAGED rollout (default 20%). Sh
 
 Upload the latest signed AAB straight to production — full rollout (all users)
 
+### android listing_images
+
+```sh
+[bundle exec] fastlane android listing_images
+```
+
+Upload store images only (phone + tablet screenshots, feature graphic, icon)
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

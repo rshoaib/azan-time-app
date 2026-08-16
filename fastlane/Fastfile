@@ -116,4 +116,32 @@ platform :android do
       skip_upload_changelogs: true
     )
   end
+
+  # Creative only — screenshots, feature graphic, icon. Never touches listing TEXT,
+  # so console-managed copy (and the ar/ur/id/tr-TR locales) can't be clobbered by a
+  # stale local .txt. Targets `internal` because supply needs a track with an active
+  # release for release context; the listing itself is track-independent.
+  #
+  # The image set on disk must be COMPLETE before running this — supply replaces each
+  # image type from what it finds locally. Pull the live set first:
+  #   node D:/Mobile/_shots/pull-live-images.mjs --app <repo> --pkg <pkg>
+  desc "Upload store images only (phone + tablet screenshots, feature graphic, icon)"
+  lane :listing_images do
+    img = File.join(ROOT, "fastlane/metadata/android/en-US/images")
+    %w[phoneScreenshots sevenInchScreenshots tenInchScreenshots].each do |d|
+      n = Dir.glob(File.join(img, d, "*.png")).length
+      UI.user_error!("#{d} is empty — refusing to push a partial image set.") if n.zero?
+      UI.message("#{d}: #{n} image(s)")
+    end
+    upload_to_play_store(
+      track: "internal",
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      changes_not_sent_for_review: false
+    )
+  end
 end

@@ -1,0 +1,15 @@
+{
+  "_note": "Tablet (7in/10in) set captured on the hala_tab7 AVD at 1200x1920. cutBandsPx excises the AdMob banner (real y 1636-1808) and rejoins, so the app's own tab bar is kept. cropTopPx drops the emulator status bar.",
+  "brand": { "from": "#1B2A6B", "to": "#0B1229" },
+  "headlineColor": "#FFFFFF",
+  "canvas": { "w": 1200, "h": 1920 },
+  "cropTopPx": 64,
+  "cutBandsPx": [{ "top": 1636, "height": 172 }],
+  "shots": [
+    { "file": "raw_prayers.png", "name": "prayers", "lines": ["Never miss a prayer,", "wherever you are"] },
+    { "file": "raw_tracker.png", "name": "tracker", "lines": ["Log every salah,", "build your streak"] },
+    { "file": "raw_dua.png", "name": "dua", "lines": ["Morning & evening", "adhkar, with audio"] },
+    { "file": "raw_qibla.png", "name": "qibla", "lines": ["Find the Qibla", "in seconds"] },
+    { "file": "raw_tilawat.png", "name": "tilawat", "lines": ["30+ live Quran", "radio stations"] }
+  ]
+}
