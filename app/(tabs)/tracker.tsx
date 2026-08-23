@@ -3,7 +3,7 @@ import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
 import { maybeShowInterstitial } from '@/services/adsService';
-import { onStreakMilestone, onTrackerDayComplete } from '@/services/reviewPromptService';
+import { onPrayerLogged, onStreakMilestone, onTrackerDayComplete } from '@/services/reviewPromptService';
 import {
     DayLog,
     getDayLog,
@@ -96,6 +96,14 @@ export default function TrackerScreen() {
       // so the user is never handed an ad and a rating dialog on one tap.
       const prompted = await onTrackerDayComplete();
       if (!prompted) maybeShowInterstitial();
+    } else if (nextStatus === 'prayed') {
+      // Logging ANY prayer is the app's core loop and its cheapest genuine
+      // success moment — up to five a day for an engaged user. This is what
+      // brings Azan's reachability in line with Mentalism's "any completed
+      // drill"; before it, the floor was three fully-tracked days. Only
+      // 'prayed' qualifies: prompting straight after someone logs a MISSED
+      // prayer would be tone-deaf. No ad on this branch, so nothing to stack.
+      void onPrayerLogged();
     }
   };
 

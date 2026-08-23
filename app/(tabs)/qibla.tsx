@@ -10,7 +10,8 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Magnetometer, type MagnetometerMeasurement } from 'expo-sensors';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
     ActivityIndicator,
     Dimensions,
@@ -42,13 +43,18 @@ export default function QiblaScreen() {
   useEffect(() => {
     loadQibla();
     startCompass();
-    // Track Qibla usage — after 3 successful uses the review service
-    // will prompt the native review dialog (once per 90 days max).
-    recordQiblaUse();
     return () => {
       Magnetometer.removeAllListeners();
     };
   }, []);
+
+  // Track Qibla usage on every VISIT, not once per mount. A tab screen mounts
+  // once per app process, so the old mount-only useEffect counted at most one
+  // use per cold launch — which made this (the cheapest review trigger the app
+  // has) need three separate cold launches to credit three uses. Every other
+  // screen here already uses useFocusEffect; this one was the outlier.
+  // The service enforces its own frequency caps.
+  useFocusEffect(useCallback(() => { recordQiblaUse(); }, []));
 
   // Point the compass and load nearby mosques for a location. Called with the
   // cached location first, then again with a fresh one if the user has travelled.

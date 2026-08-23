@@ -2,6 +2,7 @@ import { Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { DAILY_DUAS, DuaItem, EVENING_ADHKAR, MORNING_ADHKAR, TASBIH_TYPES } from '@/data/duas';
 import { isDuaPlaying, playDuaAudio, stopDuaAudio } from '@/services/duaAudioService';
+import { onTasbihTargetReached } from '@/services/reviewPromptService';
 import { getTasbihCount, setTasbihCount } from '@/services/storageService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
@@ -45,6 +46,11 @@ export default function DuaScreen() {
     setTasbihCountState(newCount);
     await setTasbihCount(newCount);
     Vibration.vibrate(15);
+    // Finishing a dhikr count (33 / 34 / 100) is a real completion moment, and
+    // the only cheap one reachable by users who never touch the tracker. Fires
+    // on the exact target hit, never on taps past it. The service enforces its
+    // own frequency caps; fire-and-forget so the counter never stutters.
+    void onTasbihTargetReached(newCount, TASBIH_TYPES[tasbihType]?.target ?? 0);
   };
 
   const resetTasbih = async () => {
