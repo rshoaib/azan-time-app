@@ -38,6 +38,18 @@
  *     "storeFile":      "upload-keystore.jks"           // relative to android/
  *   }]
  *
+ * `keystoreBackup` and `storeFile` are optional AS A PAIR. Omit both for an app
+ * that has no upload key yet — the guard is still injected, so a release build
+ * fails loudly instead of quietly debug-signing, and no signing identity is
+ * invented on the user's behalf:
+ *
+ *   ["./plugins/withReleaseSigning", { "slug": "paper-trader" }]
+ *
+ * Apps still on a hand-applied signing scheme (`storeFile`/`storePassword` in
+ * keystore.properties, or per-app gradle.properties like MICROWIN_UPLOAD_*) are
+ * detected as already wired and left exactly as they are — this plugin then only
+ * guarantees the guard is present, and never rewrites their credentials.
+ *
  * SECRETS
  * -------
  * Passwords come from `D:\Mobile\.keystores\<slug>-signing.properties`, which
@@ -54,12 +66,20 @@ const DEFAULT_KEYSTORE_DIR = path.join('D:', 'Mobile', '.keystores');
 const MARKER = 'UPLOAD_STORE_FILE'; // keystore.properties key the gradle block reads
 const GUARD_TEXT = 'this release build would be DEBUG-signed';
 
-// A build.gradle is considered already wired if it declares `useUploadKey` —
-// the flag every variant of this signing block (plugin-injected or the older
-// hand-applied ones) defines. Plain `expo prebuild` REUSES an existing android/
-// tree rather than clearing it, so the mod routinely runs against a file that
-// is already set up; re-injecting would duplicate the variable and break gradle.
-const WIRED = /\bdef useUploadKey\b/;
+// A build.gradle is considered already wired if it declares `useUploadKey` — the
+// flag this plugin's own injected block defines — OR if it already carries a loud
+// release guard from one of the fleet's hand-applied signing schemes (which read
+// `storeFile`/`storePassword`, or per-app gradle.properties like MICROWIN_UPLOAD_*,
+// and never define `useUploadKey`).
+//
+// Plain `expo prebuild` REUSES an existing android/ tree rather than clearing it,
+// so this mod routinely runs against a file that is already set up. Matching on
+// `useUploadKey` alone was too narrow: against a hand-wired tree it re-injected a
+// second signingConfigs.release block referring to an undefined `useUploadKey`,
+// which breaks gradle. Detect either shape.
+const isWired = (src) =>
+  /\bdef useUploadKey\b/.test(src) ||
+  (/throw new GradleException/.test(src) && /taskNames/.test(src));
 
 function keystoreDir() {
   return process.env.EXPO_KEYSTORE_DIR || DEFAULT_KEYSTORE_DIR;
@@ -78,6 +98,15 @@ function parseProperties(text) {
 
 function restoreSigningMaterial(androidRoot, opts, log) {
   const dir = keystoreDir();
+
+  // Apps that have no upload key yet (never published) declare no keystoreBackup.
+  // There is nothing to restore, and inventing a keystore would silently create a
+  // signing identity nobody chose. Injection still runs, so the guard is present
+  // and any release build fails loudly instead of quietly debug-signing.
+  if (!opts.keystoreBackup) {
+    log('· no upload key configured — injecting the guard only; release builds will fail loudly');
+    return;
+  }
 
   // (a) working keystore. storeFile is resolved by gradle with
   // rootProject.file(), and rootProject is android/, so resolve it the same way.
@@ -101,8 +130,14 @@ function restoreSigningMaterial(androidRoot, opts, log) {
   const propsPath = path.join(androidRoot, 'keystore.properties');
   if (fs.existsSync(propsPath)) {
     const existing = parseProperties(fs.readFileSync(propsPath, 'utf8'));
-    if (existing.UPLOAD_STORE_FILE && existing.UPLOAD_STORE_PASSWORD) {
-      log('· keystore.properties already present');
+    // Canonical keys, or the fleet's older hand-applied scheme. Both are usable —
+    // and a legacy file must NOT be overwritten with canonical keys, because the
+    // hand-wired build.gradle beside it reads `storeFile`/`storePassword` and
+    // would stop finding its credentials.
+    const canonical = existing.UPLOAD_STORE_FILE && existing.UPLOAD_STORE_PASSWORD;
+    const legacy = existing.storeFile && existing.storePassword;
+    if (canonical || legacy) {
+      log(`· keystore.properties already present (${canonical ? 'canonical' : 'legacy'} keys)`);
       return;
     }
   }
@@ -204,8 +239,10 @@ function injectGuard(src, slug, opts) {
   if (rel === -1) {
     throw new Error(`[withReleaseSigning] ${slug}: could not find the release buildType.`);
   }
-  // First signingConfig assignment inside the release buildType.
-  const target = /\n(\s*)signingConfig signingConfigs\.(debug|release)/.exec(src.slice(rel));
+  // First signingConfig assignment inside the release buildType. Some apps in the
+  // fleet write `signingConfig = signingConfigs.release` (property form), so the
+  // `=` is optional here.
+  const target = /\n(\s*)signingConfig\s*=?\s*signingConfigs\.(debug|release)/.exec(src.slice(rel));
   if (!target) {
     throw new Error(
       `[withReleaseSigning] ${slug}: could not find the release buildType's signingConfig line.`,
@@ -213,7 +250,12 @@ function injectGuard(src, slug, opts) {
   }
   const at = rel + target.index;
   const indent = target[1];
-  const backup = opts.keystoreBackup.replace(/\\/g, '\\\\');
+  // Groovy GString: every backslash in the Windows path must be doubled, or the
+  // file fails to parse at CONFIGURATION time — which breaks the build even when
+  // the keystore IS present.
+  const hint = opts.keystoreBackup
+    ? `(backup: D:\\\\Mobile\\\\.keystores\\\\${opts.keystoreBackup.replace(/\\/g, '\\\\')})`
+    : '(this app has no upload key yet — create one before releasing)';
   const replacement =
     `\n${indent}// Fail LOUDLY if the release keystore isn't wired up. A silently\n` +
     `${indent}// debug-signed release AAB is rejected by Play and is the recurring\n` +
@@ -224,7 +266,7 @@ function injectGuard(src, slug, opts) {
     `${indent}    throw new GradleException(\n` +
     `${indent}        "Upload keystore not wired up — this release build would be DEBUG-signed. " +\n` +
     `${indent}        "Run \`npx expo prebuild -p android\` to let plugins/withReleaseSigning.js restore it " +\n` +
-    `${indent}        "(backup: D:\\\\Mobile\\\\.keystores\\\\${backup}).")\n` +
+    `${indent}        "${hint}.")\n` +
     `${indent}}\n` +
     `${indent}signingConfig useUploadKey ? signingConfigs.release : signingConfigs.debug`;
   return src.slice(0, at) + replacement + src.slice(at + target[0].length);
@@ -234,10 +276,16 @@ function injectGuard(src, slug, opts) {
 
 const withReleaseSigning = (config, options) => {
   const opts = options || {};
-  for (const key of ['slug', 'keystoreBackup', 'storeFile']) {
-    if (!opts[key]) {
-      throw new Error(`[withReleaseSigning] missing required option "${key}" in app.json.`);
-    }
+  if (!opts.slug) {
+    throw new Error('[withReleaseSigning] missing required option "slug" in app.json.');
+  }
+  // keystoreBackup/storeFile are optional as a pair: omit BOTH for an app that has
+  // no upload key yet. Supplying one without the other is always a mistake.
+  if (Boolean(opts.keystoreBackup) !== Boolean(opts.storeFile)) {
+    throw new Error(
+      `[withReleaseSigning] ${opts.slug}: "keystoreBackup" and "storeFile" must be set together ` +
+        `(omit both for an app with no upload key).`,
+    );
   }
 
   config = withDangerousMod(config, [
@@ -255,7 +303,7 @@ const withReleaseSigning = (config, options) => {
       throw new Error('[withReleaseSigning] expected a Groovy app/build.gradle.');
     }
     let src = cfg.modResults.contents;
-    if (WIRED.test(src)) {
+    if (isWired(src)) {
       console.log('[withReleaseSigning] · signing config already wired — left as-is');
     } else {
       src = injectLoader(src, opts.slug);
