@@ -31,7 +31,12 @@ appId: com.azantime.app
     id: "e2e-interstitial-count"
     text: "interstitials: 0"
 
-# Completing the day (last prayer marked) MUST fire exactly one interstitial.
+# Completing the day (last prayer marked) MUST fire exactly one interstitial —
+# but only AFTER the tap quiet window. The prayer row cycles status on every tap,
+# so the service refuses to show an ad within 1200ms of any tap and each new tap
+# re-arms that window; the tracker therefore defers the attempt past it. The
+# extendedWaitUntil below is what absorbs that delay — a plain assertVisible here
+# would race the timer and read 0.
 - tapOn: "Tracker"
 - tapOn:
     id: "tracker-prayer-fajr"
@@ -44,9 +49,11 @@ appId: com.azantime.app
 - tapOn:
     id: "tracker-prayer-isha"
 - tapOn: "Settings"
-- assertVisible:
-    id: "e2e-interstitial-count"
-    text: "interstitials: 1"
+- extendedWaitUntil:
+    visible:
+      id: "e2e-interstitial-count"
+      text: "interstitials: 1"
+    timeout: 10000
 
 # The pinned banner strip is present (and, being above the tab bar, not clipped).
 - tapOn: "Prayers"

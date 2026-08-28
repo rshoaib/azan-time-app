@@ -12,7 +12,7 @@
  */
 
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { E2E } from './e2eConfig';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -52,13 +52,22 @@ export const AD_UNIT_IDS = {
     android: 'ca-app-pub-3166995085202346/5942887541',
     ios: 'ca-app-pub-3166995085202346/8822195777',
   } as AdUnitMap,
-  // Interstitial. Android unit is live ("Interstitial", created in AdMob under
-  // publisher pub-3166995085202346, 2026-07). iOS unit is still a PLACEHOLDER —
+  // Interstitial. Android unit is the live "Home Interstitial" in AdMob under
+  // publisher pub-3166995085202346. iOS unit is still a PLACEHOLDER —
   // the per-platform guard in hasRealInterstitialUnit() keeps iOS a no-op until
   // a real iOS unit is created (iOS isn't shipped yet). Dev/emulator always uses
   // Google's official test interstitial ID regardless of platform.
+  //
+  // ⚠️ 2026-08-28: this ID was WRONG from v1.3.5 (vc32) through v1.3.12 (vc39) —
+  // it read .../1260065927, but the real unit is .../1266065927 (one digit: the
+  // 4th, 0 → 6). A request against a non-existent unit fails before it reaches
+  // AdMob, so it logs ZERO requests rather than an error: AdMob's "app version"
+  // breakdown shows interstitial traffic on v1.2.0 and on NO version after it,
+  // while the banner (whose ID was correct) kept serving normally the whole time.
+  // Verified against the AdMob console ad-unit list for app ~7372137520.
+  // If you ever touch these, copy them from the console — do not retype them.
   interstitialMain: {
-    android: 'ca-app-pub-3166995085202346/1260065927',
+    android: 'ca-app-pub-3166995085202346/1266065927',
     ios: 'ca-app-pub-3166995085202346/PLACEHOLDER_INTERSTITIAL',
   } as AdUnitMap,
 } as const;
@@ -313,14 +322,45 @@ export function initializeAds(): Promise<void> {
 // Interstitial (frequency-capped, policy-conservative)
 // ──────────────────────────────────────────────────────────────────────────────
 //
-// Shown only at natural transitions (returning to the Home tab) — never on
-// launch, never during azan playback, and never more than the caps below. This
-// keeps a steady but respectful impression stream without hurting retention or
-// the app's rating. All state is in-memory and resets on cold start (which errs
-// toward FEWER ads).
+// Shown ONLY on a genuine completion — the real prayer azan finishing while the
+// app is foregrounded, or the user marking the last of the day's five prayers.
+// Never on launch, never on tab navigation, never during azan playback, never
+// while backgrounded, never within a tap's quiet window, and never more than the
+// caps below. This keeps a modest, respectful impression stream without hurting
+// retention, the app's rating, or its invalid-traffic standing. All state is
+// in-memory and resets on cold start (which errs toward FEWER ads).
 
 const INTERSTITIAL_MIN_INTERVAL_MS = 4 * 60 * 1000; // ≥ 4 min between shows
 const INTERSTITIAL_MAX_PER_DAY = 5;
+
+// ── Accidental-click protection ───────────────────────────────────────────────
+//
+// This app has a measured history of taps landing on ads the user never meant to
+// touch. On v1.2.0 its observed CTRs were 9.8% (banner), 21.6% (interstitial) and
+// 43.8% (app open) against a 1-3% norm — 10-25x high, which is the signature
+// AdMob's invalid-traffic systems flag, and the likely origin of the earlier
+// suspension warning. (App-open ads were removed entirely and must not return.)
+//
+// The tracker trigger is the specific hazard: it fires from a row the user taps
+// REPEATEDLY, because each tap cycles the status (null → prayed → missed → qada).
+// An ad presented on the same frame as the tap that completed the day can catch
+// the very next tap in that sequence. So: no interstitial within this window of
+// any user tap, and every tap re-arms the window. Callers record taps via
+// noteUserTap().
+const INTERSTITIAL_TAP_QUIET_MS = 1200;
+let lastUserTapAt = 0;
+
+/**
+ * Record a user tap that could be followed by another. Suppresses the
+ * interstitial for INTERSTITIAL_TAP_QUIET_MS so an ad never renders under a
+ * finger that is still tapping. Exported for the trigger sites and tests.
+ */
+export function noteUserTap(): void {
+  lastUserTapAt = Date.now();
+}
+
+/** Quiet window callers should wait before attempting a post-tap show. */
+export const INTERSTITIAL_POST_TAP_DELAY_MS = INTERSTITIAL_TAP_QUIET_MS + 150;
 
 let interstitialAd: any = null;
 let interstitialLoaded = false;
@@ -418,6 +458,14 @@ export function maybeShowInterstitial(opts?: { isBusy?: () => boolean }): boolea
   if (interstitialShownToday >= INTERSTITIAL_MAX_PER_DAY) return false;
   if (now - lastInterstitialShownAt < INTERSTITIAL_MIN_INTERVAL_MS) return false;
   if (opts?.isBusy?.()) return false;
+
+  // Never render over the lock screen, a notification shade, or another app —
+  // an ad the user cannot see is an impression they may dismiss by tapping
+  // blind. Centralized here so EVERY trigger inherits it, not just the audio one.
+  if (AppState.currentState !== 'active') return false;
+
+  // Never render under a finger that is still tapping (see the note above).
+  if (now - lastUserTapAt < INTERSTITIAL_TAP_QUIET_MS) return false;
 
   if (E2E) {
     // Deterministic, non-blocking test path: honor the same frequency caps as

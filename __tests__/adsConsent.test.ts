@@ -18,6 +18,8 @@ jest.mock('react-native', () => ({
     OS: 'android',
     select: (o: any) => (o && 'android' in o ? o.android : o?.default),
   },
+  // adsService reads AppState to keep interstitials off the lock screen.
+  AppState: { currentState: 'active' },
 }));
 
 import {

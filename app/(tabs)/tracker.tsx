@@ -2,7 +2,11 @@ import { SHARE_FOOTER } from '@/constants/storeLinks';
 import { PRAYER_CONFIG, Theme, ThemeColors } from '@/constants/theme';
 import { useTheme, useThemeStyles } from '@/constants/ThemeContext';
 import { getNextAchievement, getUnlockedAchievements, TIER_COLORS } from '@/data/achievements';
-import { maybeShowInterstitial } from '@/services/adsService';
+import {
+    INTERSTITIAL_POST_TAP_DELAY_MS,
+    maybeShowInterstitial,
+    noteUserTap,
+} from '@/services/adsService';
 import { onPrayerLogged, onStreakMilestone, onTrackerDayComplete } from '@/services/reviewPromptService';
 import {
     DayLog,
@@ -69,6 +73,11 @@ export default function TrackerScreen() {
   useEffect(() => { loadData(); }, []);
 
   const cyclePrayerStatus = async (prayer: TrackerPrayer) => {
+    // Every tap re-arms the interstitial's quiet window. This row cycles
+    // (null → prayed → missed → qada) so users tap it repeatedly; without this,
+    // an ad shown on the completing tap can swallow the next one.
+    noteUserTap();
+
     const current = dayLog[prayer];
     const nextStatus: PrayerStatus =
       current === null ? 'prayed' :
@@ -95,7 +104,12 @@ export default function TrackerScreen() {
       // shows: if the review request reached Play we skip the interstitial,
       // so the user is never handed an ad and a rating dialog on one tap.
       const prompted = await onTrackerDayComplete();
-      if (!prompted) maybeShowInterstitial();
+      // Wait out the tap quiet window before even attempting the ad. If the user
+      // taps again in the meantime, noteUserTap() re-arms it and
+      // maybeShowInterstitial() declines — no ad rather than a risky one.
+      if (!prompted) {
+        setTimeout(() => maybeShowInterstitial(), INTERSTITIAL_POST_TAP_DELAY_MS);
+      }
     } else if (nextStatus === 'prayed') {
       // Logging ANY prayer is the app's core loop and its cheapest genuine
       // success moment — up to five a day for an engaged user. This is what
