@@ -89,19 +89,35 @@ jest.mock('expo-notifications', () => ({
 
 // ─── the native module ───────────────────────────────────────────────────────
 
-const nativeSchedule = jest.fn(() => 1);
+// Typed args so `.mock.calls[0][0]` is reachable in the horizon assertions.
+const nativeSchedule = jest.fn(
+    (_times: number[], _sounds: string[], _title: string, _body: string) => 1,
+);
 const nativeCancelAll = jest.fn(() => true);
 const ensureSilentChannel = jest.fn(() => true);
+const ensureRearmWorker = jest.fn(() => true);
+
+/** Fire-time records the native side is holding for upload (v1.3.15). */
+let firedLog: any[] = [];
+/** Remaining alarm cover reported by the native side (v1.3.15). */
+let horizon: any = null;
+
+function makeNativeModule() {
+    return {
+        ensureSilentChannel,
+        schedule: nativeSchedule,
+        cancelAll: nativeCancelAll,
+        ensureRearmWorker,
+        horizonInfo: jest.fn(() => horizon),
+        drainFiredLog: jest.fn(() => JSON.stringify(firedLog)),
+        playNow: jest.fn(),
+        stop: jest.fn(),
+        isPlaying: jest.fn(() => false),
+    };
+}
 
 /** Swapped to null to simulate iOS / Expo Go / a build without the module. */
-let nativeModule: any = {
-    ensureSilentChannel,
-    schedule: nativeSchedule,
-    cancelAll: nativeCancelAll,
-    playNow: jest.fn(),
-    stop: jest.fn(),
-    isPlaying: jest.fn(() => false),
-};
+let nativeModule: any = makeNativeModule();
 
 jest.mock('@/modules/adhan-playback', () => ({
     __esModule: true,
@@ -110,6 +126,10 @@ jest.mock('@/modules/adhan-playback', () => ({
     },
     isAdhanServiceAvailable: () => nativeModule != null,
     addAdhanFinishedListener: jest.fn(() => () => {}),
+    // Mirror the real helpers: both swallow everything and return an empty
+    // value when the module is absent, so the app-open path cannot throw.
+    drainFiredLog: () => (nativeModule ? firedLog : []),
+    getHorizonInfo: () => (nativeModule ? horizon : null),
 }));
 
 // ─── audio + analytics + ads ─────────────────────────────────────────────────
@@ -132,15 +152,21 @@ const settings = {
     reciter: 'mishary',
 };
 
+/**
+ * null keeps the routing tests to one clean day of prayers. The horizon tests
+ * set a real location so the 30-day extension actually runs through the real
+ * `adhan` calculation — the thing whose duplication into Kotlin the design
+ * deliberately avoids.
+ */
+let savedLocation: any = null;
+
 jest.mock('@/services/storageService', () => ({
     getAzanSoundEnabled: jest.fn(async () => settings.azanSound),
     getAzanShortEnabled: jest.fn(async () => settings.azanShort),
     getAzanReciter: jest.fn(async () => settings.reciter),
     getCalculationMethod: jest.fn(async () => 'MuslimWorldLeague'),
     getMadhab: jest.fn(async () => 'shafi'),
-    // No saved location -> schedulePrayerNotifications does not extend into the
-    // next two days, so each test asserts on one clean day of prayers.
-    getSavedLocation: jest.fn(async () => null),
+    getSavedLocation: jest.fn(async () => savedLocation),
 }));
 
 // ─── fixtures ────────────────────────────────────────────────────────────────
@@ -184,14 +210,10 @@ beforeEach(() => {
     settings.azanSound = true;
     settings.azanShort = false;
     settings.reciter = 'mishary';
-    nativeModule = {
-        ensureSilentChannel,
-        schedule: nativeSchedule,
-        cancelAll: nativeCancelAll,
-        playNow: jest.fn(),
-        stop: jest.fn(),
-        isPlaying: jest.fn(() => false),
-    };
+    firedLog = [];
+    horizon = null;
+    savedLocation = null;
+    nativeModule = makeNativeModule();
 });
 
 afterEach(() => {
@@ -362,5 +384,212 @@ describe('cancelAllNotifications', () => {
         // service would still fire at prayer time with nothing on screen.
         expect(nativeCancelAll).toHaveBeenCalled();
         expect(cancelAllScheduled).toHaveBeenCalled();
+    });
+});
+
+// ─── alarm horizon (v1.3.15) ─────────────────────────────────────────────────
+//
+// The defect: the app laid down 3 days of alerts and re-armed them only from
+// applyLocation on the Home tab, so a user who did not open Azan Time for 3
+// days silently stopped getting prayer alerts. Confirmed on a real device --
+// `dumpsys alarm` showed 204 pending alarms system-wide and NOT ONE belonging
+// to this app, the last having fired 2d15h earlier.
+//
+// The native re-arm layers (alarm chain, boot receiver, WorkManager) cannot be
+// tested here; they need a device. What IS testable in JS, and what would rot
+// silently if someone "tidied" the scheduling loop, is that the full horizon is
+// computed, that the native side receives ALL of it rather than the notification
+// window, and that the platform notification cap is respected.
+
+describe('alarm horizon', () => {
+    beforeEach(() => {
+        savedLocation = { latitude: 21.4225, longitude: 39.8262 };
+    });
+
+    it('hands the native service far more than the old 3-day horizon', async () => {
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        const times: number[] = nativeSchedule.mock.calls[0][0] as any;
+        // 3 days x 6 prayers was 18. Anything near that means the horizon
+        // regressed to the old value.
+        expect(times.length).toBeGreaterThan(100);
+
+        const furthestDays = (Math.max(...times) - NOW) / 86400000;
+        expect(furthestDays).toBeGreaterThan(25);
+    });
+
+    it('never gives the native side less than the notification schedule', async () => {
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        const times: number[] = nativeSchedule.mock.calls[0][0] as any;
+        // On Android the notification budget (400) is never reached by a 30-day
+        // horizon (~176), so these are legitimately EQUAL here — the cap only
+        // bites on iOS, covered separately below. What must always hold is that
+        // the native side is never the SHORTER of the two: an adhan without a
+        // visible notification is worse than silence.
+        expect(times.length).toBeGreaterThanOrEqual(scheduled.length);
+    });
+
+    it('keeps every scheduled instant paired with its own recording', async () => {
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        const [times, sounds] = nativeSchedule.mock.calls[0] as any;
+        expect(sounds.length).toBe(times.length);
+        // Fajr keeps its own recording across the whole horizon, not just day 1.
+        expect(sounds).toContain('azan_fajr');
+        expect(sounds).toContain('azan_mishary');
+    });
+
+    it('registers the WorkManager recovery layer', async () => {
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+        expect(ensureRearmWorker).toHaveBeenCalled();
+    });
+
+    it('does not arm the worker when the service does not own playback', async () => {
+        settings.azanShort = true;
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+        // Short azan stays on the sounded channel; there is no native schedule
+        // to re-arm, so scheduling recovery work would be pointless wakeups.
+        expect(ensureRearmWorker).not.toHaveBeenCalled();
+        expect(nativeCancelAll).toHaveBeenCalled();
+    });
+});
+
+describe('horizon telemetry — measuring a failure whose symptom is silence', () => {
+    it('reports remaining cover BEFORE re-arming, including the ran-dry case', async () => {
+        // furthestMs in the past = this install had already gone silent by the
+        // time the user opened the app. That is the exact state observed on the
+        // real device, and the number worth watching in the field.
+        horizon = {
+            persistedTotal: 180,
+            futureCount: 0,
+            armedCount: 0,
+            furthestMs: NOW - 86400000,
+            nextMs: 0,
+        };
+        savedLocation = { latitude: 21.4225, longitude: 39.8262 };
+
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        const { logEvent } = require('@/services/analyticsService');
+        const call = logEvent.mock.calls.find((c: any[]) => c[0] === 'alarm_horizon_health');
+        expect(call).toBeDefined();
+        expect(call[1].ran_dry).toBe(true);
+        expect(call[1].days_remaining).toBe(0);
+    });
+
+    it('uploads fire-time records captured while the app was closed', async () => {
+        // Stamped natively at fire time and held until an app open -- the only
+        // way to observe the users this bug affects, who by definition are not
+        // opening the app.
+        firedLog = [
+            { t: NOW - 3 * 3600000, s: 'azan', e: 'started' },
+            { t: NOW - 3 * 3600000, s: 'azan', e: 'played' },
+        ];
+
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        const { logEvent } = require('@/services/analyticsService');
+        const fired = logEvent.mock.calls.filter(
+            (c: any[]) => c[0] === 'adhan_fired_batch',
+        );
+        // ONE aggregate event, not one per record: the ring holds up to 200 and
+        // a month-absent user would otherwise emit 200 events on a single open.
+        expect(fired).toHaveLength(1);
+        expect(fired[0][1].started).toBe(1);
+        expect(fired[0][1].played).toBe(1);
+        expect(fired[0][1].unfinished).toBe(0);
+        expect(fired[0][1].oldest_age_hours).toBe(3);
+    });
+
+    it('surfaces clipping as started-without-played', async () => {
+        // A fire that began but never completed is how Doze or an OEM killer
+        // shows up in the field — nobody reports "the adhan was short", they
+        // just stop using the app.
+        firedLog = [
+            { t: NOW - 2 * 3600000, s: 'azan', e: 'started' },
+            { t: NOW - 2 * 3600000, s: 'azan', e: 'played' },
+            { t: NOW - 3600000, s: 'azan', e: 'started' },
+        ];
+
+        const svc = freshService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        const { logEvent } = require('@/services/analyticsService');
+        const fired = logEvent.mock.calls.find(
+            (c: any[]) => c[0] === 'adhan_fired_batch',
+        );
+        expect(fired[1].started).toBe(2);
+        expect(fired[1].played).toBe(1);
+        expect(fired[1].unfinished).toBe(1);
+    });
+
+    it('survives the native module being absent, without throwing', async () => {
+        nativeModule = null;
+        const svc = freshService();
+        // iOS / Expo Go: no horizon info, no fired log, and scheduling must
+        // still complete. Diagnostics must never cost a prayer alert.
+        await expect(
+            svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0),
+        ).resolves.not.toThrow();
+    });
+});
+
+describe('iOS pending-notification cap', () => {
+    /**
+     * iOS hard-caps pending local notifications at 64 and SILENTLY DROPS the
+     * excess — no error, no warning. A 30-day horizon is ~176 notifications, so
+     * without an explicit cap iOS would discard which alerts it kept on its own
+     * terms. Capping deliberately means the cutoff is a decision we made.
+     *
+     * Needs its own module registry because Platform.OS is mocked for the whole
+     * file, and the cap is read at module load.
+     */
+    function iosService() {
+        let mod: any;
+        jest.isolateModules(() => {
+            jest.doMock('react-native', () => ({
+                Platform: {
+                    OS: 'ios',
+                    select: (o: any) => (o && 'ios' in o ? o.ios : o?.default),
+                },
+            }));
+            mod = require('@/services/notificationService');
+        });
+        return mod;
+    }
+
+    afterEach(() => {
+        jest.dontMock('react-native');
+    });
+
+    it('stays under the 64-notification limit across a 30-day horizon', async () => {
+        savedLocation = { latitude: 21.4225, longitude: 39.8262 };
+        const svc = iosService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        // The Android run above schedules ~176 for the same horizon; if this
+        // ever approaches that, the cap has been lost and iOS users silently
+        // lose whichever alerts the OS decides to drop.
+        expect(scheduled.length).toBeGreaterThan(0);
+        expect(scheduled.length).toBeLessThanOrEqual(60);
+    });
+
+    it('does not route through the native service on iOS', async () => {
+        savedLocation = { latitude: 21.4225, longitude: 39.8262 };
+        const svc = iosService();
+        await svc.schedulePrayerNotifications(prayers(), ALL_ENABLED, 0);
+
+        // The service is Android-only, so iOS must keep the sounded-channel
+        // path rather than scheduling silence it can never fill.
+        expect(nativeSchedule).not.toHaveBeenCalled();
+        expect(scheduled.every(s => s.sound !== false)).toBe(true);
     });
 });

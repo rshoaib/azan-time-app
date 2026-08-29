@@ -1,0 +1,3 @@
+- The call to prayer now plays in full instead of cutting short.
+- Prayer alerts keep working even if you don't open the app for a while.
+- Prayer alerts are also restored automatically after you restart your phone.

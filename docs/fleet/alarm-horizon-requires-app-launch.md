@@ -1,6 +1,7 @@
 # Fleet check — scheduled reminders that silently stop without an app launch
 
-**Status:** Azan Time — fix in progress (v1.3.15). Backtime — **open, not started.**
+**Status:** Azan Time — **FIXED and shipped in v1.3.15 / vc42** (2026-08-29).
+Backtime — **open, not started.**
 Fasting Buddy — checked, not affected.
 **Origin:** the Azan Time alarm-horizon investigation, 2026-08-29.
 
@@ -114,3 +115,55 @@ Widening the horizon does not fix this, it only moves the cliff. The fix is
 
 Whatever is chosen, it needs a way to **observe** that it is working, because the
 failure mode is silence. See Azan's v1.3.15 verification notes.
+
+---
+
+## Azan Time — what shipped (v1.3.15, 2026-08-29) and what is still unknown
+
+**Shipped:** 30-day persisted schedule with a rolling ~8-day armed window,
+re-armed by three layers that need no app launch — the alarm chain (each
+firing alarm arms the next), the boot receiver, and a 12h WorkManager job.
+The notification horizon widened to match (30 days on Android, capped at 60
+pending on iOS because iOS hard-caps at 64 and silently drops the excess).
+
+### Verified on hardware (SM-S938B)
+
+- Backgrounded fire: `uidState: RCVR`, `allowWiu:-1`,
+  `code:ALARM_MANAGER_WHILE_IDLE` — the FGS start is granted by the
+  exact-alarm exemption alone, with no foreground privilege.
+- Forced deep Doze, never on the battery-optimisation whitelist, forced back
+  into idle mid-playback: **0 ms clipping**, full 197.6s every time.
+- Reboot with the app never reopened: 40 `AdhanAlarmReceiver` alarms restored
+  from the persisted list. NOTE: count the app's OWN receiver, not the total
+  pending — expo-notifications restores its own alarms on boot and will
+  satisfy a total-count check even if your boot receiver never ran.
+
+### KNOWN UNKNOWN — Samsung "sleeping apps"
+
+**This was NOT verified and cannot be, in a single session.**
+
+Samsung's App Power Management ("sleeping apps" / "deep sleeping apps") is
+separate from AOSP standby buckets and does not show up in
+`am get-standby-bucket`. It manifests only after **days** of an app going
+unused — precisely the condition the horizon fix exists to survive, and
+precisely the condition a test session cannot compress.
+
+Nothing interfered during testing. That is absence of evidence, not evidence
+of absence. Do not read the passing device tests as clearance on this point.
+
+It is the reason the design puts the **alarm chain** in the load-bearing role
+and demotes WorkManager to recovery: an exact alarm firing is the mechanism
+OEM power management honours most reliably (it is what wakes a sleeping app
+in the first place), whereas a periodic job is the first thing to be
+throttled. If Samsung kills the worker entirely, the design still holds.
+
+The way this gets answered is the field telemetry, not another test session:
+`alarm_horizon_health.hours_since_rearm` routinely far above 12h means the
+background layers are not running on real devices.
+
+### Other limits, stated rather than buried
+
+- The cliff moved from 3 days to 30; it was not removed. Beyond the persisted
+  list the app still needs one launch.
+- A force-stop from the task manager kills alarms, chain and worker together
+  until next launch. Nothing in this design fixes that.

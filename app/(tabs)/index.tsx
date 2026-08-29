@@ -351,6 +351,28 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.countdownPill}>
                 <FontAwesome name="clock-o" size={14} color={c.goldLight} />
+                {/* KNOWN INEFFICIENCY, measured and accepted (v1.3.15).
+                    onElapsed fires ~1s after each prayer instant passes and
+                    re-runs loadPrayerTimes -> applyLocation ->
+                    schedulePrayerNotifications, which cancels and re-lays the
+                    ENTIRE schedule: ~148 notifications since the horizon
+                    widened from 3 days to 30 (it was 14 before).
+
+                    Measured on an SM-S938B: 188 pending alarms armed, no ANR
+                    and no dropped frames, against a device cap of
+                    max_alarms_per_uid=500. So it is wasteful, not harmful, and
+                    it is deliberately NOT being changed alongside the horizon
+                    fix.
+
+                    It is also foreground-only — this interval runs only while
+                    this tab is mounted and the app is in front — so it does
+                    nothing for the alarm-horizon problem. Do not mistake it for
+                    a re-arm mechanism.
+
+                    If you touch this screen: consider having onElapsed advance
+                    the displayed next-prayer locally and reschedule only when
+                    the horizon is actually shallow, rather than re-laying 148
+                    notifications six times a day. */}
                 <Countdown
                   nextPrayerTime={prayerTimes.nextPrayerTime}
                   onElapsed={loadPrayerTimes}

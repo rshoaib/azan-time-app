@@ -28,4 +28,12 @@ dependencies {
   implementation project(':expo-modules-core')
   implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
   implementation 'androidx.core:core-ktx:1.13.1'
+
+  // WorkManager is ALREADY on the app's classpath transitively (the merged
+  // manifest carries androidx.work.WorkManagerInitializer, SystemAlarmService
+  // and SystemJobService). Declaring it here only makes it compilable from this
+  // module; pinning the exact version already being resolved (2.7.0) keeps the
+  // app's dependency graph and APK unchanged. If something else in the tree
+  // raises it later, Gradle picks the higher version as usual.
+  implementation 'androidx.work:work-runtime:2.7.0'
 }

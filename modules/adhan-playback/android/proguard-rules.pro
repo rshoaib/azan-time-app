@@ -31,12 +31,53 @@
 -keep class expo.modules.adhanplayback.AdhanScheduler { *; }
 -keep class expo.modules.adhanplayback.AdhanScheduler$* { *; }
 
+# AdhanRearmWorker is instantiated REFLECTIVELY BY NAME by WorkManager, from a
+# class name persisted in its own database — so the name must survive even
+# across an app update that reshuffles everything else. androidx.work ships
+# `-keep class * extends androidx.work.Worker`, but this worker is the recovery
+# path for a silent failure, so it is not left depending on another library's
+# rules. The (Context, WorkerParameters) constructor is the reflection target.
+-keep class expo.modules.adhanplayback.AdhanRearmWorker { *; }
+-keepclassmembers class expo.modules.adhanplayback.AdhanRearmWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+
 # AdhanPlaybackModule itself is instantiated reflectively by expo-modules-core
 # from expo-module.config.json. expo-modules-core already ships
 # `-keep ... class * extends expo.modules.kotlin.modules.Module`, so this is
 # redundant today; it is stated explicitly so the module does not depend on
 # another package's keep rules staying as they are.
 -keep class expo.modules.adhanplayback.AdhanPlaybackModule { *; }
+
+# ─── UNPROVEN: KOTLIN METADATA UNDER R8 FULL MODE ────────────────────────────
+#
+# NOT covered by this file, and NOT verifiable by reading — prove it on the
+# first minified build.
+#
+# expo-modules-core coerces JS arguments to the Kotlin parameter types declared
+# on each `Function(...)` lambda (e.g. `Function("schedule") { times: List<Double>,
+# sounds: List<String>, ... }`). That coercion reads Kotlin's `@kotlin.Metadata`
+# annotations. R8 FULL MODE — the default since AGP 8 — is more aggressive about
+# stripping annotations and generic signatures than legacy mode.
+#
+# If that metadata is lost, the failure is NOT a build error. It is a runtime
+# type-coercion failure inside `schedule`, which means: no alarms armed, no
+# adhan, no crash. Silence again.
+#
+# Supplying the fix here would be guessing at another library's contract, so
+# this module does not. When the expo-av -> expo-audio migration finally
+# unblocks R8 on this app (expo-av imports the removed
+# expo.modules.core.interfaces.services.KeepAwakeManager and R8 hard-fails on
+# it), the FIRST thing to verify on a minified build is:
+#
+#   1. `AdhanPlayback.schedule([...], [...], 't', 'b')` returns a non-zero count
+#      — not a coercion error.
+#   2. `adb shell dumpsys alarm | grep <uid>` shows the alarms actually armed.
+#
+# If it fails, the likely remedy is keeping metadata for the module package:
+#   -keepattributes RuntimeVisibleAnnotations,AnnotationDefault,Signature
+#   -keep class kotlin.Metadata { *; }
+# Confirm against the expo-modules-core version in use before adopting either.
 
 # ─── RESOURCE SHRINKING (shrinkResources) ────────────────────────────────────
 #

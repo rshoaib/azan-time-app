@@ -91,8 +91,43 @@ class AdhanPlaybackModule : Module() {
 
     Function("cancelAll") {
       AdhanScheduler.cancelAll(context)
+      // Nothing left to re-arm, so stop the recovery worker too rather than
+      // waking every 12 hours to look at an empty schedule.
+      try { AdhanRearmWorker.cancel(context) } catch (e: Exception) {
+        Log.w(TAG, "could not cancel re-arm worker", e)
+      }
       true
     }
+
+    /**
+     * Register the periodic re-arm worker. Idempotent (KEEP), so calling it on
+     * every schedule is free. See AdhanRearmWorker for why this is the recovery
+     * layer and not the primary one.
+     */
+    Function("ensureRearmWorker") {
+      try {
+        AdhanRearmWorker.ensureScheduled(context)
+        true
+      } catch (e: Exception) {
+        // WorkManager absent or not initialised — the chain and boot receiver
+        // still carry the schedule, so this is not fatal.
+        Log.w(TAG, "could not schedule re-arm worker", e)
+        false
+      }
+    }
+
+    /**
+     * How much cover is actually left. Read on app open BEFORE re-arming, this
+     * is what makes a silent failure measurable in the field.
+     */
+    Function("horizonInfo") { AdhanScheduler.horizonInfo(context) }
+
+    /**
+     * Hand over the fire-time log and clear it. Returns a JSON array string of
+     * {t, s, e} records — see AdhanScheduler.recordFired for why the record is
+     * written at fire time and uploaded later.
+     */
+    Function("drainFiredLog") { AdhanScheduler.drainFiredLog(context) }
 
     /** Play immediately — in-app preview and manual verification. */
     Function("playNow") { sound: String, title: String, body: String ->

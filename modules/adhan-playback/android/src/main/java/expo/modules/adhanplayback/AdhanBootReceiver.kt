@@ -30,8 +30,24 @@ class AdhanBootReceiver : BroadcastReceiver() {
       Intent.ACTION_MY_PACKAGE_REPLACED,
       "android.intent.action.QUICKBOOT_POWERON",
       "com.htc.intent.action.QUICKBOOT_POWERON" -> {
-        val n = AdhanScheduler.restore(context)
-        Log.i(TAG, "restored $n adhan alarms after ${intent.action}")
+        // rearm() (not a fixed replay) so a reboot after several idle days arms
+        // the next window from the persisted 30-day list, rather than restoring
+        // a stale set whose entries are all in the past.
+        val n = try {
+          AdhanScheduler.rearm(context)
+        } catch (e: Exception) {
+          Log.e(TAG, "re-arm after ${intent.action} failed", e); 0
+        }
+        Log.i(TAG, "re-armed $n adhan alarms after ${intent.action}")
+
+        // WorkManager re-registers its own persisted work across reboots, but
+        // enqueueing with KEEP here costs nothing and covers the case where its
+        // records were lost (cleared data, some OEM cleaners).
+        try {
+          AdhanRearmWorker.ensureScheduled(context)
+        } catch (e: Exception) {
+          Log.w(TAG, "could not ensure re-arm worker", e)
+        }
       }
       else -> Log.i(TAG, "ignoring ${intent.action}")
     }

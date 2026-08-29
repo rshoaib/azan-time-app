@@ -14,6 +14,24 @@
  *
  * If you can't ship all five at launch, start with Makkah + Madinah —
  * those two cover 80% of user preference in survey data.
+ *
+ * ⚠️ DO NOT REMOVE THE `require()` CALLS BELOW, even if they look unused.
+ *
+ * They are load-bearing for NATIVE playback, not just for in-app preview.
+ * Each `require()` makes Metro bundle a second copy of the mp3 as
+ * `res/raw/assets_audio_<name>`, alongside the `res/raw/<name>` copy placed by
+ * the expo-notifications config plugin from app.json.
+ *
+ * That duplication is what lets the adhan foreground service survive resource
+ * shrinking: the generated keep list
+ * (android/app/build/generated/res/react/<variant>/raw/keep.xml) protects ONLY
+ * the `assets_audio_*` names, so `res/raw/azan` would be stripped if
+ * shrinkResources were enabled. AdhanPlaybackService.resolveSound() falls back
+ * to the `assets_audio_*` copy for exactly this reason.
+ *
+ * Drop these requires and that fallback silently evaporates — with no build
+ * error and no crash, just an adhan that does not play. See
+ * modules/adhan-playback/android/proguard-rules.pro.
  */
 
 export interface Reciter {

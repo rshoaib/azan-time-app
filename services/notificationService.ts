@@ -4,7 +4,7 @@ import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
 import { getAzanReciter, getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getMadhab, getSavedLocation } from './storageService';
 import { RECITERS, getReciter } from '../constants/reciters';
 import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
-import AdhanPlayback from '../modules/adhan-playback';
+import AdhanPlayback, { drainFiredLog, getHorizonInfo } from '../modules/adhan-playback';
 
 // ─── Full-adhan playback path (v1.3.14) ──────────────────────────────────────
 //
@@ -30,6 +30,36 @@ import AdhanPlayback from '../modules/adhan-playback';
 // `prayer-azan-*` channels and the only way to move them to silent is a new id.
 const ADHAN_SILENT_CHANNEL = 'prayer-azan-silent-v3';
 
+// ─── Alarm horizon (v1.3.15) ─────────────────────────────────────────────────
+//
+// This app used to schedule 3 days of prayer alerts and re-arm them ONLY from
+// applyLocation on the Home tab — i.e. only when the user opened the app. A
+// user who did not open Azan Time for 3 days silently stopped getting prayer
+// alerts. Confirmed on a real device: `dumpsys alarm` showed 204 pending alarms
+// system-wide and NOT ONE belonging to this app, the last having fired 2d15h
+// earlier. The 3-day figure came from 07f9dce with no rationale; it was never a
+// platform limit.
+//
+// Two independent changes fix it:
+//   1. This horizon widens to 30 days.
+//   2. The native side re-arms its rolling window WITHOUT an app launch (alarm
+//      chain, boot receiver, WorkManager recovery) — see AdhanScheduler.
+//
+// Widening alone would only move the cliff, and (2) alone would leave the adhan
+// playing with no visible notification, which is worse than silence.
+const PRAYER_HORIZON_DAYS = 30;
+
+// expo-notifications one-shots are scheduled from JS and CANNOT be re-armed
+// natively, so on iOS the cliff is whatever this cap allows. iOS hard-caps
+// pending local notifications at 64 and silently drops the excess, so stay
+// under it with margin. Android has no comparable cap (observed device limit:
+// max_alarms_per_uid=500) and takes the full horizon.
+//
+// NOTE: on Android this schedules ~180 notifications in a loop on app open.
+// Measured cost should be checked if the Home tab ever feels slow on load;
+// the fix would be to schedule the first week eagerly and the rest deferred.
+const MAX_PENDING_NOTIFICATIONS = Platform.OS === 'ios' ? 60 : 400;
+
 /** True when the native foreground-service path is usable on this build. */
 function hasAdhanService(): boolean {
     return Platform.OS === 'android' && AdhanPlayback != null;
@@ -38,6 +68,92 @@ function hasAdhanService(): boolean {
 /** res/raw resource name for a bundled sound file ('azan.mp3' -> 'azan'). */
 function rawName(soundFile: string): string {
     return soundFile.replace(/\.mp3$/i, '');
+}
+
+/**
+ * Report how much alarm cover was left on arrival, BEFORE re-arming.
+ *
+ * The whole difficulty with this bug class is that the symptom is silence:
+ * nothing crashes, nothing logs, and the settings screen still says reminders
+ * are on. Scheduling telemetry proves only that scheduling ran — which it
+ * always did. What matters is whether cover SURVIVED between opens, so this is
+ * sampled at the one moment we can see the previous state.
+ *
+ * `daysRemaining` 0 means this install had run dry before the user opened it —
+ * a prayer was missed. A field population clustering near the full horizon
+ * means the native re-arm layers work; a mass of zeroes means they do not.
+ */
+function reportHorizonHealth(): void {
+    try {
+        const info = getHorizonInfo();
+        if (!info) return;
+        const daysRemaining = info.furthestMs > 0
+            ? Math.max(0, (info.furthestMs - Date.now()) / 86400000)
+            : 0;
+        logEvent('alarm_horizon_health', {
+            days_remaining: Math.round(daysRemaining * 10) / 10,
+            armed_count: info.armedCount,
+            future_count: info.futureCount,
+            ran_dry: daysRemaining <= 0,
+            // Hours since anything last re-armed. If this is routinely much
+            // larger than the worker's 12h interval, the background layers are
+            // not running and only app opens are keeping the app alive — which
+            // is the pre-v1.3.15 behaviour wearing a new coat.
+            hours_since_rearm: info.lastArmedAtMs > 0
+                ? Math.round((Date.now() - info.lastArmedAtMs) / 3600000)
+                : -1,
+        });
+    } catch {
+        // Diagnostics must never break scheduling.
+    }
+}
+
+/**
+ * Upload adhans that fired while the app was closed.
+ *
+ * Records are stamped natively AT FIRE TIME and held in a bounded ring, so a
+ * user who opens the app once a month still returns a month of history with
+ * original timestamps. That is the point: the users this bug silences are
+ * exactly the ones who do not open the app, and open-time telemetry alone can
+ * never see them.
+ *
+ * 'started' vs 'played' also gives clipping visibility for free — a fire that
+ * starts but never reaches 'played' was cut short by Doze or an OEM killer.
+ */
+function uploadFiredLog(): void {
+    try {
+        const records = drainFiredLog();
+        if (records.length === 0) return;
+
+        const started = records.filter(r => r.e === 'started').length;
+        const played = records.filter(r => r.e === 'played').length;
+        const times = records.map(r => r.t).filter(t => typeof t === 'number' && t > 0);
+        const oldest = times.length ? Math.min(...times) : Date.now();
+        const newest = times.length ? Math.max(...times) : Date.now();
+
+        // ONE aggregate event, not one per record. The ring holds up to 200
+        // entries, and a user returning after a month would otherwise emit 200
+        // analytics events on a single open — enough to hit provider
+        // per-session limits and crowd out everything else. Diagnostics must
+        // not be expensive enough to become their own problem.
+        //
+        // Counts and span are sufficient for the question being asked: did the
+        // adhan keep firing while the app was closed, and did it play through?
+        logEvent('adhan_fired_batch', {
+            started,
+            played,
+            // started > played means fires were cut short — Doze, an OEM
+            // killer, or the user stopping it. The gap is the clipping signal.
+            unfinished: started - played,
+            span_hours: Math.round((newest - oldest) / 3600000),
+            // How stale the oldest record is: with the app opened rarely, this
+            // is how far back the reconstructed timeline reaches.
+            oldest_age_hours: Math.round((Date.now() - oldest) / 3600000),
+        });
+        console.log(`[adhan] uploaded ${records.length} fire-time records`);
+    } catch {
+        // Never let diagnostics cost the user their prayer alerts.
+    }
 }
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
@@ -291,16 +407,23 @@ export async function schedulePrayerNotifications(
     const azanShort = await getAzanShortEnabled();
     const reciter = getReciter(await getAzanReciter());
 
-    // Schedule notifications for today + the next 2 days (3 days total)
+    // Report how much cover was left BEFORE we re-arm. This is the measurement
+    // that makes the silent failure visible: if installs routinely arrive here
+    // with 0 days remaining, the native re-arm layers are not working in the
+    // field, and no amount of "it schedules fine on open" would reveal that.
+    reportHorizonHealth();
+    // Ship any adhans that fired while the app was closed (see drainFiredLog).
+    uploadFiredLog();
+
+    // Prayer times for today + the next PRAYER_HORIZON_DAYS - 1 days.
     const loc = await getSavedLocation();
     const method = await getCalculationMethod();
     const madhab = await getMadhab();
 
     const allPrayers: PrayerTimeEntry[] = [...prayers];
 
-    // Add prayer times for the next 2 days
     if (loc) {
-        for (let dayOffset = 1; dayOffset <= 2; dayOffset++) {
+        for (let dayOffset = 1; dayOffset < PRAYER_HORIZON_DAYS; dayOffset++) {
             const futureDate = new Date();
             futureDate.setDate(futureDate.getDate() + dayOffset);
             const futureTimes = getPrayerTimes(loc.latitude, loc.longitude, futureDate, method, madhab);
@@ -351,10 +474,19 @@ export async function schedulePrayerNotifications(
             : useAdhanService ? false
             : adhanFile;
 
+        // The native side takes the FULL horizon regardless of the notification
+        // cap: it persists the long list and arms a rolling window from it, so
+        // it is not bound by how many pending notifications the OS will hold.
         if (useAdhanService) {
             adhanTimes.push(notificationTime.getTime());
             adhanSounds.push(rawName(adhanFile));
         }
+
+        // Past the platform's pending-notification budget, stop scheduling
+        // visible alerts but keep collecting adhan instants above. On iOS the
+        // excess would be silently dropped by the OS anyway; making the cutoff
+        // explicit means the drop point is a decision rather than a surprise.
+        if (scheduled >= MAX_PENDING_NOTIFICATIONS) continue;
 
         await notif.scheduleNotificationAsync({
             content: {
@@ -383,13 +515,21 @@ export async function schedulePrayerNotifications(
     if (hasAdhanService()) {
         try {
             if (useAdhanService && adhanTimes.length > 0) {
+                // `n` is how many were ARMED (a rolling window), not how many
+                // were stored — adhanTimes carries the full 30 days.
                 const n = AdhanPlayback!.schedule(
                     adhanTimes,
                     adhanSounds,
                     'Azan Time 🕌',
                     'Adhan is playing',
                 );
-                console.log(`[adhan] scheduled ${n} foreground-service alarms`);
+                console.log(
+                    `[adhan] armed ${n} of ${adhanTimes.length} persisted alarms`,
+                );
+                // Recovery layer. Idempotent, so calling it on every schedule
+                // is free; see AdhanRearmWorker for why it is not the primary
+                // mechanism.
+                try { AdhanPlayback!.ensureRearmWorker(); } catch {}
             } else {
                 // Azan off, or short azan selected — make sure no stale alarms
                 // from a previous setting are left armed.

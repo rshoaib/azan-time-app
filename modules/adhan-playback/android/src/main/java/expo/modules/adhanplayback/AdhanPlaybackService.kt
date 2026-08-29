@@ -252,6 +252,10 @@ class AdhanPlaybackService : Service() {
         afd.use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
         setOnCompletionListener {
           Log.i(TAG, "adhan finished normally")
+          // Durable record that the adhan not only started but played through.
+          // Comparing 'played' against 'started' in the field is what would
+          // expose Doze or OEM clipping without anyone having to notice it.
+          AdhanScheduler.recordFired(applicationContext, soundName, "played")
           // Notify BEFORE teardown so JS sees the completion even if the
           // service is destroyed immediately after.
           try {
@@ -271,6 +275,12 @@ class AdhanPlaybackService : Service() {
       }
       isPlaying = true
       Log.i(TAG, "adhan started: raw/$soundName")
+
+      // Fire-time telemetry, recorded only AFTER start() has succeeded so it
+      // can never sit between the alarm and the audio. SharedPreferences only,
+      // no network, bounded ring, and every failure swallowed inside
+      // recordFired — the adhan playing matters more than knowing it did.
+      AdhanScheduler.recordFired(applicationContext, soundName, "started")
     } catch (e: Exception) {
       Log.e(TAG, "failed to start adhan", e)
       stopEverything()
