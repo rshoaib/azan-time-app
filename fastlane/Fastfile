@@ -109,11 +109,18 @@ platform :android do
       track: "production",
       release_status: "completed",          # full release, not a draft/staged hold
       aab: AAB_PATH,
-      # We only ship the binary here — leave the existing store listing untouched.
+      # Leave the existing store LISTING untouched (title, description, images) —
+      # that copy is managed in Console and a stale local .txt must not clobber it.
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
-      skip_upload_changelogs: true
+      # ...but DO ship this version's what's-new notes. Those are per-release,
+      # not listing copy, so they are not at risk of clobbering anything, and a
+      # full release with no release notes is worse than one with them.
+      # `release_staged` already did this; `release` skipping them was an
+      # inconsistency, and it cannot be worked around by staging at 100%
+      # because the Play API rejects userFraction >= 1 with status inProgress.
+      skip_upload_changelogs: false
     )
   end
 
