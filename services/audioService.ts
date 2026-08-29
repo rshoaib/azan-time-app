@@ -149,6 +149,16 @@ export async function previewReciter(reciterId: string): Promise<void> {
  * Stop the currently playing Azan sound.
  */
 export async function stopAzan(): Promise<void> {
+    // The full adhan may be playing in the native foreground service rather than
+    // here (v1.3.14). Stop that too, or the in-app Stop button would leave a
+    // 3-minute recording running with no way to silence it.
+    try {
+        const AdhanPlayback = require('../modules/adhan-playback').default;
+        if (AdhanPlayback) AdhanPlayback.stop();
+    } catch {
+        // Native module absent (Expo Go / iOS / tests) — nothing to stop.
+    }
+
     if (currentSound) {
         try {
             await currentSound.stopAsync();
@@ -164,5 +174,13 @@ export async function stopAzan(): Promise<void> {
  * Check if Azan is currently playing.
  */
 export function isAzanPlaying(): boolean {
-    return currentSound !== null;
+    if (currentSound !== null) return true;
+    // Also report the native service's playback, so Settings shows a working
+    // Stop control while the foreground-service adhan is running.
+    try {
+        const AdhanPlayback = require('../modules/adhan-playback').default;
+        return AdhanPlayback ? AdhanPlayback.isPlaying() === true : false;
+    } catch {
+        return false;
+    }
 }

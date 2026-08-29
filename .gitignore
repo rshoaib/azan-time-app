@@ -56,3 +56,6 @@ google-play-key.json
 
 # generated promo video assets (fleet promo-video pipeline)
 /_promo/
+
+# Local Expo module Gradle output (modules/ itself IS tracked; its build dir is not)
+modules/*/android/build/

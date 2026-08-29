@@ -4,6 +4,41 @@ import { PrayerName, PrayerTimeEntry, getPrayerTimes } from './prayerService';
 import { getAzanReciter, getAzanShortEnabled, getAzanSoundEnabled, getCalculationMethod, getMadhab, getSavedLocation } from './storageService';
 import { RECITERS, getReciter } from '../constants/reciters';
 import { maybeFireNotificationGranted, maybeFireFirstPrayerAlarm, logEvent } from './analyticsService';
+import AdhanPlayback from '../modules/adhan-playback';
+
+// ─── Full-adhan playback path (v1.3.14) ──────────────────────────────────────
+//
+// Android hands a notification CHANNEL sound to the system notification player
+// with usage=USAGE_NOTIFICATION / CONTENT_TYPE_SONIFICATION — a path built for
+// short chimes. Our adhans are 118-224s, so the OS cut them off and users heard
+// a fragment and reported it as "the short azan" even though the full file was
+// bundled, shipped and selected (verified: shipped res/raw azan.mp3 is 197s and
+// byte-identical to the repo).
+//
+// So the FULL adhan is played by a foreground service with USAGE_ALARM instead,
+// and the prayer notification is posted on a channel created with
+// setSound(null, null). Because that channel has no sound at all, the
+// double-adhan regression of a8859a7 is structurally impossible rather than
+// ordering-dependent.
+//
+// The SHORT azan (azanshort.mp3, 5.2s) deliberately stays on its existing
+// channel: it is well under any truncation limit, so routing it through the
+// service would add risk for no benefit.
+//
+// Channel ids are versioned `-v3` because Android notification channels are
+// IMMUTABLE after creation — existing installs already have sounded
+// `prayer-azan-*` channels and the only way to move them to silent is a new id.
+const ADHAN_SILENT_CHANNEL = 'prayer-azan-silent-v3';
+
+/** True when the native foreground-service path is usable on this build. */
+function hasAdhanService(): boolean {
+    return Platform.OS === 'android' && AdhanPlayback != null;
+}
+
+/** res/raw resource name for a bundled sound file ('azan.mp3' -> 'azan'). */
+function rawName(soundFile: string): string {
+    return soundFile.replace(/\.mp3$/i, '');
+}
 
 // Detect if running in Expo Go (notifications are NOT supported in SDK 53+)
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -42,6 +77,18 @@ async function getNotifications() {
             try { maybeFireFirstAdhanHeard('foreground'); } catch {}
             const azanEnabled = await getAzanSoundEnabled();
             if (azanEnabled) {
+                // ⚠️ DOUBLE-PLAYBACK GUARD (the a8859a7 regression).
+                //
+                // When the native service owns the full adhan it fires from its
+                // OWN exact alarm, in foreground and background alike. If we
+                // also called playAzan() here, a foregrounded prayer would play
+                // two adhans at once — exactly the bug a8859a7 fixed. The
+                // service is the single source of playback in that mode; its
+                // completion event drives the interstitial instead (see
+                // adhanFinished wiring below).
+                const shortAzan = await getAzanShortEnabled();
+                if (hasAdhanService() && !shortAzan) return;
+
                 // Route to the right azan recording (Fajr has its own version).
                 const prayerName = notification?.request?.content?.data?.prayer as
                     | PrayerName
@@ -58,6 +105,22 @@ async function getNotifications() {
             // User tapping the adhan notification still counts as "heard".
             try { maybeFireFirstAdhanHeard('notification_tap'); } catch {}
         });
+
+        // The service's completion event replaces expo-audio's didJustFinish as
+        // the interstitial trigger. maybeShowInterstitial() still applies every
+        // guard itself (foreground-only, tap quiet window, 4-min / 5-per-day
+        // caps), so this cannot increase ad exposure — when the adhan finishes
+        // with the app backgrounded, the AppState guard declines it.
+        try {
+            const { addAdhanFinishedListener } = require('../modules/adhan-playback');
+            const { maybeShowInterstitial } = require('./adsService');
+            addAdhanFinishedListener(() => {
+                try { maybeFireFirstAdhanHeard('foreground'); } catch {}
+                maybeShowInterstitial();
+            });
+        } catch (e) {
+            console.warn('[adhan] could not wire completion listener', e);
+        }
     }
     return Notifications;
 }
@@ -144,6 +207,23 @@ export async function requestNotificationPermission(): Promise<boolean> {
             });
         }
 
+        // Silent channel for the FULL adhan. Created natively so we can call
+        // setSound(null, null) — expo-notifications has no way to express "no
+        // sound at all" (omitting `sound` yields the system default chime).
+        // With no channel sound in existence, nothing can double up with the
+        // foreground service. See the note at the top of this file.
+        if (hasAdhanService()) {
+            try {
+                AdhanPlayback!.ensureSilentChannel(
+                    ADHAN_SILENT_CHANNEL,
+                    'Prayer Times (Adhan)',
+                    'Prayer time notifications; the adhan is played by the app',
+                );
+            } catch (e) {
+                console.warn('[adhan] ensureSilentChannel failed', e);
+            }
+        }
+
         // Channel with the SHORT azan (when "Short Azan" is enabled)
         await notif.setNotificationChannelAsync('prayer-azan-short', {
             name: 'Prayer Times (Short Azan)',
@@ -228,6 +308,13 @@ export async function schedulePrayerNotifications(
         }
     }
 
+    // The full adhan goes through the native foreground service. Short azan and
+    // "azan off" keep their existing sounded/default channels — neither has a
+    // truncation problem.
+    const useAdhanService = azanEnabled && !azanShort && hasAdhanService();
+    const adhanTimes: number[] = [];
+    const adhanSounds: string[] = [];
+
     let scheduled = 0;
     for (const prayer of allPrayers) {
         if (!enabledPrayers[prayer.name]) continue;
@@ -242,18 +329,32 @@ export async function schedulePrayerNotifications(
         // Fajr keeps its own recording (the extra "As-salatu khayrun min an-nawm"
         // line), the short azan overrides everything, and otherwise we use the
         // user's selected reciter voice — channel + sound must agree.
+        // Which recording this prayer should use (Fajr has its own).
+        const adhanFile: string = prayer.name === 'fajr'
+            ? 'azan_fajr.mp3'
+            : reciter.androidSound;
+
         const channelId = !azanEnabled
             ? 'prayer-times'
             : azanShort ? 'prayer-azan-short'
+            // Full adhan via the service → silent channel, so the OS plays nothing.
+            : useAdhanService ? ADHAN_SILENT_CHANNEL
             : prayer.name === 'fajr' ? 'prayer-azan-fajr-v2'
             : `prayer-azan-${reciter.id}`;
         // `true` = system default sound. Bundled files resolve fine; the string
-        // 'default' does not — it throws.
+        // 'default' does not — it throws. `false` = silent, used when the service
+        // owns playback (the silent channel already guarantees this on API 26+;
+        // this just makes the intent explicit).
         const soundFile: string | boolean = !azanEnabled
             ? true
             : azanShort ? 'azanshort.mp3'
-            : prayer.name === 'fajr' ? 'azan_fajr.mp3'
-            : reciter.androidSound;
+            : useAdhanService ? false
+            : adhanFile;
+
+        if (useAdhanService) {
+            adhanTimes.push(notificationTime.getTime());
+            adhanSounds.push(rawName(adhanFile));
+        }
 
         await notif.scheduleNotificationAsync({
             content: {
@@ -274,6 +375,31 @@ export async function schedulePrayerNotifications(
         scheduled++;
     }
 
+    // Hand the same instants to the native service. These are separate exact
+    // alarms from expo-notifications' own, both RTC_WAKEUP at the identical
+    // epoch ms, so the notification and the adhan land together. Keeping them
+    // independent means a failure to start the service still leaves the user
+    // with a visible prayer notification rather than nothing.
+    if (hasAdhanService()) {
+        try {
+            if (useAdhanService && adhanTimes.length > 0) {
+                const n = AdhanPlayback!.schedule(
+                    adhanTimes,
+                    adhanSounds,
+                    'Azan Time 🕌',
+                    'Adhan is playing',
+                );
+                console.log(`[adhan] scheduled ${n} foreground-service alarms`);
+            } else {
+                // Azan off, or short azan selected — make sure no stale alarms
+                // from a previous setting are left armed.
+                AdhanPlayback!.cancelAll();
+            }
+        } catch (e) {
+            console.warn('[adhan] native scheduling failed', e);
+        }
+    }
+
     // Day-1 retention funnel — step 4. Fires at most once per install, the
     // first time we successfully schedule at least one prayer alarm. This is
     // the moment Azan Time's core promise lands.
@@ -283,6 +409,11 @@ export async function schedulePrayerNotifications(
 }
 
 export async function cancelAllNotifications(): Promise<void> {
+    // Cancel the adhan alarms too, or turning notifications off would leave the
+    // service still firing at prayer time.
+    if (hasAdhanService()) {
+        try { AdhanPlayback!.cancelAll(); } catch {}
+    }
     const notif = await getNotifications();
     if (!notif) return;
     await notif.cancelAllScheduledNotificationsAsync();

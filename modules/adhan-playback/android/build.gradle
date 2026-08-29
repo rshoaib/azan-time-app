@@ -1,0 +1,31 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'expo.modules.adhanplayback'
+version = '0.1.0'
+
+android {
+  namespace 'expo.modules.adhanplayback'
+  compileSdk rootProject.ext.compileSdkVersion
+
+  defaultConfig {
+    minSdk rootProject.ext.minSdkVersion
+    targetSdk rootProject.ext.targetSdkVersion
+    // Ship keep-rules with the module so enabling R8 on the app later does not
+    // silently strip the service, the receivers or the cross-class statics.
+    // R8 is off today; this is here so it stays a one-line change.
+    consumerProguardFiles 'proguard-rules.pro'
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlinOptions { jvmTarget = '17' }
+}
+
+dependencies {
+  implementation project(':expo-modules-core')
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
+  implementation 'androidx.core:core-ktx:1.13.1'
+}
